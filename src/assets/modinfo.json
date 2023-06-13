@@ -1,0 +1,12 @@
+﻿{
+  "id": "manyslugcats",
+  "name": "Many Slug Cats",
+  "version": "0.1.0",
+  "authors": "blodhgarm",
+  "target_game_version": "v1.9",
+  "description": "Mod that aims to make Rainworld support more than just four players",
+  "tags": [],
+  "requirements": [],
+  "requirements_names": [],
+  "checksum_override_version": false
+}
