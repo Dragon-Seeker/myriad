@@ -97,7 +97,7 @@
   <Target Name="GatherReferences" AfterTargets="ResolveReferences">
     <!-- { Remove any references to DLL's that are to be patched but allow for others if needed } -->
     <ItemGroup>
-      <PatchReference Include="@(ReferencePath)"/> <!--  Exclude="@(ReferencePath-&gt;WithMetadataValue('ExcludeFromPatch', 'true'))" -->
+      <PatchReference Include="@(ReferencePath)" /> <!--  Exclude="@(ReferencePath-&gt;WithMetadataValue('ExcludeFromPatch', 'true'))" -->
     </ItemGroup>
   </Target>
 
