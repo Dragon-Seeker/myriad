@@ -90,21 +90,21 @@
   <Target Name="Test" BeforeTargets="BeforeBuild">
     <!-- { Removing the Preload Patches from the main DLL to prevent issues but only before build to still have the IDE provide compile info } -->
     <ItemGroup>
-      <Compile Remove="preload_patches/*.cs" />
+      <Compile Remove="src/preload_patches/*.cs" />
     </ItemGroup>
   </Target>
 
   <Target Name="GatherReferences" AfterTargets="ResolveReferences">
     <!-- { Remove any references to DLL's that are to be patched but allow for others if needed } -->
     <ItemGroup>
-      <PatchReference Include="@(ReferencePath)" /> <!--  Exclude="@(ReferencePath-&gt;WithMetadataValue('ExcludeFromPatch', 'true'))" -->
+      <PatchReference Include="@(ReferencePath)"/> <!--  Exclude="@(ReferencePath-&gt;WithMetadataValue('ExcludeFromPatch', 'true'))" -->
     </ItemGroup>
   </Target>
 
   <Target Name="BuildPreloadPatches" AfterTargets="PostBuildEvent">
     <!-- { Getting the patch files to be included with the Patch DLL } -->
     <ItemGroup>
-      <PreloadPatches Include="$(ProjectDir)/preloadPatches/*.cs" />
+      <PreloadPatches Include="$(ProjectDir)/src/preloadPatches/*.cs" />
     </ItemGroup>
 
     <!-- { OutputPath combinded with the DLL name } -->
@@ -119,19 +119,19 @@
   <!--[ End of Patch Build Code ]-->
 
   <!--[ Basically this function will copy the built files and mod info to the rainworld mod folder thru the "RainWorldDir" enviroment variable  ]-->
-  <Target Name="PostBuild-CopyToRainWorldDir" AfterTargets="PostBuildEvent" Condition="Exists('$(RainWorldDir)')">
-    <!-- { Create Asset object for transfer later } -->
-    <ItemGroup>
-      <Assets Include="$(ProjectDir)/assets/**/*.*" />
-    </ItemGroup>
+<!--  <Target Name="PostBuild-CopyToRainWorldDir" AfterTargets="PostBuildEvent" Condition="Exists('$(RainWorldDir)')">-->
+<!--    &lt;!&ndash; { Create Asset object for transfer later } &ndash;&gt;-->
+<!--    <ItemGroup>-->
+<!--      <Assets Include="$(ProjectDir)/assets/**/*.*" />-->
+<!--    </ItemGroup>-->
 
-    <!-- { Transfer main plugin portion of the Mod } -->
-    <Copy SourceFiles="@(Assets)" DestinationFiles="$(RainWorldDir)/RainWorld_Data/StreamingAssets/mods/$(ProjectName)/%(RecursiveDir)%(Filename)%(Extension)" />
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(RainWorldDir)/RainWorld_Data/StreamingAssets/mods/$(ProjectName)/plugins" />
+<!--    &lt;!&ndash; { Transfer main plugin portion of the Mod } &ndash;&gt;-->
+<!--    <Copy SourceFiles="@(Assets)" DestinationFiles="$(RainWorldDir)/RainWorld_Data/StreamingAssets/mods/$(ProjectName)/%(RecursiveDir)%(Filename)%(Extension)" />-->
+<!--    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(RainWorldDir)/RainWorld_Data/StreamingAssets/mods/$(ProjectName)/plugins" />-->
 
-    <!-- { Transfer prelaunch patchers of the Mod } -->
-    <Copy SourceFiles="$(OutputPatchPath)" DestinationFolder="$(RainWorldDir)/RainWorld_Data/StreamingAssets/mods/$(ProjectName)/patchers" />
-  </Target>
+<!--    &lt;!&ndash; { Transfer prelaunch patchers of the Mod } &ndash;&gt;-->
+<!--    <Copy SourceFiles="$(OutputPatchPath)" DestinationFolder="$(RainWorldDir)/RainWorld_Data/StreamingAssets/mods/$(ProjectName)/patchers" />-->
+<!--  </Target>-->
 
   <!-- -->
 
