@@ -25,7 +25,7 @@ using Rewired;
 
 namespace ManySlugCats;
 
-[BepInPlugin("blodhgarm.manyslugcats", "Many Slug Cats", "1.0.0")]
+[BepInPlugin("manyslugcats", "Many Slug Cats", "1.0.0")]
 public class ManySlugCatsMod : BaseUnityPlugin {
     
     public static ManualLogSource logger = BepInEx.Logging.Logger.CreateLogSource("ManySlugCats");
@@ -38,7 +38,7 @@ public class ManySlugCatsMod : BaseUnityPlugin {
     public void OnEnable() {
         try {
             new MorePlayers().OnEnable();
-            
+
             On.Menu.InputOptionsMenu.ctor += addMorePlayerOptions;
             //On.Menu.InputOptionsMenu.PlayerButton.ctor += adjustPlayerOptionSize;
 
@@ -51,51 +51,31 @@ public class ManySlugCatsMod : BaseUnityPlugin {
             // On.SlugcatStats.HiddenOrUnplayableSlugcat += hideExtraJollyEnums;
 
             //IL.JollyCoop.JollyMenu.JollySlidingMenu.ctor += IL_adjustPlayerSelectGUI;
-            
+
             On.JollyCoop.JollyMenu.JollySlidingMenu.ctor += adjustPlayerSelectGUI;
             On.JollyCoop.JollyMenu.JollySlidingMenu.NumberPlayersChange += accountForMoreThanFour;
             // On.JollyCoop.JollyMenu.JollySlidingMenu.UpdatePlayerSlideSelectable += preventOutOfBounds;
-        
+
             // On.PlayerGraphics.PopulateJollyColorArray += increasePlayerColorArray;
             // On.PlayerGraphics.SlugcatColor += adjustPlayerColor;
             //
             // On.JollyCoop.JollyCustom.Log += forceInstantLogging;
-        
+
             //On.RainWorldGame.JollySpawnPlayers += rewriteSpawnMethod;
 
             On.StoryGameSession.ctor += adjustPlayerRecordArray;
             // On.StoryGameSession.CreateJollySlugStats += override_CreateJollySlugStats;
 
-        //On.PlayerGraphics.ApplyPalette += redirectPlayerRendering;
-        On.Menu.MenuIllustration.ctor += MenuIllustration_ctor;
-
-        logger.LogMessage("Checking Patch");
-
-        //Rewired.Logger.Log();
-        
-        var loggerType = Type.GetType("Rewired.Logger, Rewired_Core");
-
-        if (loggerType != null) {
-            // foreach (var methodInfo in loggerType.GetMethods())
-            // {
-            //     logger.LogMessage($"Methods:{methodInfo}");
-            // }
-            
-            if (ManySlugCatsPatches.playersHaveBeenInjected) {
-                logger.LogMessage("IT HAS WORKED BUT NOT");
-            } else {
-                logger.LogMessage("Well Time to be sad ):");
-            }
-        } else {
-            logger.LogMessage("WHY DOSE MY LIFE HATE ME");
             //On.PlayerGraphics.ApplyPalette += redirectPlayerRendering;
-        }
-        catch (Exception e) {
+            On.Menu.MenuIllustration.ctor += MenuIllustration_ctor;
+
+            logger.LogMessage("Checking Patch");
+        } catch (Exception e) {
             logger.LogMessage("ManySlugCats failed to load due to an exception being thrown!");
             logger.LogMessage(e.ToString());
             throw e;
         }
-        
+
         RainWorld.PlayerObjectBodyColors = new Color[8];
     }
 
@@ -115,14 +95,14 @@ public class ManySlugCatsMod : BaseUnityPlugin {
 
             //REBUILD IT
             newFileName = "MultiplayerPortrait" + substr1 + substr2;
-            Debug.Log("FINAL FILE: " + substr1 + substr2 + "  -  " + newFileName);
+            logger.LogMessage("FINAL FILE: " + substr1 + substr2 + "  -  " + newFileName);
         }
         else if (lowerName.StartsWith("gamepad") && lowerName.Length == 8)
         {
             int playNum = int.Parse(lowerName.Replace("gamepad", "")); //GETS THE PLAYER NUMBER
             if (playNum > 4)
                 newFileName = "GamepadAny"; //JUST A PLACEHOLDER
-            Debug.Log("FINAL FILE: " + playNum + "  -  " + newFileName);
+            logger.LogMessage("FINAL FILE: " + playNum + "  -  " + newFileName);
         }
         orig.Invoke(self, menu, owner, folderName, newFileName, pos, crispPixels, anchorCenter);
     }

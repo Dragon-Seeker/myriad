@@ -69,11 +69,10 @@ public class MorePlayers
 
             On.Options.ToString += Options_ToString;
             
-            // On.JollyCoop.JollyMenu.JollySlidingMenu.NumberPlayersChange += MPJollySlidingMenu_NumberPlayersChange1;
-            On.Menu.MenuIllustration.ctor += MenuIllustration_ctor;
-            On.Menu.InputOptionsMenu.ctor += MPInputOptionsMenu_ctor; //INPUT MENU
+            //On.JollyCoop.JollyMenu.JollySlidingMenu.NumberPlayersChange += MPJollySlidingMenu_NumberPlayersChange1;
+            //On.Menu.MenuIllustration.ctor += MenuIllustration_ctor;
+            //On.Menu.InputOptionsMenu.ctor += MPInputOptionsMenu_ctor; //INPUT MENU
             //On.Menu.InputOptionsMenu.PlayerButton.ctor += PlayerButton_ctor; //INPUT MENU
-
 
             IL.Options.ctor += Options_ctor; 									//3
             IL.JollyCoop.JollyMenu.JollySlidingMenu.ctor += Replace4WithMore;   //3
@@ -109,7 +108,7 @@ public class MorePlayers
 
 
             //ADJUST MENU LAYOUT
-            On.JollyCoop.JollyMenu.JollySlidingMenu.ctor += JollySlidingMenu_ctor;
+            //On.JollyCoop.JollyMenu.JollySlidingMenu.ctor += JollySlidingMenu_ctor;
             On.Menu.MultiplayerMenu.InitiateGameTypeSpecificButtons += MultiplayerMenu_InitiateGameTypeSpecificButtons;
 			// On.RWInput.PlayerInputLogic += RWInput_PlayerInputLogic;
             
@@ -952,11 +951,11 @@ public class MorePlayers
     
     
     
-    private void MPInputOptionsMenu_ctor(On.Menu.InputOptionsMenu.orig_ctor orig, InputOptionsMenu self, ProcessManager manager)
-    {
-        orig.Invoke(self, manager);
-        self.backButton.pos -= new Vector2(120f, 0);
-    }
+    // private void MPInputOptionsMenu_ctor(On.Menu.InputOptionsMenu.orig_ctor orig, InputOptionsMenu self, ProcessManager manager)
+    // {
+    //     orig.Invoke(self, manager);
+    //     self.backButton.pos -= new Vector2(120f, 0);
+    // }
     
     /*
     private void PlayerButton_ctor(On.Menu.InputOptionsMenu.PlayerButton.orig_ctor orig, InputOptionsMenu.PlayerButton self, Menu.Menu menu, MenuObject owner, Vector2 pos, InputOptionsMenu.PlayerButton[] array, int index)
