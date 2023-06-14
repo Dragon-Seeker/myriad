@@ -119,19 +119,19 @@
   <!--[ End of Patch Build Code ]-->
 
   <!--[ Basically this function will copy the built files and mod info to the rainworld mod folder thru the "RainWorldDir" enviroment variable  ]-->
-<!--  <Target Name="PostBuild-CopyToRainWorldDir" AfterTargets="PostBuildEvent" Condition="Exists('$(RainWorldDir)')">-->
-<!--    &lt;!&ndash; { Create Asset object for transfer later } &ndash;&gt;-->
-<!--    <ItemGroup>-->
-<!--      <Assets Include="$(ProjectDir)/assets/**/*.*" />-->
-<!--    </ItemGroup>-->
+  <Target Name="PostBuild-CopyToRainWorldDir" AfterTargets="PostBuildEvent" Condition="Exists('$(RainWorldDir)')">
+    <!-- { Create Asset object for transfer later } -->
+    <ItemGroup>
+      <Assets Include="$(ProjectDir)/assets/**/*.*" />
+    </ItemGroup>
 
-<!--    &lt;!&ndash; { Transfer main plugin portion of the Mod } &ndash;&gt;-->
-<!--    <Copy SourceFiles="@(Assets)" DestinationFiles="$(RainWorldDir)/RainWorld_Data/StreamingAssets/mods/$(ProjectName)/%(RecursiveDir)%(Filename)%(Extension)" />-->
-<!--    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(RainWorldDir)/RainWorld_Data/StreamingAssets/mods/$(ProjectName)/plugins" />-->
+    <!-- { Transfer main plugin portion of the Mod } -->
+    <Copy SourceFiles="@(Assets)" DestinationFiles="$(RainWorldDir)/RainWorld_Data/StreamingAssets/mods/$(ProjectName)/%(RecursiveDir)%(Filename)%(Extension)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(RainWorldDir)/RainWorld_Data/StreamingAssets/mods/$(ProjectName)/plugins" />
 
-<!--    &lt;!&ndash; { Transfer prelaunch patchers of the Mod } &ndash;&gt;-->
-<!--    <Copy SourceFiles="$(OutputPatchPath)" DestinationFolder="$(RainWorldDir)/RainWorld_Data/StreamingAssets/mods/$(ProjectName)/patchers" />-->
-<!--  </Target>-->
+    <!-- { Transfer prelaunch patchers of the Mod } -->
+    <Copy SourceFiles="$(OutputPatchPath)" DestinationFolder="$(RainWorldDir)/RainWorld_Data/StreamingAssets/mods/$(ProjectName)/patchers" />
+  </Target>
 
   <!-- -->
 
