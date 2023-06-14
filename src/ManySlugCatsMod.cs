@@ -55,7 +55,7 @@ public class ManySlugCatsMod : BaseUnityPlugin {
             On.StoryGameSession.ctor += adjustPlayerRecordArray;
             
             On.Menu.MenuIllustration.ctor += MenuIllustration_ctor;
-            
+
             //-----
             
             On.RainWorld.OnModsInit += RainWorld_OnModsInit;
@@ -84,7 +84,6 @@ public class ManySlugCatsMod : BaseUnityPlugin {
 			IL.ScavengersWorldAI.Outpost.ctor += Replace4WithMore;
 			IL.ArenaGameSession.ctor += Replace4WithMore;
 			//IL.World.LoadMapConfig += Replace4WithMore; //PERHAPS? BUT LEAVE OUT UNLESS IT'S DISCOVERED THAT WE NEED IT
-
 
             RainWorld.PlayerObjectBodyColors = new Color[plyCnt];
 
@@ -1048,7 +1047,7 @@ public class ManySlugCatsMod : BaseUnityPlugin {
             try
             {
                 Logger.LogInfo("-APPLYING TO ARRAY " + entryNum);
-                self.controls[entryNum] = myControlArry[entryNum];
+                self.controls[entryNum].FromString(splt2[2]);// = myControlArry[entryNum];
             }
             catch (Exception arg)
             {

@@ -98,7 +98,7 @@ public class MPOptions : OptionInterface
         }
         catch (Exception e)
         {
-            MorePlayers.Logger.LogInfo("CATCH! ERROR 2 " + e);
+            //MorePlayers.Logger.LogInfo("CATCH! ERROR 2 " + e);
         }
     }
 }
