@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using BepInEx;
 using UnityEngine;
 using Menu.Remix.MixedUI;
@@ -59,21 +59,19 @@ public class MorePlayers
 	{
 		return plyCnt;
 	}
-
-	
 	
     public void OnEnable()
     {
 	    Logger = BepInEx.Logging.Logger.CreateLogSource("MorePlayers");
 	    
         try {
-	        // On.RainWorld.OnModsInit += RainWorld_OnModsInit;
+	        On.RainWorld.OnModsInit += RainWorld_OnModsInit;
 
-            // On.Options.ToString += Options_ToString;
+            On.Options.ToString += Options_ToString;
             
             // On.JollyCoop.JollyMenu.JollySlidingMenu.NumberPlayersChange += MPJollySlidingMenu_NumberPlayersChange1;
             On.Menu.MenuIllustration.ctor += MenuIllustration_ctor;
-            //On.Menu.InputOptionsMenu.ctor += MPInputOptionsMenu_ctor; //INPUT MENU
+            On.Menu.InputOptionsMenu.ctor += MPInputOptionsMenu_ctor; //INPUT MENU
             //On.Menu.InputOptionsMenu.PlayerButton.ctor += PlayerButton_ctor; //INPUT MENU
 
 
@@ -90,40 +88,41 @@ public class MorePlayers
 			IL.RainWorld.JoystickPreDisconnect += Replace4WithMore;
 			//THIS DIDN'T HAVE AN IL AND IDK EXACTLY WHAT IT DOES BUT IT LOOKS LIKE IT SHOULD REPLACE 4 WITH MORE
 			IL.RWInput.PlayerUIInput += Replace4WithMore;
+			//SOME MORE TO ADD!
+			IL.ScavengersWorldAI.Outpost.ctor += Replace4WithMore;
+			IL.ArenaGameSession.ctor += Replace4WithMore;
+			//IL.World.LoadMapConfig += Replace4WithMore; //PERHAPS? BUT LEAVE OUT UNLESS IT'S DISCOVERED THAT WE NEED IT
+
 
             RainWorld.PlayerObjectBodyColors = new Color[plyCnt];
 
             //On.Options.FromString += Options_FromString;
-            // On.Options.ApplyOption += Options_ApplyOption;
-            On.Options.ControlSetup.UpdateControlPreference += ControlSetup_UpdateControlPreference;
-            // On.Menu.IntroRoll.Update += IntroRoll_Update; //THIS IS WHERE THINGS FIRST BREAK. -WE TRIED TO ADD REWIRED.PLAYER HERE, BUT ALAS...
+            On.Options.ApplyOption += Options_ApplyOption;
+            //On.Options.ControlSetup.UpdateControlPreference += ControlSetup_UpdateControlPreference;
 
             On.RainWorldGame.JollySpawnPlayers += RainWorldGame_JollySpawnPlayers;
-            //On.JollyCoop.JollyMenu.JollyPlayerSelector.Update += JollyPlayerSelector_Update;
+            On.JollyCoop.JollyMenu.JollyPlayerSelector.Update += JollyPlayerSelector_Update;
             //LOCK DOWNPOUR STORY CHARACTER SELECTION FOR PLAYER 1
 			
-            // On.JollyCoop.JollyCustom.ForceActivateWithMSC += JollyCustom_ForceActivateWithMSC; //FOR JOLLYCAMPAINGN. JUST RETURN TRUE INSTEAD OF ORIG.
-            // On.Options.ToStringNonSynced += Options_ToStringNonSynced;
-            // On.Options.FromUnsyncedString += Options_FromUnsyncedString; //DISABLING CUZ MPOPTIONS ISN'T LOADED YET
+            On.JollyCoop.JollyCustom.ForceActivateWithMSC += JollyCustom_ForceActivateWithMSC; //FOR JOLLYCAMPAINGN. JUST RETURN TRUE INSTEAD OF ORIG.
+            On.Options.ToStringNonSynced += Options_ToStringNonSynced;
 
 
             //ADJUST MENU LAYOUT
-            // On.JollyCoop.JollyMenu.JollySlidingMenu.ctor += JollySlidingMenu_ctor;
-            // On.Menu.MultiplayerMenu.InitiateGameTypeSpecificButtons += MultiplayerMenu_InitiateGameTypeSpecificButtons;
-
-			//THINGS THAT WOULD OTHERWISE RANDOMLY CRASH
-            // On.RWInput.PlayerInputLogic += RWInput_PlayerInputLogic;
-            // On.RWInput.CheckPauseButton += RWInput_CheckPauseButton;
-            // On.RWInput.CheckPauseButton += RWInput_CheckPauseButton1;
-
+            On.JollyCoop.JollyMenu.JollySlidingMenu.ctor += JollySlidingMenu_ctor;
+            On.Menu.MultiplayerMenu.InitiateGameTypeSpecificButtons += MultiplayerMenu_InitiateGameTypeSpecificButtons;
+			// On.RWInput.PlayerInputLogic += RWInput_PlayerInputLogic;
+            
             // On.Menu.InputOptionsMenu.Update += InputOptionsMenu_Update;
             // On.Menu.InputOptionsMenu.InputSelectButton.ButtonText += InputSelectButton_ButtonText; //INPUT MENU
-            // On.Menu.InputOptionsMenu.SetCurrentlySelectedOfSeries += InputOptionsMenu_SetCurrentlySelectedOfSeries;
 
             //AFTER SWITCHING BACK TO MSOPTIONS WAY
-            // On.Options.ControlSetup.GetButton += ControlSetup_GetButton;
             On.PlayerGraphics.SlugcatColor += PlayerGraphics_SlugcatColor;
             On.Menu.MultiplayerMenu.ArenaImage += MultiplayerMenu_ArenaImage;
+
+            On.ArenaGameSession.SpawnPlayers += ArenaGameSession_SpawnPlayers;
+            On.HUD.PlayerSpecificMultiplayerHud.ctor += PlayerSpecificMultiplayerHud_ctor;
+            On.SlugcatStats.Name.ArenaColor += Name_ArenaColor;
         }
         catch (Exception arg)
         {
@@ -131,6 +130,82 @@ public class MorePlayers
             throw;
         }
     }
+
+    private SlugcatStats.Name Name_ArenaColor(On.SlugcatStats.Name.orig_ArenaColor orig, int playerIndex)
+    {
+        while (playerIndex > 3)
+        {
+            playerIndex = playerIndex - 4;
+        }
+
+        return orig(playerIndex);
+    }
+
+    private void PlayerSpecificMultiplayerHud_ctor(On.HUD.PlayerSpecificMultiplayerHud.orig_ctor orig, HUD.PlayerSpecificMultiplayerHud self, HUD.HUD hud, ArenaGameSession session, AbstractCreature abstractPlayer)
+    {
+        orig(self, hud, session, abstractPlayer);
+
+        int playNum = (abstractPlayer.state as PlayerState).playerNumber;
+        int rank = 0;
+
+        while (playNum > 3)
+        {
+            playNum = playNum - 4;
+            rank += 1;
+        }
+
+        if (rank > 0)
+        {
+            switch (playNum)
+            {
+                case 0:
+                    self.cornerPos = new Vector2(hud.rainWorld.options.ScreenSize.x - hud.rainWorld.options.SafeScreenOffset.x, 20f + hud.rainWorld.options.SafeScreenOffset.y);
+                    self.flip = -1;
+                    break;
+                case 1:
+                    self.cornerPos = new Vector2(hud.rainWorld.options.SafeScreenOffset.x, 20f + hud.rainWorld.options.SafeScreenOffset.y);
+                    self.flip = 1;
+                    break;
+                case 2:
+                    self.cornerPos = new Vector2(hud.rainWorld.options.SafeScreenOffset.x, hud.rainWorld.options.ScreenSize.y - 20f - hud.rainWorld.options.SafeScreenOffset.y);
+                    self.flip = 1;
+                    break;
+                case 3:
+                    self.cornerPos = new Vector2(hud.rainWorld.options.ScreenSize.x - hud.rainWorld.options.SafeScreenOffset.x, hud.rainWorld.options.ScreenSize.y - 20f - hud.rainWorld.options.SafeScreenOffset.y);
+                    self.flip = -1;
+                    break;
+            }
+
+            self.cornerPos = self.cornerPos + new Vector2(40 * rank * self.flip, 0);
+
+        }
+    }
+
+    private void ArenaGameSession_SpawnPlayers(On.ArenaGameSession.orig_SpawnPlayers orig, ArenaGameSession self, Room room, List<int> suggestedDens)
+    {
+        if (!(ModManager.MSC && self.GameTypeSetup.gameType == MoreSlugcatsEnums.GameTypeID.Challenge))
+        {
+            //SO IT SKIPS CHALLENGES.
+            //BUT WHAT IF IT DIDNT...
+
+            //WILL THIS INFINITE LOOP?
+            if (suggestedDens != null)
+            {
+                int initialCount = suggestedDens.Count;
+                for (int i = 0; i < initialCount; i++)
+                {
+                    Logger.LogInfo("DEN " + i);
+                    suggestedDens.Add(suggestedDens[i]);
+                }
+            }
+
+        }
+
+        orig(self, room, suggestedDens);
+    }
+
+
+
 
 
     //FOR ARENA IMAGES WHILE MSC IS ENABLED
@@ -192,79 +267,7 @@ public class MorePlayers
 
 
     
-    // private bool ControlSetup_GetButton(On.Options.ControlSetup.orig_GetButton orig, Options.ControlSetup self, int actionID)
-    // {
-    //     
-    //     //THIS LIKE CAUSED THE GAME TO FREEZE FOR SOME REASON
-    //     if (self.active && self.index > 3)
-    //     {
-    //         //RETURN TRUE IF HELD ACTION KEY
-    //         int plr = self.index;
-    //         switch (actionID)
-    //         {
-    //             case 0:
-    //                 return false;
-    //             case 1:
-    //                 return Input.GetKey(MPOptions.mapKey[plr - 4].Value);
-    //             case 2:
-    //                 return Input.GetKey(MPOptions.grabKey[plr - 4].Value);
-    //             case 3:
-    //                 return Input.GetKey(MPOptions.jumpKey[plr - 4].Value);
-    //             case 4:
-    //                 return Input.GetKey(MPOptions.throwKey[plr - 4].Value);
-    //             case 5:
-    //                 return Input.GetKey(MPOptions.leftKey[plr - 4].Value);
-    //             case 6:
-    //                 return Input.GetKey(MPOptions.upKey[plr - 4].Value);
-    //             case 7:
-    //                 return Input.GetKey(MPOptions.rightKey[plr - 4].Value);
-    //             case 8:
-    //                 return Input.GetKey(MPOptions.downKey[plr - 4].Value);
-    //             case 11:
-    //                 return Input.GetKey(MPOptions.mapKey[plr - 4].Value); //WAIT, WHY IS THIS ONE ALSO MAP?? THIS MAKES NO SENSE. MAYBE THE REST ARE WRONG...
-    //         }
-    //         Debug.Log("INVALID BUTTONDOWN DETECTED " + actionID + " - P" + plr);
-    //         return false;
-    //     }
-    //     return orig(self, actionID);
-    // }
-
-
-
-    //TO ACTUALLY SET OUR "ISUSINGKEYBOARD" MPOPTIONS VALUES, SINCE WE HAVENT DONE THAT FOR A WHILE
-    // private void InputOptionsMenu_SetCurrentlySelectedOfSeries(On.Menu.InputOptionsMenu.orig_SetCurrentlySelectedOfSeries orig, InputOptionsMenu self, string series, int to)
-    // {
-    //     Debug.Log("SETTING INPUT OPTIONS FOR PLAYER: " + self.manager.rainWorld.options.playerToSetInputFor + " - " + to);
-    //
-    //     int player = self.manager.rainWorld.options.playerToSetInputFor;
-    //     if (series == "DeviceButtons" && player > 3)
-    //     {
-    //         if (to == 1)
-    //         {
-    //             //self.CurrentControlSetup.UpdateControlPreference(Options.ControlSetup.ControlToUse.KEYBOARD, false); //FREE
-    //             MPOptions.usingKeyboard[player - 4].Value = true;
-    //         }
-    //         else if (to == 0)
-    //         {
-    //             //self.CurrentControlSetup.gamePadNumber = 0;
-    //             //self.CurrentControlSetup.UpdateControlPreference(Options.ControlSetup.ControlToUse.ANY, false); //FREE
-    //             //THEY BETTER NOT!!
-    //         }
-    //         else
-    //         {
-    //             //self.CurrentControlSetup.gamePadGuid = null;
-    //             //self.CurrentControlSetup.gamePadNumber = to - 2; //I THINK THEY CAN ACTUALLY STILL DO THIS AND IT STILL GOES TO THE CORRECT USER
-    //             //self.CurrentControlSetup.UpdateControlPreference(Options.ControlSetup.ControlToUse.SPECIFIC_GAMEPAD, false); //FREE
-    //             MPOptions.usingKeyboard[player - 4].Value = true;
-    //             MPOptions.gamepadNum[player - 4].Value = (to - 2);
-    //         }
-    //         Debug.Log("SETTING INPUT OPTIONS FOR PLAYER 2: " + self.manager.rainWorld.options.playerToSetInputFor + " - " + MPOptions.usingKeyboard[player - 4].Value + " - " + MPOptions.gamepadNum[player - 4].Value);
-    //     }
-    //
-    //     orig(self, series, to);
-    // }
-
-
+    
 
     //WHY DO P5 AND 6 STILL LOAD POINTING AT CONTROLLER SLOT 3&4? COULD IT BE THAT THE DATA READ FROM Options_ToString  IS SETTING THEM THIS WAY?
     //TAKE A LOOK AT THE OPTIONS TEXT FILES AND SEE WHAT IS BEING SAVED FOR THOSE VALUES
@@ -413,179 +416,165 @@ public class MorePlayers
     //     orig(self);
     // }
 
-    // private bool RWInput_CheckPauseButton1(On.RWInput.orig_CheckPauseButton orig, int playerNumber, RainWorld rainWorld)
-    // {
-    //     if (playerNumber > 4)
-    //         return false;
-    //     return orig(playerNumber, rainWorld);
-    // }
-    //
-    // private bool RWInput_CheckPauseButton(On.RWInput.orig_CheckPauseButton orig, int playerNumber, RainWorld rainWorld)
-    // {
-    //     if (playerNumber > 4)
-    //         return false;
-    //     return orig(playerNumber, rainWorld);
-    // }
 
-   //  private Player.InputPackage RWInput_PlayerInputLogic(On.RWInput.orig_PlayerInputLogic orig, int categoryID, int playerNumber, RainWorld rainWorld)
-   //  {
-   //      if (rainWorld.options.controls[playerNumber].player == null)
-   //      {
-   //          Debug.Log("NULLED PLAYER INFO! ");
-   //          //rainWorld.options.controls[playerNumber] = new Options.ControlSetup(playerNumber, false);
-			// //FILL THIS IN WITH DUMMY INFO COPIED FROM THE PREVIOUS PLAYER, JUST SO THAT THE GAME DOESN'T CRASH. WE'LL BE IGNORING MOST OF THAT INFO PAST PLAYER 4 ANYWAYS
-   //          rainWorld.options.controls[playerNumber].player = rainWorld.options.controls[playerNumber - 1].player;
-   //          Debug.Log("NULLED PLAYER INFO COMPLETE! " + rainWorld.options.controls[playerNumber]);
-   //
-   //          //HEY DON'T FORGET THE OTHER PARTS OF THEIR CONTROL PACKAGE!
-			// //intG
-   //          //string myGamePad = Math.Max(int.Parse(MPOptions.gamePadType[playerNumber - 4].Value) - 1, 0).ToString();
-   //          string myGamePad = MPOptions.gamePadType[playerNumber - 4].Value;
-   //          rainWorld.options.controls[playerNumber].gamePadNumber = MPOptions.GetGamepadInt2(myGamePad);
-   //          rainWorld.options.controls[playerNumber].usingGamePadNumber = rainWorld.options.controls[playerNumber].gamePadNumber;
-   //          rainWorld.options.controls[playerNumber].controlPreference = (myGamePad == "Keyboard") ? Options.ControlSetup.ControlToUse.KEYBOARD : Options.ControlSetup.ControlToUse.SPECIFIC_GAMEPAD;
-   //          //rainWorld.options.controls[playerNumber].UpdateControlPreference((myGamePad == "Keyboard") ? Options.ControlSetup.ControlToUse.KEYBOARD : Options.ControlSetup.ControlToUse.SPECIFIC_GAMEPAD, false);
-   //
-   //
-   //          //WE CAN'T RELY ON THIS TO CATCH PLAYER 5 BECAUSE THEY HAVE A SLOT ALREADY!
-   //          //OKAY THIS IS KIND OF SILLY BUT SINCE WE DON'T WANT THIS TO RUN EVERY TICK, LET'S JUST RUN IT 3 TIMES. 
-   //          //string p5GamePad = Math.Max(int.Parse(MPOptions.gamePadType[0].Value) - 1, 0).ToString();
-   //          string p5GamePad = MPOptions.gamePadType[0].Value;
-   //          rainWorld.options.controls[4].gamePadNumber = MPOptions.GetGamepadInt2(p5GamePad);
-   //          rainWorld.options.controls[4].usingGamePadNumber = rainWorld.options.controls[4].gamePadNumber;
-   //          rainWorld.options.controls[4].controlPreference = (p5GamePad == "Keyboard") ? Options.ControlSetup.ControlToUse.KEYBOARD : Options.ControlSetup.ControlToUse.SPECIFIC_GAMEPAD;
-   //      }
-   //
-   //
-   //      try
-   //      {
-   //          //Debug.Log("NULLED PLAYER INFO! " + playerNumber + " - " + rainWorld.options.controls[playerNumber].gamePadNumber);
-   //          //bool thing = Input.legacy.Input.GetKey(KeyCode.UpArrow); //options.controls[playerNumber].KeyboardLeft
-   //          //OKAY WE GOTTA CATCH IT AND REPLACE IT
-   //          if (playerNumber > 3)
-   //          {
-   //              Player.InputPackage inputPackage = new Player.InputPackage();
-   //              int plr = playerNumber;
-			// 	
-   //              if (categoryID == 0)
-   //              {
-   //                  if (Input.GetKey(MPOptions.leftKey[plr - 4].Value))
-   //                  {
-   //                      inputPackage.x--;
-   //                  }
-   //                  if (Input.GetKey(MPOptions.rightKey[plr - 4].Value))
-   //                  {
-   //                      inputPackage.x++;
-   //                  }
-   //                  if (Input.GetKey(MPOptions.downKey[plr - 4].Value))
-   //                  {
-   //                      inputPackage.y--;
-   //                  }
-   //                  if (Input.GetKey(MPOptions.upKey[plr - 4].Value))
-   //                  {
-   //                      inputPackage.y++;
-   //                  }
-   //                  if (inputPackage.y < 0)
-   //                  {
-   //                      inputPackage.downDiagonal = inputPackage.x;
-   //                  }
-   //                  if (Input.GetKey(MPOptions.jumpKey[plr - 4].Value))
-   //                  {
-   //                      inputPackage.jmp = true;
-   //                  }
-   //                  if (Input.GetKey(MPOptions.throwKey[plr - 4].Value))
-   //                  {
-   //                      inputPackage.thrw = true;
-   //                  }
-   //                  if (Input.GetKey(MPOptions.mapKey[plr - 4].Value))
-   //                  {
-   //                      inputPackage.mp = true;
-   //                  }
-   //                  if (Input.GetKey(MPOptions.grabKey[plr - 4].Value))
-   //                  {
-   //                      inputPackage.pckp = true;
-   //                  }
-			// 		//WAIT! I THINK I FINALLY GOT IT...
-			// 		if (MPOptions.gamePadType[playerNumber - 4].Value == "Keyboard")
-			// 		{
-			// 			inputPackage.analogueDir = new Vector2(inputPackage.x, inputPackage.y); //UHH... IS THIS GOOD ENOUGH?
-			// 		}
-			// 		else
-			// 		{   //GETTING THE ANOLOG INPUT WITHOUT USING REWIRED.PLAYER!!!!!
-   //                      string port = (rainWorld.options.controls[plr].gamePadNumber + 1).ToString();
-   //                      inputPackage.analogueDir = new Vector2(Input.GetAxisRaw("Horizontal" + port), Input.GetAxisRaw("Vertical" + port));
-			// 		}
-			// 		
-			// 		
-			// 		
-			// 		inputPackage.analogueDir = Vector2.ClampMagnitude(inputPackage.analogueDir * (ModManager.MMF ? rainWorld.options.analogSensitivity : 1f), 1f);
-			// 		if (inputPackage.analogueDir.x < -0.5f)
-			// 			inputPackage.x = -1;
-			// 		if (inputPackage.analogueDir.x > 0.5f)
-			// 			inputPackage.x = 1;
-			// 		if (inputPackage.analogueDir.y < -0.5f)
-			// 			inputPackage.y = -1;
-			// 		if (inputPackage.analogueDir.y > 0.5f)
-			// 			inputPackage.y = 1;
-			// 		
-			// 		if (ModManager.MMF)
-			// 		{
-			// 			if (inputPackage.analogueDir.y < -0.05f || inputPackage.y < 0)
-			// 			{
-			// 				if (inputPackage.analogueDir.x < -0.05f || inputPackage.x < 0)
-			// 					inputPackage.downDiagonal = -1;
-			// 				else if (inputPackage.analogueDir.x > 0.05f || inputPackage.x > 0)
-			// 					inputPackage.downDiagonal = 1;
-			// 			}
-			// 		}
-			// 		else if (inputPackage.analogueDir.y < -0.05f)
-			// 		{
-			// 			if (inputPackage.analogueDir.x < -0.05f)
-			// 				inputPackage.downDiagonal = -1;
-			// 			else if (inputPackage.analogueDir.x > 0.05f)
-			// 				inputPackage.downDiagonal = 1;
-			// 		}
-   //              }
-			// 	else
-			// 	{
-   //                  //AND NOW THE CONTROLLER VERSION... OH BOY...
-   //                  //WAIT NO I DON'T THINK THIS IS CONTROLLER VERSION. I THINK THIS IS JUST... ""OTHER""...
-   //                  //Debug.Log("SOME WEIRD OTHER CONTROL! CATEGORY 1 (NOT 0)");
-			// 		
-			// 		//ACTUALLY, I THINK IT BECOMES CATEGORY 1 IF IT'S GETTING INPUT FOR UI PURPOSES. BUT IN-GAME JUST USES CATEGORY 0? I THINK
-   //              }
-   //
-   //              return inputPackage;
-   //          }
-   //      }
-   //      catch (Exception arg)
-   //      {
-   //          Logger.LogError(string.Format("REDUCE! - ", arg));
-   //      }
-   //      
-   //
-   //
-   //      
-   //
-   //      Player.InputPackage result = orig(categoryID, playerNumber, rainWorld);
-   //      return result;
-   //  }
-    
+	/* GOODNIGHT, MY SWEET PRINCE...
+    private Player.InputPackage RWInput_PlayerInputLogic(On.RWInput.orig_PlayerInputLogic orig, int categoryID, int playerNumber, RainWorld rainWorld)
+    {
+        if (rainWorld.options.controls[playerNumber].player == null)
+        {
+            Debug.Log("NULLED PLAYER INFO! ");
+            //rainWorld.options.controls[playerNumber] = new Options.ControlSetup(playerNumber, false);
+			//FILL THIS IN WITH DUMMY INFO COPIED FROM THE PREVIOUS PLAYER, JUST SO THAT THE GAME DOESN'T CRASH. WE'LL BE IGNORING MOST OF THAT INFO PAST PLAYER 4 ANYWAYS
+            rainWorld.options.controls[playerNumber].player = rainWorld.options.controls[playerNumber - 1].player;
+            Debug.Log("NULLED PLAYER INFO COMPLETE! " + rainWorld.options.controls[playerNumber]);
+   
+            //HEY DON'T FORGET THE OTHER PARTS OF THEIR CONTROL PACKAGE!
+			//intG
+            //string myGamePad = Math.Max(int.Parse(MPOptions.gamePadType[playerNumber - 4].Value) - 1, 0).ToString();
+            string myGamePad = MPOptions.gamePadType[playerNumber - 4].Value;
+            rainWorld.options.controls[playerNumber].gamePadNumber = MPOptions.GetGamepadInt2(myGamePad);
+            rainWorld.options.controls[playerNumber].usingGamePadNumber = rainWorld.options.controls[playerNumber].gamePadNumber;
+            rainWorld.options.controls[playerNumber].controlPreference = (myGamePad == "Keyboard") ? Options.ControlSetup.ControlToUse.KEYBOARD : Options.ControlSetup.ControlToUse.SPECIFIC_GAMEPAD;
+            //rainWorld.options.controls[playerNumber].UpdateControlPreference((myGamePad == "Keyboard") ? Options.ControlSetup.ControlToUse.KEYBOARD : Options.ControlSetup.ControlToUse.SPECIFIC_GAMEPAD, false);
+   
+   
+            //WE CAN'T RELY ON THIS TO CATCH PLAYER 5 BECAUSE THEY HAVE A SLOT ALREADY!
+            //OKAY THIS IS KIND OF SILLY BUT SINCE WE DON'T WANT THIS TO RUN EVERY TICK, LET'S JUST RUN IT 3 TIMES. 
+            //string p5GamePad = Math.Max(int.Parse(MPOptions.gamePadType[0].Value) - 1, 0).ToString();
+            string p5GamePad = MPOptions.gamePadType[0].Value;
+            rainWorld.options.controls[4].gamePadNumber = MPOptions.GetGamepadInt2(p5GamePad);
+            rainWorld.options.controls[4].usingGamePadNumber = rainWorld.options.controls[4].gamePadNumber;
+            rainWorld.options.controls[4].controlPreference = (p5GamePad == "Keyboard") ? Options.ControlSetup.ControlToUse.KEYBOARD : Options.ControlSetup.ControlToUse.SPECIFIC_GAMEPAD;
+        }
+   
+   
+        try
+        {
+            //Debug.Log("NULLED PLAYER INFO! " + playerNumber + " - " + rainWorld.options.controls[playerNumber].gamePadNumber);
+            //bool thing = Input.legacy.Input.GetKey(KeyCode.UpArrow); //options.controls[playerNumber].KeyboardLeft
+            //OKAY WE GOTTA CATCH IT AND REPLACE IT
+            if (playerNumber > 3)
+            {
+                Player.InputPackage inputPackage = new Player.InputPackage();
+                int plr = playerNumber;
+				
+                if (categoryID == 0)
+                {
+                    if (Input.GetKey(MPOptions.leftKey[plr - 4].Value))
+                    {
+                        inputPackage.x--;
+                    }
+                    if (Input.GetKey(MPOptions.rightKey[plr - 4].Value))
+                    {
+                        inputPackage.x++;
+                    }
+                    if (Input.GetKey(MPOptions.downKey[plr - 4].Value))
+                    {
+                        inputPackage.y--;
+                    }
+                    if (Input.GetKey(MPOptions.upKey[plr - 4].Value))
+                    {
+                        inputPackage.y++;
+                    }
+                    if (inputPackage.y < 0)
+                    {
+                        inputPackage.downDiagonal = inputPackage.x;
+                    }
+                    if (Input.GetKey(MPOptions.jumpKey[plr - 4].Value))
+                    {
+                        inputPackage.jmp = true;
+                    }
+                    if (Input.GetKey(MPOptions.throwKey[plr - 4].Value))
+                    {
+                        inputPackage.thrw = true;
+                    }
+                    if (Input.GetKey(MPOptions.mapKey[plr - 4].Value))
+                    {
+                        inputPackage.mp = true;
+                    }
+                    if (Input.GetKey(MPOptions.grabKey[plr - 4].Value))
+                    {
+                        inputPackage.pckp = true;
+                    }
+					//WAIT! I THINK I FINALLY GOT IT...
+					if (MPOptions.gamePadType[playerNumber - 4].Value == "Keyboard")
+					{
+						inputPackage.analogueDir = new Vector2(inputPackage.x, inputPackage.y); //UHH... IS THIS GOOD ENOUGH?
+					}
+					else
+					{   //GETTING THE ANOLOG INPUT WITHOUT USING REWIRED.PLAYER!!!!!
+                        string port = (rainWorld.options.controls[plr].gamePadNumber + 1).ToString();
+                        inputPackage.analogueDir = new Vector2(Input.GetAxisRaw("Horizontal" + port), Input.GetAxisRaw("Vertical" + port));
+					}
+					
+					
+					
+					inputPackage.analogueDir = Vector2.ClampMagnitude(inputPackage.analogueDir * (ModManager.MMF ? rainWorld.options.analogSensitivity : 1f), 1f);
+					if (inputPackage.analogueDir.x < -0.5f)
+						inputPackage.x = -1;
+					if (inputPackage.analogueDir.x > 0.5f)
+						inputPackage.x = 1;
+					if (inputPackage.analogueDir.y < -0.5f)
+						inputPackage.y = -1;
+					if (inputPackage.analogueDir.y > 0.5f)
+						inputPackage.y = 1;
+					
+					if (ModManager.MMF)
+					{
+						if (inputPackage.analogueDir.y < -0.05f || inputPackage.y < 0)
+						{
+							if (inputPackage.analogueDir.x < -0.05f || inputPackage.x < 0)
+								inputPackage.downDiagonal = -1;
+							else if (inputPackage.analogueDir.x > 0.05f || inputPackage.x > 0)
+								inputPackage.downDiagonal = 1;
+						}
+					}
+					else if (inputPackage.analogueDir.y < -0.05f)
+					{
+						if (inputPackage.analogueDir.x < -0.05f)
+							inputPackage.downDiagonal = -1;
+						else if (inputPackage.analogueDir.x > 0.05f)
+							inputPackage.downDiagonal = 1;
+					}
+                }
+				else
+				{
+                    //AND NOW THE CONTROLLER VERSION... OH BOY...
+                    //WAIT NO I DON'T THINK THIS IS CONTROLLER VERSION. I THINK THIS IS JUST... ""OTHER""...
+                    //Debug.Log("SOME WEIRD OTHER CONTROL! CATEGORY 1 (NOT 0)");
+					
+					//ACTUALLY, I THINK IT BECOMES CATEGORY 1 IF IT'S GETTING INPUT FOR UI PURPOSES. BUT IN-GAME JUST USES CATEGORY 0? I THINK
+                }
+   
+                return inputPackage;
+            }
+        }
+        catch (Exception arg)
+        {
+            Logger.LogError(string.Format("REDUCE! - ", arg));
+        }
+        
+        Player.InputPackage result = orig(categoryID, playerNumber, rainWorld);
+        return result;
+    }
+    */
 
-    // private void JollyPlayerSelector_Update(On.JollyCoop.JollyMenu.JollyPlayerSelector.orig_Update orig, JollyPlayerSelector self)
-    // {
-    //     orig(self);
-    //
-    //     if (self.index == 0 && SlugcatStats.IsSlugcatFromMSC(self.JollyOptions(self.index).playerClass)
-    //         && !(ModManager.Expedition && self.menu.manager.rainWorld.ExpeditionMode))
-    //     {
-    //         self.classButton.GetButtonBehavior.greyedOut = true;
-    //     }
-    //
-    //     //AAAND UNLOCK P1 EXPEDITION MODE BECAUSE WHY NOT
-    //     if (self.index == 0 && ModManager.Expedition && self.menu.manager.rainWorld.ExpeditionMode)
-    //         self.classButton.GetButtonBehavior.greyedOut = false;
-    // }
+    private void JollyPlayerSelector_Update(On.JollyCoop.JollyMenu.JollyPlayerSelector.orig_Update orig, JollyPlayerSelector self)
+    {
+        orig(self);
+		
+		//IDK WHAT I WAS EVEN DOING HERE
+        // if (self.index == 0 && SlugcatStats.IsSlugcatFromMSC(self.JollyOptions(self.index).playerClass)
+            // && !(ModManager.Expedition && self.menu.manager.rainWorld.ExpeditionMode))
+        // {
+            // self.classButton.GetButtonBehavior.greyedOut = true;
+        // }
+		
+		//I LIKE THIS ONE :)
+        //AAAND UNLOCK P1 EXPEDITION MODE BECAUSE WHY NOT
+        if (self.index == 0 && ModManager.Expedition && self.menu.manager.rainWorld.ExpeditionMode)
+            self.classButton.GetButtonBehavior.greyedOut = false;
+    }
     
 	//CRASH FOR World/RainWorld_Data/StreamingAssets\illustrations\multiplayerportrait41-white.png
     private void MultiplayerMenu_InitiateGameTypeSpecificButtons(On.Menu.MultiplayerMenu.orig_InitiateGameTypeSpecificButtons orig, MultiplayerMenu self)
@@ -647,366 +636,262 @@ public class MorePlayers
 
 
 
-    /*
-	
-	
-	*/
 
 
- //    public static void BPPlayer_Update(On.Player.orig_Update orig, Player self, bool eu)
-	// {
-	// 	orig(self, eu);
-	// 	
-	// 	//BRING BACK THIS CLASSIC JOLLYCOOP FIXES FEATURE THAT IS VERY MUCH NEEDED IN CO-OP
-	// 	if (!rotundWorldEnabled && MPOptions.grabRelease.Value && self.input[0].jmp && !self.input[1].jmp && self.grabbedBy?.Count > 0)
-	// 	{
-	// 		for (int graspIndex = self.grabbedBy.Count - 1; graspIndex >= 0; graspIndex--)
-	// 		{
-	// 			if (self.grabbedBy[graspIndex] is Creature.Grasp grasp && grasp.grabber is Player player_)
-	// 			{
-	// 				if (!self.isNPC || (player_.isNPC)) //PUPS SHOULD LET GO OF OTHER PUPS
-	// 				player_.ReleaseGrasp(grasp.graspUsed); // list is modified
-	// 			}
-	// 		}
-	// 	}
-	// }
+
+    public static void BPPlayer_Update(On.Player.orig_Update orig, Player self, bool eu)
+	{
+		orig(self, eu);
+		
+		//BRING BACK THIS CLASSIC JOLLYCOOP FIXES FEATURE THAT IS VERY MUCH NEEDED IN CO-OP
+		if (!rotundWorldEnabled && MPOptions.grabRelease.Value && self.input[0].jmp && !self.input[1].jmp && self.grabbedBy?.Count > 0)
+		{
+			for (int graspIndex = self.grabbedBy.Count - 1; graspIndex >= 0; graspIndex--)
+			{
+				if (self.grabbedBy[graspIndex] is Creature.Grasp grasp && grasp.grabber is Player player_)
+				{
+					if (!self.isNPC || (player_.isNPC)) //PUPS SHOULD LET GO OF OTHER PUPS
+					player_.ReleaseGrasp(grasp.graspUsed); // list is modified
+				}
+			}
+		}
+	}
 
     
 
-    // private bool JollyCustom_ForceActivateWithMSC(On.JollyCoop.JollyCustom.orig_ForceActivateWithMSC orig)
-    // {
-    //     if (MPOptions.downpourCoop.Value)
-    //         return true;
-    //     else
-    //         return orig();
-    // }
+    private bool JollyCustom_ForceActivateWithMSC(On.JollyCoop.JollyCustom.orig_ForceActivateWithMSC orig)
+    {
+        if (MPOptions.downpourCoop.Value)
+            return true;
+        else
+            return orig();
+    }
 
 
- //    private void RainWorld_OnModsInit(On.RainWorld.orig_OnModsInit orig, RainWorld self)
-	// {
-	// 	orig(self);
- //        MachineConnector.SetRegisteredOI("me.moreplayers", new MPOptions());
- //
- //        for (int i = 0; i < ModManager.ActiveMods.Count; i++)
-	// 	{
-	// 		if (ModManager.ActiveMods[i].id == "willowwisp.bellyplus")
- //            {
-	// 			rotundWorldEnabled = true;
-	// 			Debug.Log("ROTUND WORLD DETECTED");
-	// 		}
- //        }
-	// 	
- //    }
-	//
-	// public static bool rotundWorldEnabled = false;
+    private void RainWorld_OnModsInit(On.RainWorld.orig_OnModsInit orig, RainWorld self)
+	{
+		orig(self);
+        MachineConnector.SetRegisteredOI("me.moreplayers", new MPOptions());
+ 
+        for (int i = 0; i < ModManager.ActiveMods.Count; i++)
+		{
+			if (ModManager.ActiveMods[i].id == "willowwisp.bellyplus")
+            {
+				rotundWorldEnabled = true;
+				Debug.Log("ROTUND WORLD DETECTED");
+			}
+        }
+		
+    }
+	
+	public static bool rotundWorldEnabled = false;
 	
 	
-	// public static void UpdateMPConfigs()
-	// {
-		// Debug.Log("SAVING CONFIGS");
-		// MachineConnector.SaveConfig(MPOptions as OptionInterface);
-	// }
+
 	
 	
 	
 	
-	// private bool Options_ApplyOption(On.Options.orig_ApplyOption orig, Options self, string[] splt2)
- //    {
- //        
-	// 	bool result = false;
- //        try
- //        {
- //            Logger.LogInfo("APPLY OPTION: " + splt2[0] + " - " +self.controls.Length);
- //            result = orig.Invoke(self, splt2);
- //        }
- //        catch
- //        {
- //            Logger.LogInfo("FAILED TO APPLY OPTION!!");
- //            result = false;
- //        }
-	// 	
-	// 	//6-8-23 WE'RE GONNA TRY DISABLING THIS BECAUSE WE PULL DIRECTLY FROM THE MPOPTIONS NOW
-	// 	// 6-9-23 WE CAN'T DO THAT DUMMY, I DON'T THINK THEY'VE INITIALIZED YET!
-	// 	//5-18-23 AFTER RUNNING THE ORIGINAL, IF WE'RE LOOKING FOR INPUT, SETUP THE REST OF OUR PLAYERS PAST 4
-	// 	if (splt2[0] == "InputSetup2")
-	// 	{
-	// 		result = false; //BECAUSE WE HIT A MATCH
-	// 		Logger.LogInfo("---APPLYING EXTRA INPUT OPTION! " + self.controls.Length + " - " + splt2[1] + " - " + splt2[2]);
- //            // Options.ControlSetup myControlArry = self.controls[k];
-	// 		//self.controls[int.Parse(splt2[1], NumberStyles.Any, CultureInfo.InvariantCulture)].FromString(splt2[2]);
- //            //THAT JUST CRASHES, SO LETS LOAD THE DATA INTO A HOLDING CELL AND THEN ONLY TRANSFER INTO ENTRIES THAT EXIST.
- //            Options.ControlSetup[] myControlArry = self.controls; //WE SET IT TO CONTROL SO THAT THE NUMBER OF ENTRIES IN THE TABLE MATCHES CONTROL
- //            int entryNum = int.Parse(splt2[1], NumberStyles.Any, CultureInfo.InvariantCulture);
- //            //myControlArry[entryNum].FromString(splt2[2]);
- //            //for (int k = 4; k < self.controls.Length; k++) //CAN'T USE THAT! I DON'T THINK MPOPTIONS HAS LOADED YET
- //            //{
- //            //    Logger.LogInfo("-APPLYING TO ARRAY " + k + " out of: " + myControlArry.Length);
- //            //    self.controls[k] = myControlArry[k];
- //            //}
- //            //APPARENTLY EACH LINE GETS SENT IN INDIVIDUALLY SO WE CAN JUST DO THIS..
- //            try
- //            {
- //                Logger.LogInfo("-APPLYING TO ARRAY " + entryNum);
- //                self.controls[entryNum] = myControlArry[entryNum];
- //            }
- //            catch (Exception arg)
- //            {
- //                Logger.LogError(string.Format("FAILED READ/APPLY EXTRA INPUT SETTINGS! - ", arg));
- //            }
- //        }
-	// 	
-	// 	
-	// 	
-	// 	
-	// 	
-	// 	//OKAY I'M PUTTING THIS HERE INSTEAD OF APPLYOPTION()
-	// 	//OKAY BUT WHAT IF WE COULD STILL SAVE JOLLYOPTIONS?...
- //        if (false)
- //        {
- //            if (splt2[0] == "JollySetupPlayers" && ModManager.JollyCoop)
- //            {
- //                Logger.LogInfo("---APPLYING EXTRA JOLLYSETUP ");
- //
- //                //5-18-23 AND THEN ADD THE EXTRA ONES
- //                for (int k = 4; k < PlyCnt(); k++)
- //                {
- //                    /*string[] array3 = Regex.Split(splt2[1], "<optC>");
- //                    // int num = 0;
- //                    string[] array4 = array3;
- //                    foreach (string text in array4)
- //                    {
- //                        if (!(text == string.Empty))
- //                        {
- //                            JollyPlayerOptions jollyPlayerOptions = new JollyPlayerOptions(k);
- //                            // jollyPlayerOptions.FromString(text);
- //                            jollyPlayerOptions.FromString(MPOptions.jollySetup[k - 4].Value);
- //                            self.jollyPlayerOptionsArray[jollyPlayerOptions.playerNumber] = jollyPlayerOptions;
- //                            // num++;
- //                        }
- //                    }
- //                    */
- //
- //                    try
- //                    {
- //                        Logger.LogInfo("--- JOLLY PLAYER OPTIONS! " + MPOptions.jollySetup[k - 4].Value);
- //                        JollyPlayerOptions jollyPlayerOptions = new JollyPlayerOptions(k);
- //                        jollyPlayerOptions.FromString(MPOptions.jollySetup[k - 4].Value); //PULL FROM OUR SAVED VAL
- //                        self.jollyPlayerOptionsArray[jollyPlayerOptions.playerNumber] = jollyPlayerOptions;
- //                    }
- //                    catch (Exception arg)
- //                    {
- //                        Logger.LogError(string.Format("FAILED READ INITIALIZE JOLLY PLAYER OPTIONS! - ", arg));
- //                    }
- //                }
- //            }
- //        }
-	// 	
-	// 	
-	// 	
-	// 	//6-8-23 TRYING AGAIN BUT FOR JOLLY EXTRAS
- //        
-	// 	if (splt2[0] == "JollySetupPlayersExtra")
-	// 	{
-	// 		result = false; //BECAUSE WE HIT A MATCH
-	// 		if (ModManager.JollyCoop)
-	// 		{
-	// 			string[] array3 = Regex.Split(splt2[1], "<optC>");
-	// 			int num = 4; //START AT 4
-	// 			foreach (string text in array3)
-	// 			{
-	// 				if (!(text == string.Empty))
-	// 				{
- //                        Logger.LogInfo("--- JOLLY PLAYER OPTIONS!(V2) " + text);
- //                        JollyPlayerOptions jollyPlayerOptions = new JollyPlayerOptions(num);
-	// 					jollyPlayerOptions.FromString(text); 
-	// 					self.jollyPlayerOptionsArray[jollyPlayerOptions.playerNumber] = jollyPlayerOptions;
-	// 					num++;
-	// 				}
-	// 			}
-	// 		}
-	// 		else
-	// 		{
-	// 			result = true;
-	// 		}
-	// 	}
-	// 	
- //        return result;
- //    }
+	private bool Options_ApplyOption(On.Options.orig_ApplyOption orig, Options self, string[] splt2)
+    {
+        
+		bool result = false;
+        try
+        {
+            Logger.LogInfo("APPLY OPTION: " + splt2[0] + " - " +self.controls.Length);
+            result = orig.Invoke(self, splt2);
+        }
+        catch
+        {
+            Logger.LogInfo("FAILED TO APPLY OPTION!!");
+            result = false;
+        }
+		
+		//6-8-23 WE'RE GONNA TRY DISABLING THIS BECAUSE WE PULL DIRECTLY FROM THE MPOPTIONS NOW
+		// 6-9-23 WE CAN'T DO THAT DUMMY, I DON'T THINK THEY'VE INITIALIZED YET!
+		//5-18-23 AFTER RUNNING THE ORIGINAL, IF WE'RE LOOKING FOR INPUT, SETUP THE REST OF OUR PLAYERS PAST 4
+		if (splt2[0] == "InputSetup2")
+		{
+			result = false; //BECAUSE WE HIT A MATCH
+			Logger.LogInfo("---APPLYING EXTRA INPUT OPTION! " + self.controls.Length + " - " + splt2[1] + " - " + splt2[2]);
+            // Options.ControlSetup myControlArry = self.controls[k];
+			//self.controls[int.Parse(splt2[1], NumberStyles.Any, CultureInfo.InvariantCulture)].FromString(splt2[2]);
+            //THAT JUST CRASHES, SO LETS LOAD THE DATA INTO A HOLDING CELL AND THEN ONLY TRANSFER INTO ENTRIES THAT EXIST.
+            Options.ControlSetup[] myControlArry = self.controls; //WE SET IT TO CONTROL SO THAT THE NUMBER OF ENTRIES IN THE TABLE MATCHES CONTROL
+            int entryNum = int.Parse(splt2[1], NumberStyles.Any, CultureInfo.InvariantCulture);
+            //myControlArry[entryNum].FromString(splt2[2]);
+            //for (int k = 4; k < self.controls.Length; k++) //CAN'T USE THAT! I DON'T THINK MPOPTIONS HAS LOADED YET
+            //{
+            //    Logger.LogInfo("-APPLYING TO ARRAY " + k + " out of: " + myControlArry.Length);
+            //    self.controls[k] = myControlArry[k];
+            //}
+            //APPARENTLY EACH LINE GETS SENT IN INDIVIDUALLY SO WE CAN JUST DO THIS..
+            try
+            {
+                Logger.LogInfo("-APPLYING TO ARRAY " + entryNum);
+                self.controls[entryNum] = myControlArry[entryNum];
+            }
+            catch (Exception arg)
+            {
+                Logger.LogError(string.Format("FAILED READ/APPLY EXTRA INPUT SETTINGS! - ", arg));
+            }
+        }
+		
+		
+		
+		//6-8-23 TRYING AGAIN BUT FOR JOLLY EXTRAS
+		if (splt2[0] == "JollySetupPlayersExtra")
+		{
+			result = false; //BECAUSE WE HIT A MATCH
+			if (ModManager.JollyCoop)
+			{
+				string[] array3 = Regex.Split(splt2[1], "<optC>");
+				int num = 4; //START AT 4
+				foreach (string text in array3)
+				{
+					if (!(text == string.Empty))
+					{
+                        Logger.LogInfo("--- JOLLY PLAYER OPTIONS!(V2) " + text);
+                        JollyPlayerOptions jollyPlayerOptions = new JollyPlayerOptions(num);
+						jollyPlayerOptions.FromString(text); 
+						self.jollyPlayerOptionsArray[jollyPlayerOptions.playerNumber] = jollyPlayerOptions;
+						num++;
+					}
+				}
+			}
+			else
+			{
+				result = true;
+			}
+		}
+		
+        return result;
+    }
 	
 	
 	
 	
 
    //6-8 WAIT NO WE NEED TO USE THIS THIS BREAKS THE SAVES OTHERWISE
- //    private string Options_ToStringNonSynced(On.Options.orig_ToStringNonSynced orig, Options self)
- //    {
-	// 	int servMemory = self.playerToSetInputFor;
-	// 	self.playerToSetInputFor = Math.Min(self.playerToSetInputFor, 3); //DON'T LET THIS GET SAVED OUTSIDE OF THE NORMAL RANGE
-	// 	//AND DON'T LET CONTROLS SAVE FOR MORE THAN 4 PLAYERS
-	// 	Options.ControlSetup[] controlsMemory = self.controls;
-	// 	self.controls = new Options.ControlSetup[4];
-	// 	for (int i = 0; i < self.controls.Length; i++)
-	// 	{
-	// 		self.controls[i] = controlsMemory[i];
-	// 	}
- //
- //        //OKAY, AND WE CAN ALSO REDIRECT THE INPUT SETTINGS FOR OUR EXTRA PLAYERS TO SOMEWHERE ELSE
- //        //for (int i = 0; i < controlsMemory.Length - 4; i++)
- //        //{
- //        //    //BPOptions.gamepadNum[k - 4].Value
- //        //}
- //        //NAH NVM WE DONT HAVE THAT STUFF LOADED
-	// 	
-	// 	
-	// 	string result = orig(self);
- //
- //        //5-18-23 INSTEAD, MAYBE WE OUTPUT THAT STUFF TO A FILE AS A DIFFERENT NAME?
- //        //for (int k = 4; k < PlyCnt(); k++)
- //        //      {
- //        //          Logger.LogInfo("---SAVING CUTSOM OPTIONS STRING FOR PLAYER: " + k);
- //        //          //controlsMemory[k].gamePad = 0;
- //        //          controlsMemory[k].str
- //        //          result += string.Format(CultureInfo.InvariantCulture, "InputSetup2<optB>{0}<optB>{1}<optA>", k, controlsMemory[k]);
- //        //          //!!! WARNING!!!! THE GAME SEEMS TO WANT TO SET P5'S SPECIFIC CONTROLLER TO #3, WHICH CRASHES THE GAME IF NOT PLUGGED IN. UNDO THAT!!!
- //        //      }
- //
- //
- //        //DANG, STEAM ALWAYS SETS P5'S GAMEPAD TO 4 BY DEFAULT. WE NEED TO SAVE THE CONTROLS IN A WAY THAT IGNORES THAT
- //        for (int k = 4; k < PlyCnt(); k++)
- //        {
- //            string plrSetting = "InputSetup2<optB>" + k + "<optB>SPECIFIC_GAMEPAD<ctrlA>0<ctrlA><ctrlA>0<ctrlA>0<optA>";
- //            result += plrSetting;
- //            Logger.LogInfo("---SAVING CUTSOM OPTIONS STRING FOR PLAYER: " + plrSetting);
- //        }
- //        //
- //
- //        self.controls = controlsMemory;
-	// 	self.playerToSetInputFor = servMemory;
-	// 	//WE CAN'T SAVE THIS YET, MPOTIONS HASNT LOADED YET
-	// 	// MPOptions.playerToSetInput.Value = servMemory; //ALSO SAVE IT AS MOD DATA TOO
- //        return result;
-	// }
+    private string Options_ToStringNonSynced(On.Options.orig_ToStringNonSynced orig, Options self)
+    {
+		int servMemory = self.playerToSetInputFor;
+		self.playerToSetInputFor = Math.Min(self.playerToSetInputFor, 3); //DON'T LET THIS GET SAVED OUTSIDE OF THE NORMAL RANGE
+		//AND DON'T LET CONTROLS SAVE FOR MORE THAN 4 PLAYERS
+		Options.ControlSetup[] controlsMemory = self.controls;
+		self.controls = new Options.ControlSetup[4];
+		for (int i = 0; i < self.controls.Length; i++)
+		{
+			self.controls[i] = controlsMemory[i];
+		}
+		
+		
+		string result = orig(self);
+
+        //5-18-23 INSTEAD, MAYBE WE OUTPUT THAT STUFF TO A FILE AS A DIFFERENT NAME?
+        for (int k = 4; k < PlyCnt(); k++)
+		 {
+			 Logger.LogInfo("---SAVING CUTSOM OPTIONS STRING FOR PLAYER: " + k);
+			 //controlsMemory[k].gamePad = 0;
+             //controlsMemory[k].str
+             result += string.Format(CultureInfo.InvariantCulture, "InputSetup2<optB>{0}<optB>{1}<optA>", k, controlsMemory[k]);
+			 // !!! WARNING!!!! THE GAME SEEMS TO WANT TO SET P5'S SPECIFIC CONTROLLER TO #3, WHICH CRASHES THE GAME IF NOT PLUGGED IN. UNDO THAT!!!
+		 }
+
+
+        //DANG, STEAM ALWAYS SETS P5'S GAMEPAD TO 4 BY DEFAULT. WE NEED TO SAVE THE CONTROLS IN A WAY THAT IGNORES THAT
+        // for (int k = 4; k < PlyCnt(); k++)
+        // {
+            // string plrSetting = "InputSetup2<optB>" + k + "<optB>SPECIFIC_GAMEPAD<ctrlA>0<ctrlA><ctrlA>0<ctrlA>0<optA>";
+            // result += plrSetting;
+            // Logger.LogInfo("---SAVING CUTSOM OPTIONS STRING FOR PLAYER: " + plrSetting);
+        // }
+
+        self.controls = controlsMemory;
+		self.playerToSetInputFor = servMemory;
+        return result;
+	}
 	
 	
 	
 	//THIS IS FOR SAVING OUR DATA (TO THE TEXT FILES AND STUFF)
-	// private string Options_ToString(On.Options.orig_ToString orig, Options self)
- //    {
- //        //I'M SORRY, IL'S ARE JUST TOO HARD ; ;
- //        string text = "";
- //        JollyPlayerOptions[] optionsMemory = self.jollyPlayerOptionsArray;
- //        Options.ControlSetup[] controlsMemory = self.controls;
- //
- //        //DON'T JUST USE 4. CAP AT 4. OTHERWISE GAME WILL FREAK IF... WAIT WHAT? I DON'T UNERSTAND...
- //        //int plyCount = Math.Min(self.jollyPlayerOptionsArray.Length, 4);
- //        Debug.Log("JOLLYPLAYEROOPTIONSARRAY LENGTH: " + self.jollyPlayerOptionsArray.Length);
- //
- //        //REBUILD THE ARRAY WITH A MAX OF 4 PLAYERS
- //        self.jollyPlayerOptionsArray = new JollyPlayerOptions[4];
- //        self.controls = new Options.ControlSetup[4]; //WE MAY NEED THE SAME FOR INPUT SETUP TOO...
- //        for (int j = 0; j < self.jollyPlayerOptionsArray.Length; j++)
- //        {
- //            self.jollyPlayerOptionsArray[j] = optionsMemory[j];
- //        }
- //        for (int i = 0; i < self.controls.Length; i++)
- //        {
- //            self.controls[i] = controlsMemory[i];
- //        }
- //
- //        //RUN THE ORIGINAL WITH THE SHORTENED TABLE
- //        text = orig(self);
-	// 	
- //        /* 6-8-DISABLING
-	// 	//5-18-23 AND THEN ADD THE EXTRA ONES
-	// 	for (int k = 4; k < PlyCnt(); k++)
- //        {
- //            Logger.LogInfo("---SAVING CUTSOM OPTIONS STRING FOR PLAYER: " + k);
- //            text += string.Format(CultureInfo.InvariantCulture, "InputSetup2<optB>{0}<optB>{1}<optA>", k, controlsMemory[k]);
-	// 		Logger.LogInfo("---SAVING CUTSOM COMPLETE! ");
-	// 		
-	// 		
-	// 		//OKAY BUT WHAT IF WE COULD STILL SAVE JOLLYOPTIONS?... BUT IN MPOPTIONS, NOT IN THE TEXT FILE
-	// 		if (ModManager.JollyCoop) //splt2[0] == "JollySetupPlayers" && 
-	// 		{
-	// 			//OKAY WAIT, THIS ONE IS FOR STORING INTO THE TEXT FILE (OR MPOPTIONS, IN OUR CASE)
-	// 			Logger.LogInfo("--- SAVING EXTRA JOLLY PLAYER OPTIONS! ");
-	// 			try
-	// 			{
-	// 				MPOptions.jollySetup[k - 4].Value = optionsMemory[k].ToString();
-	// 				Logger.LogInfo("--- SUCCESS! " + MPOptions.jollySetup[k - 4].Value);
-	// 			}
-	// 			catch (Exception arg)
-	// 			{
-	// 				Logger.LogError(string.Format("FAILED TO SAVE JOLLY PLAYER OPTIONS! - ", arg));
-	// 			}
-	// 		}
- //        }
-	// 	*/
-	// 	
-	// 	//6-8-23 -OKAY THE MODDED VERSION KINDA STINKS BECAUSE IT DOESN'T ACTUALLY SAVE MOST OF THE TIME
-	// 	if (ModManager.JollyCoop)
-	// 	{
-	// 		text += "JollySetupPlayersExtra<optB>";
-	// 		for (int j = 4; j < optionsMemory.Length; j++)
-	// 		{
-	// 			text = text + optionsMemory[j].ToString() + "<optC>";
-	// 		}
-	// 		text += "<optA>";
-	// 	}
-	// 	
-	// 	//MAYBE WE COULD GIVE THIS ONE MORE TRY TOO
-	// 	// UpdateMPConfigs();
-	// 	
- //
- //        //THEN RESTORE THE ARRAY TO IT'S FULL PLAYER COUNT
- //        self.jollyPlayerOptionsArray = optionsMemory;
- //        self.controls = controlsMemory;
- //        return text;
- //    }
+	private string Options_ToString(On.Options.orig_ToString orig, Options self)
+    {
+        //I'M SORRY, IL'S ARE JUST TOO HARD ; ;
+        string text = "";
+        JollyPlayerOptions[] optionsMemory = self.jollyPlayerOptionsArray;
+        Options.ControlSetup[] controlsMemory = self.controls;
+
+        //DON'T JUST USE 4. CAP AT 4. OTHERWISE GAME WILL FREAK IF... WAIT WHAT? I DON'T UNERSTAND...
+        //int plyCount = Math.Min(self.jollyPlayerOptionsArray.Length, 4);
+        Debug.Log("JOLLYPLAYEROOPTIONSARRAY LENGTH: " + self.jollyPlayerOptionsArray.Length);
+
+        //REBUILD THE ARRAY WITH A MAX OF 4 PLAYERS
+        self.jollyPlayerOptionsArray = new JollyPlayerOptions[4];
+        self.controls = new Options.ControlSetup[4]; //WE MAY NEED THE SAME FOR INPUT SETUP TOO...
+        for (int j = 0; j < self.jollyPlayerOptionsArray.Length; j++)
+        {
+            self.jollyPlayerOptionsArray[j] = optionsMemory[j];
+        }
+        for (int i = 0; i < self.controls.Length; i++)
+        {
+            self.controls[i] = controlsMemory[i];
+        }
+
+        //RUN THE ORIGINAL WITH THE SHORTENED TABLES
+        text = orig(self);
+		
+        //NOW WE SAVE THE EXTRA VALUES 
+		for (int k = 4; k < PlyCnt(); k++)
+        {
+            Logger.LogInfo("---SAVING CUTSOM OPTIONS STRING FOR PLAYER: " + k);
+            text += string.Format(CultureInfo.InvariantCulture, "InputSetup2<optB>{0}<optB>{1}<optA>", k, controlsMemory[k]);
+			Logger.LogInfo("---SAVING CUTSOM COMPLETE! ");
+			
+			
+			//OKAY BUT WHAT IF WE COULD STILL SAVE JOLLYOPTIONS?... BUT IN MPOPTIONS, NOT IN THE TEXT FILE
+			//NAH THIS SUCKS, JUST DO THE SAME THING WE DID FOR INPUTSETUP2
+			/*
+			if (ModManager.JollyCoop) //splt2[0] == "JollySetupPlayers" && 
+			{
+				//OKAY WAIT, THIS ONE IS FOR STORING INTO THE TEXT FILE (OR MPOPTIONS, IN OUR CASE)
+				Logger.LogInfo("--- SAVING EXTRA JOLLY PLAYER OPTIONS! ");
+				try
+				{
+					MPOptions.jollySetup[k - 4].Value = optionsMemory[k].ToString();
+					Logger.LogInfo("--- SUCCESS! " + MPOptions.jollySetup[k - 4].Value);
+				}
+				catch (Exception arg)
+				{
+					Logger.LogError(string.Format("FAILED TO SAVE JOLLY PLAYER OPTIONS! - ", arg));
+				}
+			}
+			*/
+        }
+		
+		
+		//6-8-23 -OKAY THE MODDED VERSION KINDA STINKS BECAUSE IT DOESN'T ACTUALLY SAVE MOST OF THE TIME
+		if (ModManager.JollyCoop)
+		{
+			text += "JollySetupPlayersExtra<optB>";
+			for (int j = 4; j < optionsMemory.Length; j++)
+			{
+				text = text + optionsMemory[j].ToString() + "<optC>";
+			}
+			text += "<optA>";
+		}
+		
+		
+
+        //THEN RESTORE THE ARRAY TO IT'S FULL PLAYER COUNT
+        self.jollyPlayerOptionsArray = optionsMemory;
+        self.controls = controlsMemory;
+        return text;
+    }
 
 
 
-    //OKAY playerToSetInputFor IS GETTING SET BACK TO 4 BETWEEN GAMES, VIA APPLYOPTION. BUT WHICH APPLYOPTION IS DOING IT? THERE'S LIKE 4
-	//THIS ONES DISABLED NOW
-	
-    // private void Options_FromUnsyncedString(On.Options.orig_FromUnsyncedString orig, Options self, string s)
-    // {
-    //     orig(self, s);
-    //
-    //     Logger.LogInfo("CHECKING MPOPTIONS...");
-    //     if (MPOptions.playerToSetInput == null)
-    //     {
-    //         Logger.LogInfo("---MPOPTIONS NOT LOADED YET!! " );
-    //         return;
-    //     }
-    //
-    //     //OKAY NOW WE JUST RUN APPLYOPTIONS STUFF FOR EACH RELEVAN VARIABLES
-    //     for (int k = 4; k < PlyCnt(); k++)
-    //     {
-    //         Logger.LogInfo("---RE-APPLYING EXTRA OPTION! " + k);
-    //
-    //         if (MPOptions.playerToSetInput.Value > 3)
-    //             self.playerToSetInputFor = MPOptions.playerToSetInput.Value;
-    //
-    //         Options.ControlSetup myControlArry = self.controls[k];
-    //         try
-    //         {
-    //             myControlArry.gamePadNumber = MPOptions.gamepadNum[k - 4].Value;
-    //             Logger.LogInfo("---GAMEPAD NUM " + myControlArry.gamePadNumber);
-    //             myControlArry.xInvert = MPOptions.invertX[k - 4].Value; //(array2[6] == "1");
-    //             myControlArry.yInvert = MPOptions.invertY[k - 4].Value; //(array2[7] == "1");
-    //             myControlArry.UpdateControlPreference((MPOptions.usingKeyboard[k - 4].Value) ? Options.ControlSetup.ControlToUse.KEYBOARD : Options.ControlSetup.ControlToUse.SPECIFIC_GAMEPAD, true);
-    //         }
-    //         catch
-    //         {
-    //             Logger.LogInfo("RE-FAILED TO APPLY OPTION CHANGES FROM BPOPTIONS. DEFAULTING TO BACKUP");
-    //             myControlArry.gamePadNumber = 0;
-    //             myControlArry.xInvert = false;
-    //             myControlArry.yInvert = false;
-    //             myControlArry.UpdateControlPreference(Options.ControlSetup.ControlToUse.KEYBOARD, true);
-    //         }
-    //     }
-    // }
+
 
     
 	
@@ -1063,178 +948,44 @@ public class MorePlayers
     
 
 
-    // private void IntroRoll_Update(On.Menu.IntroRoll.orig_Update orig, IntroRoll self)
-    // {
-    //     //Logger.LogInfo("INTRO ROLL " + self.manager.rainWorld.options.controls.Length);
-    //     //HOLD IT! SOME OF OUR PLAYERS MAY BE NULL UNTIL WE ADD THEM
-    //     try
-    //     {
-    //         for (int i = 0; i < self.manager.rainWorld.options.controls.Length; i++)
-    //         {
-    //             //Logger.LogInfo("UPDATE INTRO ROLL" + self.manager.rainWorld.options.controls[i].player);
-    //             if (self.manager.rainWorld.options.controls[i].player == null)
-    //             {
-    //                 //Rewired.Data.UserData.
-    //                 //BUT YEA ITS DEF A REWIRED THING...
-    //
-    //                 //Custom.rainWorld.rewiredInputManager.userData.AddPlayer();
-    //                 //self.manager.rainWorld.rewiredInputManager.userData.AddPlayer();
-    //                 //self.manager.rainWorld.rewiredInputManager.userData.DuplicatePlayer(1); //THIS ISN'T IT EITHER
-    //                 //Logger.LogInfo("UPDATE INTRO ROLL COMPLETE" + i);
-    //                 //NO MATTER WHAT I DO, IT SEEMS THAT THE NUMBER OF ENTRIES IN ReInput.players.Players[] DOES NOT INCREASE. SO MAYBE ADDPLAYER() ETC IS NOT WHAT WE NEED HERE...
-    //
-    //                 //self.manager.rainWorld.options.controls[i].player = new Rewired.Player;
-    //
-    //                 //SET THE NEW PLAYERS SETTINGS EQUAL TO THE PREV ONE. BECAUSE IT DEFAULTS TO NULL I GUESS
-    //                 //self.manager.rainWorld.options.controls[i].player = self.manager.rainWorld.options.controls[i-1].player;
-    //                 //ReInput.players.
-    //                 //self.manager.rainWorld.options.controls[i].player.id = 4;
-    //
-    //                 //ReInput.players.Players[i] = new Rewired.Player(false, i, "Player" + i, "Player" + i, i, i, i);
-    //                 //THIS IS STRAIGJT FROM ONE OF THOSE REWIRED GIBBERISH CLASSES 
-    //                 //player = new Player(false, i - 1, player_Editor.name, player_Editor.descriptiveName, ypwUncqYrrgWARbofZIocbdoyJzm, iZBHTLMJEscsCxujGlXwPdwYSOZv, oejthPnlmICeXCzkndFXvfozHuLjA);
-    //                 //ReInput.players.Players[i] = new Rewired.Player(false, i - 1, player_Editor.name, player_Editor.descriptiveName, ypwUncqYrrgWARbofZIocbdoyJzm, iZBHTLMJEscsCxujGlXwPdwYSOZv, oejthPnlmICeXCzkndFXvfozHuLjA);
-    //
-    //                 //foreach (Rewired.Player player in ReInput.players.GetPlayers(false))
-    //                 //UNCOMMENT THIS BLOCK TO SEE WHERE THE BIG ISSUE STANDS (PLAYER EXISTS, BUT IS NULL, AND THERE IS NO WAY TO POPULATE IT...)
-    //                 /*
-    //                 foreach (Rewired.Player player in ReInput.players.Players)
-    //                 {
-    //                     Logger.LogInfo("--------CHECKING REWIRED PLAYER!!!" + i + " - " + player + " - " + player.name + " - " + ReInput.players.Players.Count);
-    //                     if (player.id == i) //self.index)
-    //                     {
-    //                         //this.player = player;
-    //                         Logger.LogInfo("--------ADDING REWIRED PLAYER!!!" + i);
-    //                         self.manager.rainWorld.options.controls[i].player = player;
-    //                         break;
-    //                     }
-    //                 }
-    //                 */
-    //
-    //
-    //
-    //                 //self.manager.rainWorld.options.controls[i].player.id = self.manager.rainWorld.options.controls[i].index;
-    //                 //Rewired.Player player = new Rewired.Player(false, i, "Player"+i, "Player" + i, );
-    //                 //Rewired.Player.ControllerHelper
-    //                 //self.manager.rainWorld.options.controls[i].player = player;
-    //                 //self.manager.rainWorld.options.controls[i].player = new Rewired.Player Options.ControlSetup
-    //                 //self.manager.rainWorld.rewiredInputManager.userData.pla
-    //                 //self.manager.rainWorld.options.controls[i].player = self.manager.rainWorld.rewiredInputManager.userData.GetPlayer(i);
-    //             }
-    //         }
-    //         //self.manager.rainWorld.options.InitRewiredObjects();
-    //         //self.manager.rainWorld.options.ControlSetup.InitRewiredObjects();
-    //         //WE WANT TO RUN THIS I THINK
-    //     }
-    //     catch (Exception arg)
-    //     {
-    //         Logger.LogInfo("FAILED TO ADD SPECIAL NEW PLAYER : " + arg);
-    //     }
-    //     
-    //
-    //
-    //     //OKAY, ATTEMPT 3. WE JUST HAVE TO PRETEND THE EXTRA PLAYERS DON'T EXIST FOR A MOMENT... AGAIN
-    //     Options.ControlSetup[] controlsMemory = self.manager.rainWorld.options.controls;
-    //     self.manager.rainWorld.options.controls = new Options.ControlSetup[4];
-    //     for (int i = 0; i < self.manager.rainWorld.options.controls.Length; i++) //DON'T LET CONTROLS SAVE FOR MORE THAN 4 PLAYERS
-    //     {
-    //         self.manager.rainWorld.options.controls[i] = controlsMemory[i];
-    //     }
-    //
-    //     orig(self); //THE ORIGINAL
-    //     
-    //     self.manager.rainWorld.options.controls = controlsMemory; //AND THEN PUT IT BACK
-    // }
-
-
-
-
-
-    private void ControlSetup_UpdateControlPreference(On.Options.ControlSetup.orig_UpdateControlPreference orig, Options.ControlSetup self, Options.ControlSetup.ControlToUse preference, bool forceUpdate)
-    {
-        try
-        {
-            Logger.LogInfo("APPLY CONTROL PREFERENCE: " + preference + " - " + forceUpdate);
-            //self.InitRewiredObjects();
-            orig.Invoke(self, preference, forceUpdate);
-        }
-        catch
-        {
-            Logger.LogInfo("FAILED TO UPDATE CONTROL PREFERENCE!!");
-            
-        }
-    }
 
     
-    //THESE WERE FOR THE INPUT MENU BUT WE DIN'T USE IT ANYMORE
-    // private void Options_FromString(On.Options.orig_FromString orig, Options self, string s)
-    // {
-    //     self.validation = false;
-    //     self.dlcTutorialShown = false;
-    //     self.remixTutorialShown = false;
-    //     self.lastGameVersion = null;
-    //     self.commentary = false;
-    //     self.vsync = false;
-    //     self.enabledMods = new List<string>();
-    //     self.modLoadOrder = new Dictionary<string, int>();
-    //     self.friendlyLizards = true;
-    //     self.jollyHud = true;
-    //     self.friendlyFire = false;
-    //     self.friendlySteal = true;
-    //     self.smartShortcuts = true;
-    //     self.cameraCycling = true;
-    //     self.modChecksums = new Dictionary<string, string>();
-    //     self.unrecognizedSaveStrings.Clear();
-    //     string[] array = Regex.Split(s, "<optA>");
-    //     for (int i = 0; i < array.Length; i++)
-    //     {
-    //         string[] array2 = Regex.Split(array[i], "<optB>");
-    //         //for (int i = 0; i < array.Length; i++)
-    //         //{
-    //         //    Debug.Log("LOAD OPTION: " + array2[i]);
-    //         //}
-    //             
-    //         if (self.ApplyOption(array2) && array[i].Trim().Length > 0 && array2.Length >= 1)
-    //         {
-    //             self.unrecognizedSaveStrings.Add(array[i]);
-    //         }
-    //     }
-    //     ModManager.RefreshModsLists(self.rainWorld);
-    // }
-    //
-    // private void MPInputOptionsMenu_ctor(On.Menu.InputOptionsMenu.orig_ctor orig, InputOptionsMenu self, ProcessManager manager)
-    // {
-    //     orig.Invoke(self, manager);
-    //     self.backButton.pos -= new Vector2(120f, 0);
-    // }
-    //
-    //
-    // private void PlayerButton_ctor(On.Menu.InputOptionsMenu.PlayerButton.orig_ctor orig, InputOptionsMenu.PlayerButton self, Menu.Menu menu, MenuObject owner, Vector2 pos, InputOptionsMenu.PlayerButton[] array, int index)
-    // {
-    //     orig(self, menu, owner, pos, array, index);
-    //
-    //     //SHIFT BUTTONS UP IF WE NEED ROOM
-    //     if (PlyCnt() == 5)
-    //     {
-    //         self.originalPos.y += 10 + (3 * (index * PlyCnt() - 4));
-    //     }
-    //     else if (PlyCnt() > 5)
-    //     {
-    //         //INCREASE THE HIGHT, AND POSSIBLY BRING THEM CLOSER TOGETHER
-    //         self.originalPos.y += 25 + (8 * (index * PlyCnt() - 4));
-    //         self.menuLabel.pos.y += 25;
-    //         //self.menuLabel.Container.MoveToFront();
-    //         self.menuLabel.label.MoveToFront();
-    //     }
-    // }
-
+    
+    
+    private void MPInputOptionsMenu_ctor(On.Menu.InputOptionsMenu.orig_ctor orig, InputOptionsMenu self, ProcessManager manager)
+    {
+        orig.Invoke(self, manager);
+        self.backButton.pos -= new Vector2(120f, 0);
+    }
+    
+    /*
+    private void PlayerButton_ctor(On.Menu.InputOptionsMenu.PlayerButton.orig_ctor orig, InputOptionsMenu.PlayerButton self, Menu.Menu menu, MenuObject owner, Vector2 pos, InputOptionsMenu.PlayerButton[] array, int index)
+    {
+        orig(self, menu, owner, pos, array, index);
+    
+        //SHIFT BUTTONS UP IF WE NEED ROOM
+        if (PlyCnt() == 5)
+        {
+            self.originalPos.y += 10 + (3 * (index * PlyCnt() - 4));
+        }
+        else if (PlyCnt() > 5)
+        {
+            //INCREASE THE HIGHT, AND POSSIBLY BRING THEM CLOSER TOGETHER
+            self.originalPos.y += 25 + (8 * (index * PlyCnt() - 4));
+            self.menuLabel.pos.y += 25;
+            //self.menuLabel.Container.MoveToFront();
+            self.menuLabel.label.MoveToFront();
+        }
+    }
+	*/
     private void MenuIllustration_ctor(On.Menu.MenuIllustration.orig_ctor orig, MenuIllustration self, Menu.Menu menu, MenuObject owner, string folderName, string fileName, Vector2 pos, bool crispPixels, bool anchorCenter)
     {
         string newFileName = fileName;
-        if (fileName.StartsWith("MultiplayerPortrait"))
+        string lowerName = fileName.ToLower();
+        if (lowerName.StartsWith("multiplayerportrait"))
         {
-            string substr1 = fileName.Replace("MultiplayerPortrait", "").Substring(0, 1); //GETS THE PLAYER NUMBER
-            string substr2 = fileName.Replace("MultiplayerPortrait", "").Substring(1); //THE REST OF THE NUMBERS
+            string substr1 = lowerName.Replace("multiplayerportrait", "").Substring(0, 1); //GETS THE PLAYER NUMBER
+            string substr2 = lowerName.Replace("multiplayerportrait", "").Substring(1); //THE REST OF THE NUMBERS
             //IF OUR PLAYER NUM IS HIGHER THAN EXPECTED, RETURN THE 4TH PLAYER IMAGE VERSION
             if (Convert.ToInt32(substr1) > 3)
                 substr1 = "3";
@@ -1243,7 +994,13 @@ public class MorePlayers
             newFileName = "MultiplayerPortrait" + substr1 + substr2;
             Debug.Log("FINAL FILE: " + substr1 + substr2 + "  -  " + newFileName);
         }
-
+        else if (lowerName.StartsWith("gamepad") && lowerName != "GamepadAny")
+        {
+            int playNum = int.Parse(lowerName.Replace("gamepad", "").Substring(0, 1)); //GETS THE PLAYER NUMBER
+            if (playNum > 4)
+                newFileName = "GamepadAny"; //JUST A PLACEHOLDER
+            Debug.Log("FINAL FILE: " + playNum + "  -  " + newFileName);
+        }
         orig.Invoke(self, menu, owner, folderName, newFileName, pos, crispPixels, anchorCenter);
     }
 
@@ -1295,6 +1052,7 @@ public class MorePlayers
         Logger.LogInfo("TESTMYSLUGCAT IL LINES ADDED! " + x);
     }
 
+	//TBH I DON'T EVEN REMEMBER WHAT THIS WAS FOR
     private void MPJollySlidingMenu_NumberPlayersChange1(On.JollyCoop.JollyMenu.JollySlidingMenu.orig_NumberPlayersChange orig, JollySlidingMenu self, UIconfig config, string value, string oldvalue)
     {
         int num;

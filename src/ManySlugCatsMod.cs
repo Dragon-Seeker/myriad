@@ -38,8 +38,6 @@ public class ManySlugCatsMod : BaseUnityPlugin {
     BindingFlags myMethodFlags = BindingFlags.Static | BindingFlags.Public;
     
     public void OnEnable() {
-        new MorePlayers().OnEnable();
-        
         //controlMapperHook.Apply();
 
         // ControlMap;
@@ -48,29 +46,30 @@ public class ManySlugCatsMod : BaseUnityPlugin {
         //On.Menu.InputOptionsMenu.PlayerButton.ctor += adjustPlayerOptionSize;
 
             // Add hooks here
-        // On.RainWorld.OnModsInit += OnModsInit;
-        // On.Options.ctor += addMoreJollyOptions;
-        //
-        // On.JollyCoop.JollyEnums.RegisterAllEnumExtensions += extendJollyEnumData;
-        // On.JollyCoop.JollyEnums.UnregisterAllEnumExtensions += removeExtendedJollyEnum;
-        // On.SlugcatStats.HiddenOrUnplayableSlugcat += hideExtraJollyEnums;
+        On.RainWorld.OnModsInit += OnModsInit;
+        On.Options.ctor += addMoreJollyOptions;
+        
+        On.JollyCoop.JollyEnums.RegisterAllEnumExtensions += extendJollyEnumData;
+        On.JollyCoop.JollyEnums.UnregisterAllEnumExtensions += removeExtendedJollyEnum;
+        On.SlugcatStats.HiddenOrUnplayableSlugcat += hideExtraJollyEnums;
         
         On.JollyCoop.JollyMenu.JollySlidingMenu.ctor += adjustPlayerSelectGUI;
         On.JollyCoop.JollyMenu.JollySlidingMenu.NumberPlayersChange += accountForMoreThanFour;
-        // On.JollyCoop.JollyMenu.JollySlidingMenu.UpdatePlayerSlideSelectable += preventOutOfBounds;
+        On.JollyCoop.JollyMenu.JollySlidingMenu.UpdatePlayerSlideSelectable += preventOutOfBounds;
         
-        // On.PlayerGraphics.PopulateJollyColorArray += increasePlayerColorArray;
-        // On.PlayerGraphics.SlugcatColor += adjustPlayerColor;
-        //
-        // On.JollyCoop.JollyCustom.Log += forceInstantLogging;
+        On.PlayerGraphics.PopulateJollyColorArray += increasePlayerColorArray;
+        On.PlayerGraphics.SlugcatColor += adjustPlayerColor;
         
-        //On.RainWorldGame.JollySpawnPlayers += rewriteSpawnMethod;
+        On.JollyCoop.JollyCustom.Log += forceInstantLogging;
+        
+        On.RainWorldGame.JollySpawnPlayers += rewriteSpawnMethod;
 
         On.StoryGameSession.ctor += adjustPlayerRecordArray;
-        // On.StoryGameSession.CreateJollySlugStats += override_CreateJollySlugStats;
+        On.StoryGameSession.CreateJollySlugStats += override_CreateJollySlugStats;
 
         //On.PlayerGraphics.ApplyPalette += redirectPlayerRendering;
-        
+        On.Menu.MenuIllustration.ctor += MenuIllustration_ctor;
+
         logger.LogMessage("Checking Patch");
 
         //Rewired.Logger.Log();
@@ -92,63 +91,91 @@ public class ManySlugCatsMod : BaseUnityPlugin {
             logger.LogMessage("WHY DOSE MY LIFE HATE ME");
         }
         
-        //RainWorld.PlayerObjectBodyColors = new Color[8];
+        RainWorld.PlayerObjectBodyColors = new Color[8];
     }
-    
+
+
+    //I JUST COPIED THIS IN HERE SO IT RUNS FIRST I GUESS? DO I STILL NEED TO RUN IT IN THE OTHER ONE THEN?
+    private void MenuIllustration_ctor(On.Menu.MenuIllustration.orig_ctor orig, MenuIllustration self, Menu.Menu menu, MenuObject owner, string folderName, string fileName, Vector2 pos, bool crispPixels, bool anchorCenter)
+    {
+        string newFileName = fileName;
+        string lowerName = fileName.ToLower();
+        if (lowerName.StartsWith("multiplayerportrait"))
+        {
+            string substr1 = lowerName.Replace("multiplayerportrait", "").Substring(0, 1); //GETS THE PLAYER NUMBER
+            string substr2 = lowerName.Replace("multiplayerportrait", "").Substring(1); //THE REST OF THE NUMBERS
+            //IF OUR PLAYER NUM IS HIGHER THAN EXPECTED, RETURN THE 4TH PLAYER IMAGE VERSION
+            if (Convert.ToInt32(substr1) > 3)
+                substr1 = "3";
+
+            //REBUILD IT
+            newFileName = "MultiplayerPortrait" + substr1 + substr2;
+            Debug.Log("FINAL FILE: " + substr1 + substr2 + "  -  " + newFileName);
+        }
+        else if (lowerName.StartsWith("gamepad") && lowerName.Length == 8)
+        {
+            int playNum = int.Parse(lowerName.Replace("gamepad", "")); //GETS THE PLAYER NUMBER
+            if (playNum > 4)
+                newFileName = "GamepadAny"; //JUST A PLACEHOLDER
+            Debug.Log("FINAL FILE: " + playNum + "  -  " + newFileName);
+        }
+        orig.Invoke(self, menu, owner, folderName, newFileName, pos, crispPixels, anchorCenter);
+    }
+
     //----
 
-    // private void forceInstantLogging(On.JollyCoop.JollyCustom.orig_Log orig, string logText, bool throwException = false) {
-    //     orig(logText, throwException);
-    //
-    //     JollyCustom.WriteToLog();
-    // }
+    private void forceInstantLogging(On.JollyCoop.JollyCustom.orig_Log orig, string logText, bool throwException = false) {
+        orig(logText, throwException);
 
-    // private void rewriteSpawnMethod(On.RainWorldGame.orig_JollySpawnPlayers orig, RainWorldGame self, WorldCoordinate location) {
-    //     int index = self.rainWorld.options.JollyPlayerCount;
-    //     string str1 = index.ToString();
-    //     index = (self.rainWorld.options.jollyPlayerOptionsArray)
-    //         .Count((x => x.joined));
-    //     string str2 = index.ToString();
-    //     JollyCustom.Log("Number of jolly players: " + str1 + " accesing directly: " + str2);
-    //     JollyPlayerOptions[] playerOptionsArray = self.rainWorld.options.jollyPlayerOptionsArray;
-    //     for (index = 0; index < playerOptionsArray.Length; ++index) 
-    //         JollyCustom.Log(playerOptionsArray[index].ToString());
-    //     for (int number = 1; number < self.rainWorld.options.jollyPlayerOptionsArray.Length; ++number)
-    //     {
-    //         if (!self.rainWorld.options.jollyPlayerOptionsArray[number].joined)
-    //         {
-    //             System.Type type = self.rainWorld.setup.GetType();
-    //             index = number + 1;
-    //             string name = "player" + index.ToString();
-    //
-    //             var field = type.GetField(name);
-    //
-    //             if (field != null && !(bool)field.GetValue((object)self.rainWorld.setup)) continue;
-    //         }
-    //
-    //         JollyCustom.Log("[JOLLY] Spawning player: " + number.ToString());
-    //         AbstractCreature abstractCreature = new AbstractCreature(self.world,
-    //         StaticWorld.GetCreatureTemplate("Slugcat"), (Creature)null, location, new EntityID(-1, number));
-    //         AbstractCreature crit = abstractCreature;
-    //         int playerNumber = number;
-    //         index = number + 1;
-    //         SlugcatStats.Name slugcatCharacter = new SlugcatStats.Name("JollyPlayer" + index.ToString());
-    //         PlayerState playerState = new PlayerState(crit, playerNumber, slugcatCharacter, false)
-    //         {
-    //             isPup = self.rainWorld.options.jollyPlayerOptionsArray[number].isPup,
-    //             swallowedItem = (string)null
-    //         };
-    //         abstractCreature.state = (CreatureState)playerState;
-    //         self.world.GetAbstractRoom(abstractCreature.pos.room).AddEntity((AbstractWorldEntity)abstractCreature);
-    //         JollyCustom.Log("Adding player: " + (abstractCreature.state as PlayerState).playerNumber.ToString());
-    //         index = (self.session as StoryGameSession).playerSessionRecords.Length;
-    //         JollyCustom.Log("Player session records: " + index.ToString());
-    //         self.session.AddPlayer(abstractCreature);
-    //     }
-    // }
+        JollyCustom.WriteToLog();
+    }
 
-    //Test if needed still??
-    private void adjustPlayerRecordArray(On.StoryGameSession.orig_ctor orig, StoryGameSession self, 
+    private void rewriteSpawnMethod(On.RainWorldGame.orig_JollySpawnPlayers orig, RainWorldGame self, WorldCoordinate location) {
+        int index = self.rainWorld.options.JollyPlayerCount;
+        string str1 = index.ToString();
+        index = (self.rainWorld.options.jollyPlayerOptionsArray)
+            .Count<JollyPlayerOptions>((Func<JollyPlayerOptions, bool>)(x => x.joined));
+        string str2 = index.ToString();
+        JollyCustom.Log("Number of jolly players: " + str1 + " accesing directly: " + str2);
+        JollyPlayerOptions[] playerOptionsArray = self.rainWorld.options.jollyPlayerOptionsArray;
+        
+        for (index = 0; index < playerOptionsArray.Length; ++index) JollyCustom.Log(playerOptionsArray[index].ToString());
+        
+        for (int number = 1; number < self.rainWorld.options.jollyPlayerOptionsArray.Length; ++number)
+        {
+            if (!self.rainWorld.options.jollyPlayerOptionsArray[number].joined)
+            {
+                System.Type type = self.rainWorld.setup.GetType();
+                index = number + 1;
+                string name = "player" + index.ToString();
+
+                var field = type.GetField(name);
+
+                if (field != null && !(bool)field.GetValue((object)self.rainWorld.setup)) continue;
+            }
+
+            JollyCustom.Log("[JOLLY] Spawning player: " + number.ToString());
+            AbstractCreature abstractCreature = new AbstractCreature(self.world,
+            StaticWorld.GetCreatureTemplate("Slugcat"), (Creature)null, location, new EntityID(-1, number));
+            AbstractCreature crit = abstractCreature;
+            int playerNumber = number;
+            index = number + 1;
+            SlugcatStats.Name slugcatCharacter = new SlugcatStats.Name("JollyPlayer" + index.ToString());
+            PlayerState playerState = new PlayerState(crit, playerNumber, slugcatCharacter, false)
+            {
+                isPup = self.rainWorld.options.jollyPlayerOptionsArray[number].isPup,
+                swallowedItem = (string)null
+            };
+            abstractCreature.state = (CreatureState)playerState;
+            self.world.GetAbstractRoom(abstractCreature.pos.room).AddEntity((AbstractWorldEntity)abstractCreature);
+            JollyCustom.Log("Adding player: " + (abstractCreature.state as PlayerState).playerNumber.ToString());
+            index = (self.session as StoryGameSession).playerSessionRecords.Length;
+            JollyCustom.Log("Player session records: " + index.ToString());
+            self.session.AddPlayer(abstractCreature);
+        }
+    }
+
+    private void adjustPlayerRecordArray(On.StoryGameSession.orig_ctor orig, StoryGameSession self,
         SlugcatStats.Name saveStateNumber, RainWorldGame game)
     {
         orig(self, saveStateNumber, game);
@@ -156,115 +183,113 @@ public class ManySlugCatsMod : BaseUnityPlugin {
         self.playerSessionRecords = new PlayerSessionRecord[8];
     }
 
-    // private void override_CreateJollySlugStats(On.StoryGameSession.orig_CreateJollySlugStats orig,
-    //     StoryGameSession self, bool m)
-    // {
-    //     if (self.game.Players.Count == 0) {
-    //         JollyCustom.Log("[JOLLY] NO PLAYERS IN SESSION!!");
-    //     } else {
-    //         self.characterStatsJollyplayer = new SlugcatStats[8]; //CHANGE IS HERE
-    //         PlayerState state1 = self.game.Players[0].state as PlayerState;
-    //         SlugcatStats slugcatStats = new SlugcatStats(self.saveState.saveStateNumber, m);
-    //         for (int index = 0; index < self.game.world.game.Players.Count; ++index)
-    //         {
-    //             PlayerState state2 = self.game.Players[index].state as PlayerState;
-    //             SlugcatStats.Name slugcat = self.game.rainWorld.options.jollyPlayerOptionsArray[state2.playerNumber]
-    //                 .playerClass;
-    //             if ((ExtEnum<SlugcatStats.Name>)slugcat == (ExtEnum<SlugcatStats.Name>)null)
-    //             {
-    //                 slugcat = self.saveState.saveStateNumber;
-    //                 JollyCustom.Log(string.Format("Using savelot stats for p [{0}]: {1} ...", (object)index,
-    //                     (object)slugcat));
-    //             }
-    //
-    //             self.characterStatsJollyplayer[state2.playerNumber] = new SlugcatStats(slugcat, m);
-    //             self.characterStatsJollyplayer[state2.playerNumber].foodToHibernate = slugcatStats.foodToHibernate;
-    //             self.characterStatsJollyplayer[state2.playerNumber].maxFood = slugcatStats.maxFood;
-    //             self.characterStatsJollyplayer[state2.playerNumber].bodyWeightFac = slugcatStats.bodyWeightFac;
-    //         }
-    //     }
-    // }
+    private void override_CreateJollySlugStats(On.StoryGameSession.orig_CreateJollySlugStats orig,
+        StoryGameSession self, bool m)
+    {
+        if (self.game.Players.Count == 0) {
+            JollyCustom.Log("[JOLLY] NO PLAYERS IN SESSION!!");
+        } else {
+            self.characterStatsJollyplayer = new SlugcatStats[8]; //CHANGE IS HERE
+            PlayerState state1 = self.game.Players[0].state as PlayerState;
+            SlugcatStats slugcatStats = new SlugcatStats(self.saveState.saveStateNumber, m);
+            for (int index = 0; index < self.game.world.game.Players.Count; ++index)
+            {
+                PlayerState state2 = self.game.Players[index].state as PlayerState;
+                SlugcatStats.Name slugcat = self.game.rainWorld.options.jollyPlayerOptionsArray[state2.playerNumber]
+                    .playerClass;
+                if ((ExtEnum<SlugcatStats.Name>)slugcat == (ExtEnum<SlugcatStats.Name>)null)
+                {
+                    slugcat = self.saveState.saveStateNumber;
+                    JollyCustom.Log(string.Format("Using savelot stats for p [{0}]: {1} ...", (object)index,
+                        (object)slugcat));
+                }
 
-    // private void OnModsInit(On.RainWorld.orig_OnModsInit orig, RainWorld self)
-    // {
-    //     orig(self);
-    //
-    //     if (init) return;
-    //
-    //     init = true;
-    //
-    //     // Initialize assets, your mod config, and anything that uses RainWorld here
-    // }
-    //
-    // private void addMoreJollyOptions(On.Options.orig_ctor orig, Options self, RainWorld rainWorld)
-    // {
-    //     //TODO: MAYBE A GOOD IDEA TO THROW OUT ALREADY EXISTING OPTIONS FILES DUE TO FUN STUFF
-    //     orig(self, rainWorld);
-    //     
-    //     foreach (Rewired.Player player in (IEnumerable<Rewired.Player>) ReInput.players.GetPlayers(false))
-    //     {
-    //         if (player.id == 8)
-    //         {
-    //             Options.templatePlayer = player;
-    //             break;
-    //         }
-    //     }
-    //
-    //     int totalNumberOfPlayers = 8;
-    //
-    //     JollyPlayerOptions[] newOptions = new JollyPlayerOptions[totalNumberOfPlayers];
-    //
-    //     self.jollyPlayerOptionsArray.CopyTo(newOptions, 0);
-    //
-    //     for (int i = 4; i < totalNumberOfPlayers; i++) {
-    //         newOptions[i] = new JollyPlayerOptions(i);
-    //         newOptions[i].joined = false;
-    //     }
-    //
-    //     self.jollyPlayerOptionsArray = newOptions;
-    //
-    //     Logger.LogMessage("Test");
-    //     
-    //
-    //     //------
-    //
-    //     BindingFlags flags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
-    //     
-    //     //--------
-    //
-    //     Options.ControlSetup[] newControlSetups = new Options.ControlSetup[totalNumberOfPlayers];
-    //     
-    //     self.controls.CopyTo(newControlSetups, 0);
-    //     
-    //     for (int i = 4; i < totalNumberOfPlayers; ++i)
-    //         newControlSetups[i] = new Options.ControlSetup(i, i == 0);
-    //     
-    //     self.controls = newControlSetups;
-    //
-    //     //------
-    //     int index = self.JollyPlayerCount;
-    //
-    //     string str1 = index.ToString();
-    //
-    //     index = self.jollyPlayerOptionsArray.Count(x => x.joined);
-    //
-    //     string str2 = index.ToString();
-    //
-    //     Action<string> logFunc = (str) => System.IO.File.AppendAllText("consoleLog.txt", str + Environment.NewLine);
-    //
-    //     logFunc.Invoke("[CUSTOM_OUT]: Number of jolly players: " + str1 + " accesing directly: " + str2);
-    //
-    //     JollyPlayerOptions[] playerOptionsArray = self.jollyPlayerOptionsArray;
-    //
-    //     for (index = 0; index < playerOptionsArray.Length; ++index)
-    //     {
-    //         logFunc.Invoke("[CUSTOM_OUT]: " + playerOptionsArray[index].ToString());
-    //     }
-    // }
+                self.characterStatsJollyplayer[state2.playerNumber] = new SlugcatStats(slugcat, m);
+                self.characterStatsJollyplayer[state2.playerNumber].foodToHibernate = slugcatStats.foodToHibernate;
+                self.characterStatsJollyplayer[state2.playerNumber].maxFood = slugcatStats.maxFood;
+                self.characterStatsJollyplayer[state2.playerNumber].bodyWeightFac = slugcatStats.bodyWeightFac;
+            }
+        }
+    }
 
+    private void OnModsInit(On.RainWorld.orig_OnModsInit orig, RainWorld self)
+    {
+        orig(self);
+
+        if (init) return;
+
+        init = true;
+
+        // Initialize assets, your mod config, and anything that uses RainWorld here
+    }
     
-    // !!!!!!!!!!!!!!!! --- NOT NEEDED ANYMORE --- !!!!!!!!!!!!!!!!!!!!!!!!!
-    /*public static SlugcatStats.Name JollyPlayer5;
+    private void addMoreJollyOptions(On.Options.orig_ctor orig, Options self, RainWorld rainWorld)
+    {
+        //TODO: MAYBE A GOOD IDEA TO THROW OUT ALREADY EXISTING OPTIONS FILES DUE TO FUN STUFF
+        orig(self, rainWorld);
+        
+        foreach (Rewired.Player player in (IEnumerable<Rewired.Player>) ReInput.players.GetPlayers(false))
+        {
+            if (player.id == 8)
+            {
+                Options.templatePlayer = player;
+                break;
+            }
+        }
+
+        int totalNumberOfPlayers = 8;
+
+        JollyPlayerOptions[] newOptions = new JollyPlayerOptions[totalNumberOfPlayers];
+
+        self.jollyPlayerOptionsArray.CopyTo(newOptions, 0);
+
+        for (int i = 4; i < totalNumberOfPlayers; i++) {
+            newOptions[i] = new JollyPlayerOptions(i);
+            newOptions[i].joined = false;
+        }
+
+        self.jollyPlayerOptionsArray = newOptions;
+
+        Logger.LogMessage("Test");
+        
+
+        //------
+
+        BindingFlags flags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+        
+        //--------
+
+        Options.ControlSetup[] newControlSetups = new Options.ControlSetup[totalNumberOfPlayers];
+        
+        self.controls.CopyTo(newControlSetups, 0);
+        
+        for (int i = 4; i < totalNumberOfPlayers; ++i)
+            newControlSetups[i] = new Options.ControlSetup(i, i == 0);
+        
+        self.controls = newControlSetups;
+
+        //------
+        int index = self.JollyPlayerCount;
+
+        string str1 = index.ToString();
+
+        index = self.jollyPlayerOptionsArray.Count(x => x.joined);
+
+        string str2 = index.ToString();
+
+        Action<string> logFunc = (str) => System.IO.File.AppendAllText("consoleLog.txt", str + Environment.NewLine);
+
+        logFunc.Invoke("[CUSTOM_OUT]: Number of jolly players: " + str1 + " accesing directly: " + str2);
+
+        JollyPlayerOptions[] playerOptionsArray = self.jollyPlayerOptionsArray;
+
+        for (index = 0; index < playerOptionsArray.Length; ++index)
+        {
+            logFunc.Invoke("[CUSTOM_OUT]: " + playerOptionsArray[index].ToString());
+        }
+    }
+
+    public static SlugcatStats.Name JollyPlayer5;
     public static SlugcatStats.Name JollyPlayer6;
     public static SlugcatStats.Name JollyPlayer7;
     public static SlugcatStats.Name JollyPlayer8;
@@ -306,12 +331,11 @@ public class ManySlugCatsMod : BaseUnityPlugin {
 
         JollyPlayer8.Unregister();
         JollyPlayer8 = null;
-    }*/
-    // !!!!!!!!!!!!!!!! --- NOT NEEDED ANYMORE --- !!!!!!!!!!!!!!!!!!!!!!!!!
+    }
     
-    // public static bool hideExtraJollyEnums(On.SlugcatStats.orig_HiddenOrUnplayableSlugcat orig, SlugcatStats.Name i) {
-    //     return orig(i) || (ModManager.JollyCoop && (i == JollyPlayer5 || i == JollyPlayer6 || i == JollyPlayer7 || i == JollyPlayer8));
-    // }
+    public static bool hideExtraJollyEnums(On.SlugcatStats.orig_HiddenOrUnplayableSlugcat orig, SlugcatStats.Name i) {
+        return orig(i) || (ModManager.JollyCoop && (i == JollyPlayer5 || i == JollyPlayer6 || i == JollyPlayer7 || i == JollyPlayer8));
+    }
 
     public void adjustPlayerSelectGUI(On.JollyCoop.JollyMenu.JollySlidingMenu.orig_ctor orig, JollySlidingMenu self, JollySetupDialog menu, MenuObject owner, Vector2 pos) {
         
@@ -327,31 +351,31 @@ public class ManySlugCatsMod : BaseUnityPlugin {
         Vector2 vector2 = new Vector2(/*171f*/ -50 + num2, 0.0f);
         Vector2 pos1 = vector2 + new Vector2(0.0f, menu.manager.rainWorld.screenSize.y * 0.55f);
 
-        // JollyPlayerSelector[] newSelector = new JollyPlayerSelector[8];
-        //
-        // self.playerSelector.CopyTo(newSelector, 0);
-        //
-        // self.playerSelector = newSelector;
+        JollyPlayerSelector[] newSelector = new JollyPlayerSelector[8];
+
+        self.playerSelector.CopyTo(newSelector, 0);
+
+        self.playerSelector = newSelector;
         
         logger.LogMessage($"Array Data: {self.playerSelector.ToList()}");
         
         for (int index = 0; index < 8; ++index) {
             JollyPlayerSelector playerSelector;
             
-            // if (index < 4) {
-            playerSelector = self.playerSelector[index];
-            
-            playerSelector.pos.x -= playerSelector.pos.x - pos1.x;
-            
-            playerSelector.playerLabelSelector._pos.x -= playerSelector.playerLabelSelector._pos.x - pos1.x;
-            
-            //playerSelector.dirty = true;
-            // }
-            // else {
-                // playerSelector = new JollyPlayerSelector(menu, (MenuObject)self, pos1, index);
-                // self.playerSelector[index] = playerSelector;
-                // self.subObjects.Add(playerSelector);
-            // }
+            if (index < 4) {
+                playerSelector = self.playerSelector[index];
+
+                playerSelector.pos.x -= playerSelector.pos.x - pos1.x;
+
+                playerSelector.playerLabelSelector._pos.x -= playerSelector.playerLabelSelector._pos.x - pos1.x;
+
+                //playerSelector.dirty = true;
+            }
+            else {
+                playerSelector = new JollyPlayerSelector(menu, (MenuObject)self, pos1, index);
+                self.playerSelector[index] = playerSelector;
+                self.subObjects.Add(playerSelector);
+            }
 
             pos1 += new Vector2(num2 + (float)num1, 0.0f);
         }
@@ -363,6 +387,60 @@ public class ManySlugCatsMod : BaseUnityPlugin {
         
         logger.LogMessage($"Array Data: {self.playerSelector.Length}");
 
+        /*self.colorModeButtons = new SelectOneButton[ExtEnum<Options.JollyColorMode>.values.Count];
+        self.cameraSwitchQuickness = new SelectOneButton[ExtEnum<Options.JollyCameraInputSpeed>.values.Count];
+        self.difficultyButtons = new SelectOneButton[ExtEnum<Options.JollyDifficulty>.values.Count];
+        float[] numArray1 = new float[Mathf.Max(new int[3]
+        {
+          self.colorModeButtons.Length,
+          self.cameraSwitchQuickness.Length,
+          self.difficultyButtons.Length
+        })];
+        float[] numArray2 = new float[numArray1.Length];
+        for (int index = 0; index < numArray1.Length; ++index)
+        {
+          numArray1[index] = 125f;
+          numArray2[index] = 100f;
+          if ((ExtEnum<InGameTranslator.LanguageID>) menu.CurrLang == (ExtEnum<InGameTranslator.LanguageID>) InGameTranslator.LanguageID.Italian || (ExtEnum<InGameTranslator.LanguageID>) menu.CurrLang == (ExtEnum<InGameTranslator.LanguageID>) InGameTranslator.LanguageID.Russian)
+            numArray2[index] = 115f;
+          else if ((ExtEnum<InGameTranslator.LanguageID>) menu.CurrLang == (ExtEnum<InGameTranslator.LanguageID>) InGameTranslator.LanguageID.German)
+          {
+            numArray1[index] = 110f;
+            if (index == 2)
+              numArray2[index] = 130f;
+          }
+          else if ((ExtEnum<InGameTranslator.LanguageID>) menu.CurrLang == (ExtEnum<InGameTranslator.LanguageID>) InGameTranslator.LanguageID.Spanish || (ExtEnum<InGameTranslator.LanguageID>) menu.CurrLang == (ExtEnum<InGameTranslator.LanguageID>) InGameTranslator.LanguageID.Portuguese)
+          {
+            numArray1[index] = 120f;
+            if (index == 2)
+              numArray2[index] = 110f;
+          }
+        }
+        float x1 = 0.0f;
+        for (int index = 0; index < self.colorModeButtons.Length; ++index)
+        {
+          self.AddSelectOneButton(self.colorModeButtons, menu.Translate(ExtEnum<Options.JollyColorMode>.values.GetEntry(index)), "ColorMode", index, vector2 + new Vector2(x1, 175f), numArray2[index]);
+          x1 += numArray1[index];
+        }
+        self.AddLabelToSelectOne(self.colorModeButtons, menu.Translate("Color Mode"), menu.Translate("ADJUST_COLOR"));
+        self.colorInfoSymbol = self.AddSymbolToSelectOne(self.colorModeButtons, "INFO_COLOR");
+        float x2 = 0.0f;
+        for (int index = 0; index < self.cameraSwitchQuickness.Length; ++index)
+        {
+          self.AddSelectOneButton(self.cameraSwitchQuickness, menu.Translate(ExtEnum<Options.JollyCameraInputSpeed>.values.GetEntry(index)), "CameraInput", index, vector2 + new Vector2(x2, 125f), numArray2[index]);
+          x2 += numArray1[index];
+        }
+        self.AddLabelToSelectOne(self.cameraSwitchQuickness, menu.Translate("Camera Input"), menu.Translate("ADJUST_CAMERA"));
+        self.cameraInfoSymbol = self.AddSymbolToSelectOne(self.cameraSwitchQuickness, "INFO_CAMERA");
+        float x3 = 0.0f;
+        for (int index = 0; index < self.difficultyButtons.Length; ++index)
+        {
+          self.AddSelectOneButton(self.difficultyButtons, menu.Translate(ExtEnum<Options.JollyDifficulty>.values.GetEntry(index)), "Difficulty", index, vector2 + new Vector2(x3, 75f), numArray2[index]);
+          x3 += numArray1[index];
+        }
+        self.AddLabelToSelectOne(self.difficultyButtons, menu.Translate("Difficulty"), menu.Translate("ADJUST_DIFFICULTY"));
+        self.difficultyInfoSymbol = self.AddSymbolToSelectOne(self.difficultyButtons, "INFO_DIFF");*/
+        
         logger.LogMessage("DEEEEZ");
         
         menu.tabWrapper.wrappers.Remove(self.numberPlayersSlider);
@@ -478,11 +556,11 @@ public class ManySlugCatsMod : BaseUnityPlugin {
         self.UpdatePlayerSlideSelectable(result - 1);
     }
 
-    // public void preventOutOfBounds(On.JollyCoop.JollyMenu.JollySlidingMenu.orig_UpdatePlayerSlideSelectable orig, JollySlidingMenu self, int pIndex) {
-    //     if(pIndex > self.playerSelector.Length) pIndex = 3;
-    //
-    //     orig(self, pIndex);
-    // }
+    public void preventOutOfBounds(On.JollyCoop.JollyMenu.JollySlidingMenu.orig_UpdatePlayerSlideSelectable orig, JollySlidingMenu self, int pIndex) {
+        if(pIndex > self.playerSelector.Length) pIndex = 3;
+
+        orig.Invoke(self, pIndex);
+    }
     
     //----
 
@@ -691,79 +769,79 @@ public class ManySlugCatsMod : BaseUnityPlugin {
 
     //----
 
-    // public void increasePlayerColorArray(On.PlayerGraphics.orig_PopulateJollyColorArray orig, SlugcatStats.Name reference) {
-    //     PlayerGraphics.jollyColors = new Color?[8][];
-    //     JollyCustom.Log("Initializing colors... reference " + reference?.ToString());
-    //     for (int playerNumber = 0; playerNumber < PlayerGraphics.jollyColors.Length; ++playerNumber)
-    //     {
-    //         PlayerGraphics.jollyColors[playerNumber] = new Color?[3];
-    //         if ((ExtEnum<Options.JollyColorMode>)Custom.rainWorld.options.jollyColorMode ==
-    //             (ExtEnum<Options.JollyColorMode>)Options.JollyColorMode.CUSTOM)
-    //             PlayerGraphics.LoadJollyColorsFromOptions(playerNumber);
-    //         else if ((ExtEnum<Options.JollyColorMode>)Custom.rainWorld.options.jollyColorMode ==
-    //                  (ExtEnum<Options.JollyColorMode>)Options.JollyColorMode.AUTO)
-    //         {
-    //             JollyCustom.Log("Need to generate colors for player " + playerNumber.ToString());
-    //             if (playerNumber == 0)
-    //             {
-    //                 List<string> stringList = PlayerGraphics.DefaultBodyPartColorHex(reference);
-    //                 PlayerGraphics.jollyColors[0][0] = new Color?(Color.white);
-    //                 PlayerGraphics.jollyColors[0][1] = new Color?(Color.black);
-    //                 PlayerGraphics.jollyColors[0][2] = new Color?(Color.green);
-    //                 if (stringList.Count >= 1)
-    //                     PlayerGraphics.jollyColors[0][0] = new Color?(Custom.hexToColor(stringList[0]));
-    //                 if (stringList.Count >= 2)
-    //                     PlayerGraphics.jollyColors[0][1] = new Color?(Custom.hexToColor(stringList[1]));
-    //                 if (stringList.Count >= 3)
-    //                     PlayerGraphics.jollyColors[0][2] = new Color?(Custom.hexToColor(stringList[2]));
-    //             }
-    //             else
-    //             {
-    //                 Color complementaryColor =
-    //                     JollyCustom.GenerateComplementaryColor(PlayerGraphics.JollyColor(playerNumber - 1, 0));
-    //                 PlayerGraphics.jollyColors[playerNumber][0] = new Color?(complementaryColor);
-    //                 HSLColor hslColor1 =
-    //                     JollyCustom.RGB2HSL(JollyCustom.GenerateClippedInverseColor(complementaryColor));
-    //                 float num = hslColor1.lightness + 0.45f;
-    //                 hslColor1.lightness *= num;
-    //                 hslColor1.saturation *= num;
-    //                 PlayerGraphics.jollyColors[playerNumber][1] = new Color?(hslColor1.rgb);
-    //                 HSLColor hslColor2 = JollyCustom.RGB2HSL(JollyCustom.GenerateComplementaryColor(hslColor1.rgb));
-    //                 hslColor2.saturation = Mathf.Lerp(hslColor2.saturation, 1f, 0.8f);
-    //                 hslColor2.lightness = Mathf.Lerp(hslColor2.lightness, 1f, 0.8f);
-    //                 PlayerGraphics.jollyColors[playerNumber][2] = new Color?(hslColor2.rgb);
-    //                 JollyCustom.Log("Generating auto color for player " + playerNumber.ToString());
-    //             }
-    //         }
-    //     }
-    // }
+    public void increasePlayerColorArray(On.PlayerGraphics.orig_PopulateJollyColorArray orig, SlugcatStats.Name reference) {
+        PlayerGraphics.jollyColors = new Color?[8][];
+        JollyCustom.Log("Initializing colors... reference " + reference?.ToString());
+        for (int playerNumber = 0; playerNumber < PlayerGraphics.jollyColors.Length; ++playerNumber)
+        {
+            PlayerGraphics.jollyColors[playerNumber] = new Color?[3];
+            if ((ExtEnum<Options.JollyColorMode>)Custom.rainWorld.options.jollyColorMode ==
+                (ExtEnum<Options.JollyColorMode>)Options.JollyColorMode.CUSTOM)
+                PlayerGraphics.LoadJollyColorsFromOptions(playerNumber);
+            else if ((ExtEnum<Options.JollyColorMode>)Custom.rainWorld.options.jollyColorMode ==
+                     (ExtEnum<Options.JollyColorMode>)Options.JollyColorMode.AUTO)
+            {
+                JollyCustom.Log("Need to generate colors for player " + playerNumber.ToString());
+                if (playerNumber == 0)
+                {
+                    List<string> stringList = PlayerGraphics.DefaultBodyPartColorHex(reference);
+                    PlayerGraphics.jollyColors[0][0] = new Color?(Color.white);
+                    PlayerGraphics.jollyColors[0][1] = new Color?(Color.black);
+                    PlayerGraphics.jollyColors[0][2] = new Color?(Color.green);
+                    if (stringList.Count >= 1)
+                        PlayerGraphics.jollyColors[0][0] = new Color?(Custom.hexToColor(stringList[0]));
+                    if (stringList.Count >= 2)
+                        PlayerGraphics.jollyColors[0][1] = new Color?(Custom.hexToColor(stringList[1]));
+                    if (stringList.Count >= 3)
+                        PlayerGraphics.jollyColors[0][2] = new Color?(Custom.hexToColor(stringList[2]));
+                }
+                else
+                {
+                    Color complementaryColor =
+                        JollyCustom.GenerateComplementaryColor(PlayerGraphics.JollyColor(playerNumber - 1, 0));
+                    PlayerGraphics.jollyColors[playerNumber][0] = new Color?(complementaryColor);
+                    HSLColor hslColor1 =
+                        JollyCustom.RGB2HSL(JollyCustom.GenerateClippedInverseColor(complementaryColor));
+                    float num = hslColor1.lightness + 0.45f;
+                    hslColor1.lightness *= num;
+                    hslColor1.saturation *= num;
+                    PlayerGraphics.jollyColors[playerNumber][1] = new Color?(hslColor1.rgb);
+                    HSLColor hslColor2 = JollyCustom.RGB2HSL(JollyCustom.GenerateComplementaryColor(hslColor1.rgb));
+                    hslColor2.saturation = Mathf.Lerp(hslColor2.saturation, 1f, 0.8f);
+                    hslColor2.lightness = Mathf.Lerp(hslColor2.lightness, 1f, 0.8f);
+                    PlayerGraphics.jollyColors[playerNumber][2] = new Color?(hslColor2.rgb);
+                    JollyCustom.Log("Generating auto color for player " + playerNumber.ToString());
+                }
+            }
+        }
+    }
 
-    // public static Color adjustPlayerColor(On.PlayerGraphics.orig_SlugcatColor orig, SlugcatStats.Name i) {
-    //     orig(i);
-    //     
-    //     if (ModManager.CoopAvailable)
-    //     {
-    //         int playerNumber = 0;
-    //         
-    //         if (i == JollyEnums.Name.JollyPlayer2) playerNumber = 1;
-    //         else if(i == JollyEnums.Name.JollyPlayer3) playerNumber = 2;
-    //         else if(i == JollyEnums.Name.JollyPlayer4) playerNumber = 3;
-    //         else if(i == JollyPlayer5) playerNumber = 4;
-    //         else if(i == JollyPlayer6) playerNumber = 5;
-    //         else if(i == JollyPlayer7) playerNumber = 6;
-    //         else if(i == JollyPlayer8) playerNumber = 7;
-    //
-    //         if (Custom.rainWorld.options.jollyColorMode == Options.JollyColorMode.AUTO && playerNumber > 0
-    //             || Custom.rainWorld.options.jollyColorMode == Options.JollyColorMode.CUSTOM) {
-    //             return PlayerGraphics.JollyColor(playerNumber, 0);
-    //         }
-    //             
-    //         
-    //         i = Custom.rainWorld.options.jollyPlayerOptionsArray[playerNumber].playerClass ?? i;
-    //     }
-    //     
-    //     return PlayerGraphics.CustomColorsEnabled() ? PlayerGraphics.CustomColorSafety(0) : PlayerGraphics.DefaultSlugcatColor(i);
-    // }
+    public static Color adjustPlayerColor(On.PlayerGraphics.orig_SlugcatColor orig, SlugcatStats.Name i) {
+        orig(i);
+        
+        if (ModManager.CoopAvailable)
+        {
+            int playerNumber = 0;
+            
+            if (i == JollyEnums.Name.JollyPlayer2) playerNumber = 1;
+            else if(i == JollyEnums.Name.JollyPlayer3) playerNumber = 2;
+            else if(i == JollyEnums.Name.JollyPlayer4) playerNumber = 3;
+            else if(i == JollyPlayer5) playerNumber = 4;
+            else if(i == JollyPlayer6) playerNumber = 5;
+            else if(i == JollyPlayer7) playerNumber = 6;
+            else if(i == JollyPlayer8) playerNumber = 7;
+
+            if (Custom.rainWorld.options.jollyColorMode == Options.JollyColorMode.AUTO && playerNumber > 0
+                || Custom.rainWorld.options.jollyColorMode == Options.JollyColorMode.CUSTOM) {
+                return PlayerGraphics.JollyColor(playerNumber, 0);
+            }
+                
+            
+            i = Custom.rainWorld.options.jollyPlayerOptionsArray[playerNumber].playerClass ?? i;
+        }
+        
+        return PlayerGraphics.CustomColorsEnabled() ? PlayerGraphics.CustomColorSafety(0) : PlayerGraphics.DefaultSlugcatColor(i);
+    }
 
     #region Helper Methods
 
