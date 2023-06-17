@@ -53,8 +53,6 @@ public class ManySlugCatsMod : BaseUnityPlugin {
             On.JollyCoop.JollyMenu.JollySlidingMenu.ctor += adjustPlayerSelectGUI;
             On.JollyCoop.JollyMenu.JollySlidingMenu.NumberPlayersChange += accountForMoreThanFour;
             
-            
-            
             On.Menu.MenuIllustration.ctor += MenuIllustration_ctor;
 
             //-----
@@ -76,6 +74,7 @@ public class ManySlugCatsMod : BaseUnityPlugin {
             IL.ArenaSetup.ctor += Replace4WithMore;                             //2
             //IL.Menu.InputOptionsMenu.ctor += Options_ctor;                      //1  //INPUT MENU
             IL.Menu.MultiplayerMenu.InitiateGameTypeSpecificButtons += il => Replace4WithMore(il, true); //SHOULD GRAB 2
+            IL.Menu.MultiplayerMenu.Update += il => Replace4WithMore(il, false, 2); 
 			IL.Options.ControlSetup.SaveAllControllerUserdata += Replace4WithMore;  //1
 			IL.RainWorld.JoystickConnected += Replace4WithMore; //5-19
             IL.RainWorld.JoystickPreDisconnect += Replace4WithMore;
@@ -86,7 +85,7 @@ public class ManySlugCatsMod : BaseUnityPlugin {
 			IL.ArenaGameSession.ctor += Replace4WithMore;
 			//IL.World.LoadMapConfig += Replace4WithMore; //PERHAPS? BUT LEAVE OUT UNLESS IT'S DISCOVERED THAT WE NEED IT
 
-            IL.StoryGameSession.ctor += il => Replace4WithMore(il, false, true);
+            IL.StoryGameSession.ctor += il => Replace4WithMore(il, false, 1);
 
             RainWorld.PlayerObjectBodyColors = new Color[plyCnt];
 
@@ -116,6 +115,8 @@ public class ManySlugCatsMod : BaseUnityPlugin {
             On.ArenaGameSession.SpawnPlayers += ArenaGameSession_SpawnPlayers;
             On.HUD.PlayerSpecificMultiplayerHud.ctor += PlayerSpecificMultiplayerHud_ctor;
             On.SlugcatStats.Name.ArenaColor += Name_ArenaColor;
+
+            On.ArenaGameSession.ctor += ArenaGameSession_ctor;
             
             //-----
 
@@ -480,7 +481,38 @@ public class ManySlugCatsMod : BaseUnityPlugin {
     }
 
     //----
-    
+
+    private void ArenaGameSession_ctor(On.ArenaGameSession.orig_ctor orig, ArenaGameSession self, RainWorldGame game) {
+        orig(self, game);
+        
+        if (!ModManager.MSC) return;
+        
+        //self.characterStats_Mplayer = new SlugcatStats[4];
+        
+        //var arenaPlayers = self.arenaSitting.players;
+        
+        if (self.chMeta == null) {
+            // for (int index = 0; index < arenaPlayers.Count; ++index) {
+            //     self.characterStats_Mplayer[arenaPlayers[index].playerNumber] = new SlugcatStats(arenaPlayers[index].playerClass, false);
+            // }
+        } else {
+            // self.characterStats_Mplayer[4] = new SlugcatStats(self.chMeta.slugcatClass, false);
+            //
+            // if (self.chMeta.spawnDen2 >= 0) {
+            //     self.characterStats_Mplayer[5] = new SlugcatStats(self.chMeta.slugcatClass, false);
+            // }
+            //
+            // if (self.chMeta.spawnDen3 >= 0) {
+            //     self.characterStats_Mplayer[6] = new SlugcatStats(self.chMeta.slugcatClass, false); 
+            // }
+            //
+            // if (self.chMeta.spawnDen4 >= 0) {
+            //     self.characterStats_Mplayer[7] = new SlugcatStats(self.chMeta.slugcatClass, false);
+            // }
+            //
+            //How should more than four players be handled?
+        }
+    }
     
     private SlugcatStats.Name Name_ArenaColor(On.SlugcatStats.Name.orig_ArenaColor orig, int playerIndex)
     {
@@ -612,146 +644,146 @@ public class ManySlugCatsMod : BaseUnityPlugin {
     //DO CONTROLLERS EVEN WORK?
 
     //IT STAYS CONNECTED TO THE CORRECT INPUT TYPE UNTIL YOU SELECT A NEW KEY WITH A CONTROLLER
-    // private string InputSelectButton_ButtonText(On.Menu.InputOptionsMenu.InputSelectButton.orig_ButtonText orig, Menu.Menu menu, bool gamePadBool, int player, int button, bool inputTesterDisplay)
-    // {
-    //     string result = orig(menu, gamePadBool, player, button, inputTesterDisplay);
-    //     if (player > 3)
-    //     {
-    //         
-    //         ActionElementMap actionElementMap = null;
-    //         for (int i = 0; i < (menu as InputOptionsMenu).inputActions[button].Length; i++)
-    //         {
-    //             //Debug.Log("INPUT BUTTON TEXT: " + (menu as InputOptionsMenu).inputActions[button][i] + " - " + button + " - " + (menu as InputOptionsMenu).inputActions[i][0]);
-    //             int inputType = 0; //OKAY THIS DOESN'T WORK
-    //             if (MPOptions.usingKeyboard[player - 4].Value == false)
-    //                 inputType = 1;
-    //
-    //             inputType = i;
-    //
-    //             Debug.Log("INPUT TYPE: " + MPOptions.usingKeyboard[player - 4].Value);
-    //             Debug.Log("INPUT BUTTON TEXT: " + (menu as InputOptionsMenu).inputActions[button][inputType] + " - " + (menu as InputOptionsMenu).inputActionCategories[button][inputType] + " - " + (menu as InputOptionsMenu).inputAxesPositive[button]);
-    //
-    //
-    //             result = "????";
-    //             switch ((menu as InputOptionsMenu).inputActions[button][inputType])
-    //             {
-    //                 case 0:
-    //                     result = MPOptions.jumpKey[player - 4].Value.ToString();
-    //                     break;
-    //                 case 1:
-    //                     result = ((menu as InputOptionsMenu).inputAxesPositive[button]) ? MPOptions.rightKey[player - 4].Value.ToString() : MPOptions.leftKey[player - 4].Value.ToString();
-    //                     break;
-    //                 case 2:
-    //                     result = ((menu as InputOptionsMenu).inputAxesPositive[button]) ? MPOptions.upKey[player - 4].Value.ToString() : MPOptions.downKey[player - 4].Value.ToString();
-    //                     break;
-    //                 case 3:
-    //                     result = MPOptions.grabKey[player - 4].Value.ToString();
-    //                     break;
-    //                 case 4:
-    //                     result = MPOptions.throwKey[player - 4].Value.ToString();
-    //                     break;
-    //                 case 5:
-    //                     result = "_"; //FORGET IT LOL
-    //                     break;
-    //                 case 6:
-    //                     result = "_A"; 
-    //                     break;
-    //                 case 7:
-    //                     result = "_B";
-    //                     break;
-    //                 case 8:
-    //                     result = "_C";
-    //                     break;
-    //                 case 9:
-    //                     result = "_D";
-    //                     break;
-    //                 case 10:
-    //                     result = "_E";
-    //                     break;
-    //                 case 11:
-    //                     result = MPOptions.mapKey[player - 4].Value.ToString();
-    //                     break;
-    //             }
-    //             //MPOptions.usingKeyboard[k - 4].Value
-    //             //return (menu as InputOptionsMenu).inputActions[button][0].ToString() + " - " + (menu as InputOptionsMenu).inputAxesPositive[button].ToString();
-    //             //Debug.Log("INPUT BUTTON TEXT: " + (menu as InputOptionsMenu).inputActions[button][0] + " - " + (menu as InputOptionsMenu).inputActionCategories[button][0] + " - " + (menu as InputOptionsMenu).inputAxesPositive[button]);
-    //             return result;
-    //             // return (menu as InputOptionsMenu).inputActions[button][inputType] + " - " + (menu as InputOptionsMenu).inputActionCategories[button][inputType] + " - " + (menu as InputOptionsMenu).inputAxesPositive[button];
-    //         }
-    //
-    //         if (actionElementMap == null)
-    //         {
-    //             return "BORKED";
-    //         }
-    //         return actionElementMap.elementIdentifierName;
-    //     }
-    //     return result;
-    // }
+    /*private string InputSelectButton_ButtonText(On.Menu.InputOptionsMenu.InputSelectButton.orig_ButtonText orig, Menu.Menu menu, bool gamePadBool, int player, int button, bool inputTesterDisplay)
+    {
+        string result = orig(menu, gamePadBool, player, button, inputTesterDisplay);
+        if (player > 3)
+        {
+            
+            ActionElementMap actionElementMap = null;
+            for (int i = 0; i < (menu as InputOptionsMenu).inputActions[button].Length; i++)
+            {
+                //Debug.Log("INPUT BUTTON TEXT: " + (menu as InputOptionsMenu).inputActions[button][i] + " - " + button + " - " + (menu as InputOptionsMenu).inputActions[i][0]);
+                int inputType = 0; //OKAY THIS DOESN'T WORK
+                if (MPOptions.usingKeyboard[player - 4].Value == false)
+                    inputType = 1;
+    
+                inputType = i;
+    
+                Debug.Log("INPUT TYPE: " + MPOptions.usingKeyboard[player - 4].Value);
+                Debug.Log("INPUT BUTTON TEXT: " + (menu as InputOptionsMenu).inputActions[button][inputType] + " - " + (menu as InputOptionsMenu).inputActionCategories[button][inputType] + " - " + (menu as InputOptionsMenu).inputAxesPositive[button]);
+    
+    
+                result = "????";
+                switch ((menu as InputOptionsMenu).inputActions[button][inputType])
+                {
+                    case 0:
+                        result = MPOptions.jumpKey[player - 4].Value.ToString();
+                        break;
+                    case 1:
+                        result = ((menu as InputOptionsMenu).inputAxesPositive[button]) ? MPOptions.rightKey[player - 4].Value.ToString() : MPOptions.leftKey[player - 4].Value.ToString();
+                        break;
+                    case 2:
+                        result = ((menu as InputOptionsMenu).inputAxesPositive[button]) ? MPOptions.upKey[player - 4].Value.ToString() : MPOptions.downKey[player - 4].Value.ToString();
+                        break;
+                    case 3:
+                        result = MPOptions.grabKey[player - 4].Value.ToString();
+                        break;
+                    case 4:
+                        result = MPOptions.throwKey[player - 4].Value.ToString();
+                        break;
+                    case 5:
+                        result = "_"; //FORGET IT LOL
+                        break;
+                    case 6:
+                        result = "_A"; 
+                        break;
+                    case 7:
+                        result = "_B";
+                        break;
+                    case 8:
+                        result = "_C";
+                        break;
+                    case 9:
+                        result = "_D";
+                        break;
+                    case 10:
+                        result = "_E";
+                        break;
+                    case 11:
+                        result = MPOptions.mapKey[player - 4].Value.ToString();
+                        break;
+                }
+                //MPOptions.usingKeyboard[k - 4].Value
+                //return (menu as InputOptionsMenu).inputActions[button][0].ToString() + " - " + (menu as InputOptionsMenu).inputAxesPositive[button].ToString();
+                //Debug.Log("INPUT BUTTON TEXT: " + (menu as InputOptionsMenu).inputActions[button][0] + " - " + (menu as InputOptionsMenu).inputActionCategories[button][0] + " - " + (menu as InputOptionsMenu).inputAxesPositive[button]);
+                return result;
+                // return (menu as InputOptionsMenu).inputActions[button][inputType] + " - " + (menu as InputOptionsMenu).inputActionCategories[button][inputType] + " - " + (menu as InputOptionsMenu).inputAxesPositive[button];
+            }
+    
+            if (actionElementMap == null)
+            {
+                return "BORKED";
+            }
+            return actionElementMap.elementIdentifierName;
+        }
+        return result;
+    }*/
 
-    // private void InputOptionsMenu_Update(On.Menu.InputOptionsMenu.orig_Update orig, InputOptionsMenu self)
-    // {
-    //     bool flag = true;
-    //     for (int i = 0; i < self.inputMappers.Length; i++)
-    //     {
-    //         if (self.inputMappers[i].status != InputMapper.Status.Idle)
-    //         {
-    //             flag = false;
-    //         }
-    //     }
-    //
-    //     if (self.mappersStarted && flag)
-    //     {
-    //         Debug.Log("BLEH: ");
-    //         if (self.selectedObject is InputOptionsMenu.InputSelectButton) //IF WE'VE SELECTED AN INPUT BUTTON
-    //         {
-    //             
-    //             int plr = self.manager.rainWorld.options.playerToSetInputFor;
-    //             int action = (self.selectedObject as InputOptionsMenu.InputSelectButton).index; //THIS DETERMINES WHAT ACTION IT WAS FOR
-    //
-    //             //CHECK EVERY SINGLE INPUT BTN AND SEE IF ANY OF THEM ARE HELD DOWN.
-    //             foreach (KeyCode keyCode in Enum.GetValues(typeof(KeyCode)).OfType<KeyCode>())
-    //             {
-    //                 if (Input.GetKey(keyCode)) // || CustomInputExt.ResolveButtonDown(keyCode, ctrl, self.CurrentControlSetup.GetActivePreset())) {
-    //                 {
-    //                     Debug.Log("CUSTOM KEYBIND DETECTED: " + action + " PLR: " + plr);
-    //
-    //                     switch (action)
-    //                     {
-    //                         case 0:
-    //                             //MPOptions.mapKey[plr - 4].Value = keyCode;
-    //                             break;
-    //                         case 1:
-    //                             MPOptions.mapKey[plr - 4].Value = keyCode;
-    //                             break;
-    //                         case 2:
-    //                             MPOptions.grabKey[plr - 4].Value = keyCode;
-    //                             break;
-    //                         case 3:
-    //                             MPOptions.jumpKey[plr - 4].Value = keyCode;
-    //                             break;
-    //                         case 4:
-    //                             MPOptions.throwKey[plr - 4].Value = keyCode;
-    //                             break;
-    //                         case 5:
-    //                             MPOptions.leftKey[plr - 4].Value = keyCode;
-    //                             break;
-    //                         case 6:
-    //                             MPOptions.upKey[plr - 4].Value = keyCode;
-    //                             break;
-    //                         case 7:
-    //                             MPOptions.rightKey[plr - 4].Value = keyCode;
-    //                             break;
-    //                         case 8:
-    //                             MPOptions.downKey[plr - 4].Value = keyCode;
-    //                             break;
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    //
-    //     orig(self);
-    // }
+    /*private void InputOptionsMenu_Update(On.Menu.InputOptionsMenu.orig_Update orig, InputOptionsMenu self)
+    {
+        bool flag = true;
+        for (int i = 0; i < self.inputMappers.Length; i++)
+        {
+            if (self.inputMappers[i].status != InputMapper.Status.Idle)
+            {
+                flag = false;
+            }
+        }
+    
+        if (self.mappersStarted && flag)
+        {
+            Debug.Log("BLEH: ");
+            if (self.selectedObject is InputOptionsMenu.InputSelectButton) //IF WE'VE SELECTED AN INPUT BUTTON
+            {
+                
+                int plr = self.manager.rainWorld.options.playerToSetInputFor;
+                int action = (self.selectedObject as InputOptionsMenu.InputSelectButton).index; //THIS DETERMINES WHAT ACTION IT WAS FOR
+    
+                //CHECK EVERY SINGLE INPUT BTN AND SEE IF ANY OF THEM ARE HELD DOWN.
+                foreach (KeyCode keyCode in Enum.GetValues(typeof(KeyCode)).OfType<KeyCode>())
+                {
+                    if (Input.GetKey(keyCode)) // || CustomInputExt.ResolveButtonDown(keyCode, ctrl, self.CurrentControlSetup.GetActivePreset())) {
+                    {
+                        Debug.Log("CUSTOM KEYBIND DETECTED: " + action + " PLR: " + plr);
+    
+                        switch (action)
+                        {
+                            case 0:
+                                //MPOptions.mapKey[plr - 4].Value = keyCode;
+                                break;
+                            case 1:
+                                MPOptions.mapKey[plr - 4].Value = keyCode;
+                                break;
+                            case 2:
+                                MPOptions.grabKey[plr - 4].Value = keyCode;
+                                break;
+                            case 3:
+                                MPOptions.jumpKey[plr - 4].Value = keyCode;
+                                break;
+                            case 4:
+                                MPOptions.throwKey[plr - 4].Value = keyCode;
+                                break;
+                            case 5:
+                                MPOptions.leftKey[plr - 4].Value = keyCode;
+                                break;
+                            case 6:
+                                MPOptions.upKey[plr - 4].Value = keyCode;
+                                break;
+                            case 7:
+                                MPOptions.rightKey[plr - 4].Value = keyCode;
+                                break;
+                            case 8:
+                                MPOptions.downKey[plr - 4].Value = keyCode;
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+    
+        orig(self);
+    }*/
 
 
 	/* GOODNIGHT, MY SWEET PRINCE...
@@ -914,26 +946,20 @@ public class ManySlugCatsMod : BaseUnityPlugin {
     }
     
 	//CRASH FOR World/RainWorld_Data/StreamingAssets\illustrations\multiplayerportrait41-white.png
-    private void MultiplayerMenu_InitiateGameTypeSpecificButtons(On.Menu.MultiplayerMenu.orig_InitiateGameTypeSpecificButtons orig, MultiplayerMenu self)
-    {
+    private void MultiplayerMenu_InitiateGameTypeSpecificButtons(On.Menu.MultiplayerMenu.orig_InitiateGameTypeSpecificButtons orig, MultiplayerMenu self) {
         orig(self);
 
-        if (PlyCnt() > 5)
-        {
-            float shift = 100; //NORMALLY 120
-            if (ModManager.MSC)
-            {
-                for (int i = 0; i < self.playerClassButtons.Length; i++)
-                {
-                    self.playerClassButtons[i].pos.x -= shift;
-                }
-            }
-
-            for (int i = 0; i < self.playerJoinButtons.Length; i++)
-            {
-                self.playerJoinButtons[i].pos.x -= shift;
-            }
+        if (PlyCnt() <= 4) return;
+        
+        float shift = 298; //NORMALLY 120
+        if (ModManager.MSC) {
+            foreach (var playerClassButton in self.playerClassButtons) playerClassButton.pos.x -= shift;
         }
+        
+        foreach (var playerJoinButton in self.playerJoinButtons) playerJoinButton.pos.x -= shift;
+
+        self.levelSelector.pos -= new Vector2(165,0);
+        self.levelSelector.lastPos = self.levelSelector.pos;
     }
 
     // public JollySlidingMenu(JollySetupDialog menu, MenuObject owner, Vector2 pos)
@@ -1273,7 +1299,7 @@ public class ManySlugCatsMod : BaseUnityPlugin {
 
     private void Replace4WithMore(ILContext il) => Replace4WithMore(il, false);
 
-    private void Replace4WithMore(ILContext il, bool checkLdarg = false, bool onlyOnce = false) {
+    private void Replace4WithMore(ILContext il, bool checkLdarg = false, int maxReplace = -1) {
         List<Func<Instruction, bool>> predicates = new List<Func<Instruction, bool>>();
         
         if(checkLdarg) predicates.Add(i => i.MatchLdarg(0));
@@ -1291,7 +1317,7 @@ public class ManySlugCatsMod : BaseUnityPlugin {
             //cursor.EmitDelegate((float rad, Player player, int k) =>
             cursor.EmitDelegate((int oldNum) => plyCnt);
             
-            if(onlyOnce) break;
+            if(maxReplace != 1 && maxReplace == x) break;
         }
 
         if (x == 0) {
