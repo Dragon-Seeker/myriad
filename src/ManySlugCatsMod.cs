@@ -86,7 +86,7 @@ public class ManySlugCatsMod : BaseUnityPlugin {
 			IL.ArenaGameSession.ctor += Replace4WithMore;
 			//IL.World.LoadMapConfig += Replace4WithMore; //PERHAPS? BUT LEAVE OUT UNLESS IT'S DISCOVERED THAT WE NEED IT
 
-            IL.ArenaGameSession.ctor += il => Replace4WithMore(il, false, true);
+            IL.StoryGameSession.ctor += il => Replace4WithMore(il, false, true);
 
             RainWorld.PlayerObjectBodyColors = new Color[plyCnt];
 
