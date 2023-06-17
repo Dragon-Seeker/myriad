@@ -13,8 +13,6 @@ public class RewiredAdjustUserData
     private static ManualLogSource logger = Logger.CreateLogSource("ManySlugCats.PlayerInjection");
     
     public static void adjustData() {
-        
-        
         BindingFlags flags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
         
         logger.LogMessage("ATTEMPTING TO ADD MORE PLAYERS!!!!");

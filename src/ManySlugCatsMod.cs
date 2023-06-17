@@ -13,6 +13,7 @@ using BepInEx.Logging;
 using JollyCoop.JollyMenu;
 using Menu;
 using Menu.Remix.MixedUI;
+using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using MoreSlugcats;
 using Rewired;
@@ -52,7 +53,7 @@ public class ManySlugCatsMod : BaseUnityPlugin {
             On.JollyCoop.JollyMenu.JollySlidingMenu.ctor += adjustPlayerSelectGUI;
             On.JollyCoop.JollyMenu.JollySlidingMenu.NumberPlayersChange += accountForMoreThanFour;
             
-            On.StoryGameSession.ctor += adjustPlayerRecordArray;
+            
             
             On.Menu.MenuIllustration.ctor += MenuIllustration_ctor;
 
@@ -67,23 +68,25 @@ public class ManySlugCatsMod : BaseUnityPlugin {
             //On.Menu.InputOptionsMenu.ctor += MPInputOptionsMenu_ctor; //INPUT MENU
             //On.Menu.InputOptionsMenu.PlayerButton.ctor += PlayerButton_ctor; //INPUT MENU
 
-            IL.Options.ctor += Options_ctor; 									//3
+            IL.Options.ctor += il => Replace4WithMore(il, true); 									//3
             IL.JollyCoop.JollyMenu.JollySlidingMenu.ctor += Replace4WithMore;   //3
             IL.StoryGameSession.CreateJollySlugStats += Replace4WithMore;       //1
             IL.PlayerGraphics.PopulateJollyColorArray += Replace4WithMore;      //1
             IL.RoomSpecificScript.SU_C04StartUp.ctor += Replace4WithMore;       //2
             IL.ArenaSetup.ctor += Replace4WithMore;                             //2
             //IL.Menu.InputOptionsMenu.ctor += Options_ctor;                      //1  //INPUT MENU
-            IL.Menu.MultiplayerMenu.InitiateGameTypeSpecificButtons += Options_ctor; //SHOULD GRAB 2
+            IL.Menu.MultiplayerMenu.InitiateGameTypeSpecificButtons += il => Replace4WithMore(il, true); //SHOULD GRAB 2
 			IL.Options.ControlSetup.SaveAllControllerUserdata += Replace4WithMore;  //1
 			IL.RainWorld.JoystickConnected += Replace4WithMore; //5-19
-			IL.RainWorld.JoystickPreDisconnect += Replace4WithMore;
+            IL.RainWorld.JoystickPreDisconnect += Replace4WithMore;
 			//THIS DIDN'T HAVE AN IL AND IDK EXACTLY WHAT IT DOES BUT IT LOOKS LIKE IT SHOULD REPLACE 4 WITH MORE
 			IL.RWInput.PlayerUIInput += Replace4WithMore;
 			//SOME MORE TO ADD!
 			IL.ScavengersWorldAI.Outpost.ctor += Replace4WithMore;
 			IL.ArenaGameSession.ctor += Replace4WithMore;
 			//IL.World.LoadMapConfig += Replace4WithMore; //PERHAPS? BUT LEAVE OUT UNLESS IT'S DISCOVERED THAT WE NEED IT
+
+            IL.ArenaGameSession.ctor += il => Replace4WithMore(il, false, true);
 
             RainWorld.PlayerObjectBodyColors = new Color[plyCnt];
 
@@ -97,7 +100,6 @@ public class ManySlugCatsMod : BaseUnityPlugin {
 			
             On.JollyCoop.JollyCustom.ForceActivateWithMSC += JollyCustom_ForceActivateWithMSC; //FOR JOLLYCAMPAINGN. JUST RETURN TRUE INSTEAD OF ORIG.
             On.Options.ToStringNonSynced += Options_ToStringNonSynced;
-
 
             //ADJUST MENU LAYOUT
             //On.JollyCoop.JollyMenu.JollySlidingMenu.ctor += JollySlidingMenu_ctor;
@@ -116,6 +118,10 @@ public class ManySlugCatsMod : BaseUnityPlugin {
             On.SlugcatStats.Name.ArenaColor += Name_ArenaColor;
             
             //-----
+
+            var testArray = new String[300];
+
+            testArray[0] = "test";
             
             logger.LogMessage("Checking Patch");
         } catch (Exception e) {
@@ -127,13 +133,6 @@ public class ManySlugCatsMod : BaseUnityPlugin {
         RainWorld.PlayerObjectBodyColors = new Color[PlyCnt()];
     }
 
-    //Test if needed still??
-    private void adjustPlayerRecordArray(On.StoryGameSession.orig_ctor orig, StoryGameSession self, SlugcatStats.Name saveStateNumber, RainWorldGame game) {
-        orig(self, saveStateNumber, game);
-
-        self.playerSessionRecords = new PlayerSessionRecord[PlyCnt()];
-    }
-    
     //Needed To fix Template Player being set incorrectly!!!!!
     private void addMoreJollyOptions(On.Options.orig_ctor orig, Options self, RainWorld rainWorld) {
         orig(self, rainWorld);
@@ -1271,28 +1270,35 @@ public class ManySlugCatsMod : BaseUnityPlugin {
         }
     }
 	*/
-    
-    private void Replace4WithMore(ILContext il)
-    {
+
+    private void Replace4WithMore(ILContext il) => Replace4WithMore(il, false);
+
+    private void Replace4WithMore(ILContext il, bool checkLdarg = false, bool onlyOnce = false) {
+        List<Func<Instruction, bool>> predicates = new List<Func<Instruction, bool>>();
+        
+        if(checkLdarg) predicates.Add(i => i.MatchLdarg(0));
+        
+        predicates.Add(i => i.MatchLdcI4(4));
+
         var cursor = new ILCursor(il);
         var x = 0;
-        while (cursor.TryGotoNext(MoveType.After,
-            //i => i.MatchLdarg(0),
-            i => i.MatchLdcI4(4)
-        ))
-        {
+        
+        while (cursor.TryGotoNext(MoveType.After, predicates.ToArray())) {
             x++;
             //cursor.Emit(OpCodes.Ldloc, player); //THESE LIKE, BECOME ARGUMENTS WITHIN EMITDELEGATE  I THINK?
             //cursor.Emit(OpCodes.Ldloc, k);
 
             //cursor.EmitDelegate((float rad, Player player, int k) =>
-            cursor.EmitDelegate((int oldNum) =>
-            {
-                return plyCnt;
-            });
+            cursor.EmitDelegate((int oldNum) => plyCnt);
+            
+            if(onlyOnce) break;
         }
 
-        Logger.LogInfo("SLIDING MENU IL LINES ADDED! " + x);
+        if (x == 0) {
+            Logger.LogWarning($"A method had NONE adjustments made to account for increased player count: [Adjustments #: {x}, Method: {il.Method.Name}]");
+        } else {
+            Logger.LogInfo($"A method had adjustments made to account for increased player count: [Adjustments #: {x}, Method: {il.Method.Name}]");
+        }
     }
 
     private void Options_ctor(MonoMod.Cil.ILContext il)
