@@ -54,16 +54,13 @@ public class ManySlugCatsMod : BaseUnityPlugin {
             On.JollyCoop.JollyMenu.JollySlidingMenu.NumberPlayersChange += accountForMoreThanFour;
             
             On.Menu.MenuIllustration.ctor += MenuIllustration_ctor;
+            On.Menu.MenuIllustration.LoadFile_string += MenuIllustration_LoadFile_string;
+            On.Menu.PlayerJoinButton.GrafUpdate += PlayerJoinButton_GrafUpdate;
+            On.Menu.PlayerJoinButton.Update += PlayerJoinButton_Update;
 
             //-----
-            
-            On.RainWorld.OnModsInit += RainWorld_OnModsInit;
 
-            On.Options.ToString += Options_ToString;
-            
-            //On.JollyCoop.JollyMenu.JollySlidingMenu.NumberPlayersChange += MPJollySlidingMenu_NumberPlayersChange1;
-            //On.Menu.MenuIllustration.ctor += MenuIllustration_ctor;
-            //On.Menu.InputOptionsMenu.ctor += MPInputOptionsMenu_ctor; //INPUT MENU
+            On.RainWorld.OnModsInit += RainWorld_OnModsInit;
             //On.Menu.InputOptionsMenu.PlayerButton.ctor += PlayerButton_ctor; //INPUT MENU
 
             IL.Options.ctor += il => Replace4WithMore(il, true); 									//3
@@ -78,46 +75,45 @@ public class ManySlugCatsMod : BaseUnityPlugin {
 			IL.Options.ControlSetup.SaveAllControllerUserdata += Replace4WithMore;  //1
 			IL.RainWorld.JoystickConnected += Replace4WithMore; //5-19
             IL.RainWorld.JoystickPreDisconnect += Replace4WithMore;
-			//THIS DIDN'T HAVE AN IL AND IDK EXACTLY WHAT IT DOES BUT IT LOOKS LIKE IT SHOULD REPLACE 4 WITH MORE
 			IL.RWInput.PlayerUIInput += Replace4WithMore;
 			//SOME MORE TO ADD!
 			IL.ScavengersWorldAI.Outpost.ctor += Replace4WithMore;
 			IL.ArenaGameSession.ctor += Replace4WithMore;
 			//IL.World.LoadMapConfig += Replace4WithMore; //PERHAPS? BUT LEAVE OUT UNLESS IT'S DISCOVERED THAT WE NEED IT
+            IL.CreatureCommunities.ctor += Replace4WithMore;
 
             IL.StoryGameSession.ctor += il => Replace4WithMore(il, false, 1);
 
             RainWorld.PlayerObjectBodyColors = new Color[plyCnt];
-
-            //On.Options.FromString += Options_FromString;
             On.Options.ApplyOption += Options_ApplyOption;
-            //On.Options.ControlSetup.UpdateControlPreference += ControlSetup_UpdateControlPreference;
+            On.Options.ToStringNonSynced += Options_ToStringNonSynced;
+            On.Options.ToString += Options_ToString;
 
             On.RainWorldGame.JollySpawnPlayers += RainWorldGame_JollySpawnPlayers;
             On.JollyCoop.JollyMenu.JollyPlayerSelector.Update += JollyPlayerSelector_Update;
             //LOCK DOWNPOUR STORY CHARACTER SELECTION FOR PLAYER 1
 			
             On.JollyCoop.JollyCustom.ForceActivateWithMSC += JollyCustom_ForceActivateWithMSC; //FOR JOLLYCAMPAINGN. JUST RETURN TRUE INSTEAD OF ORIG.
-            On.Options.ToStringNonSynced += Options_ToStringNonSynced;
 
             //ADJUST MENU LAYOUT
             //On.JollyCoop.JollyMenu.JollySlidingMenu.ctor += JollySlidingMenu_ctor;
             On.Menu.MultiplayerMenu.InitiateGameTypeSpecificButtons += MultiplayerMenu_InitiateGameTypeSpecificButtons;
-			// On.RWInput.PlayerInputLogic += RWInput_PlayerInputLogic;
-            
+            On.Menu.MultiplayerMenu.Update += MultiplayerMenu_Update;
+            On.Menu.SandboxSettingsInterface.AddPositionedScoreButton += SandboxSettingsInterface_AddPositionedScoreButton;
+            // On.RWInput.PlayerInputLogic += RWInput_PlayerInputLogic;
+
             // On.Menu.InputOptionsMenu.Update += InputOptionsMenu_Update;
             // On.Menu.InputOptionsMenu.InputSelectButton.ButtonText += InputSelectButton_ButtonText; //INPUT MENU
 
             //AFTER SWITCHING BACK TO MSOPTIONS WAY
             On.PlayerGraphics.SlugcatColor += PlayerGraphics_SlugcatColor;
-            On.Menu.MultiplayerMenu.ArenaImage += MultiplayerMenu_ArenaImage;
 
             On.ArenaGameSession.SpawnPlayers += ArenaGameSession_SpawnPlayers;
             On.HUD.PlayerSpecificMultiplayerHud.ctor += PlayerSpecificMultiplayerHud_ctor;
             On.SlugcatStats.Name.ArenaColor += Name_ArenaColor;
 
-            On.ArenaGameSession.ctor += ArenaGameSession_ctor;
-            
+            On.Player.Update += BPPlayer_Update;
+
             //-----
 
             var testArray = new String[300];
@@ -133,6 +129,10 @@ public class ManySlugCatsMod : BaseUnityPlugin {
 
         RainWorld.PlayerObjectBodyColors = new Color[PlyCnt()];
     }
+
+    private void Player_Update(On.Player.orig_Update orig, Player self, bool eu) => throw new NotImplementedException();
+
+
 
     //Needed To fix Template Player being set incorrectly!!!!!
     private void addMoreJollyOptions(On.Options.orig_ctor orig, Options self, RainWorld rainWorld) {
@@ -196,33 +196,141 @@ public class ManySlugCatsMod : BaseUnityPlugin {
     }*/
     // !!!!!!!!!!!!!!!! --- NOT NEEDED ANYMORE but may be good for compat???? --- !!!!!!!!!!!!!!!!!!!!!!!!!
     
-    //I JUST COPIED THIS IN HERE SO IT RUNS FIRST I GUESS? DO I STILL NEED TO RUN IT IN THE OTHER ONE THEN?
-    private void MenuIllustration_ctor(On.Menu.MenuIllustration.orig_ctor orig, MenuIllustration self, Menu.Menu menu, MenuObject owner, string folderName, string fileName, Vector2 pos, bool crispPixels, bool anchorCenter)
-    {
+
+    //WE NEED THIS IN MULTIPLE PLACES BECAUSE IDK WHY RAIN WORLD DOES THIS, PLS
+    public static int GetPortraitIndex (string fileName) {
+        int result = -1; //NOT A PORTRAIT
+
+        string lowerName = fileName.ToLower();
+        if (lowerName.StartsWith("multiplayerportrait")) {
+            string substr1 = lowerName.Replace("multiplayerportrait", "").Substring(0, 1); //GETS THE PLAYER NUMBER
+            string substr2 = lowerName.Replace("multiplayerportrait", "").Substring(1); //THE REST OF THE NUMBERS
+            result = Convert.ToInt32(substr1);
+        }
+        return result;
+    }
+
+
+    public static string AdjustedPortraitFile(string fileName) {
+
         string newFileName = fileName;
         string lowerName = fileName.ToLower();
-        if (lowerName.StartsWith("multiplayerportrait"))
-        {
+        //logger.LogMessage("STARTING FILE: " + fileName);
+
+        //We CANNOT do this for player 5 because MSC slugcats use "MultiplayerPortrait40-" for their canon untinted color portraits -_- thanks rainworld
+        if (lowerName.StartsWith("multiplayerportrait4") && lowerName.Length > 21) {
+            //We'll have to let PlayerJoinButton deal with this because this is a valid portrait file
+            //Except for the vanilla slugs because of course it would :/
+            if (lowerName.EndsWith("white") || lowerName.EndsWith("yellow") || lowerName.EndsWith("red")) {
+                newFileName = fileName.Replace("4", "0");
+            }
+        }
+        else if (lowerName.StartsWith("multiplayerportrait")) {
             string substr1 = lowerName.Replace("multiplayerportrait", "").Substring(0, 1); //GETS THE PLAYER NUMBER
             string substr2 = lowerName.Replace("multiplayerportrait", "").Substring(1); //THE REST OF THE NUMBERS
             //IF OUR PLAYER NUM IS HIGHER THAN EXPECTED, RETURN THE 4TH PLAYER IMAGE VERSION
             if (Convert.ToInt32(substr1) > 3)
-                substr1 = "3";
-
-            //REBUILD IT
-            newFileName = "MultiplayerPortrait" + substr1 + substr2;
-            logger.LogMessage("FINAL FILE: " + substr1 + substr2 + "  -  " + newFileName);
-        }
-        else if (lowerName.StartsWith("gamepad") && lowerName.Length == 8)
-        {
+                substr1 = "0";
+            newFileName = "MultiplayerPortrait" + substr1 + substr2; //REBUILD IT
+        } else if (lowerName.StartsWith("gamepad") && lowerName.Length == 8) {
             int playNum = int.Parse(lowerName.Replace("gamepad", "")); //GETS THE PLAYER NUMBER
             if (playNum > 4)
                 newFileName = "GamepadAny"; //JUST A PLACEHOLDER
-            logger.LogMessage("FINAL FILE: " + playNum + "  -  " + newFileName);
         }
-        orig.Invoke(self, menu, owner, folderName, newFileName, pos, crispPixels, anchorCenter);
+        //logger.LogMessage("EDITED FILE: " + newFileName);
+
+        return newFileName;
     }
+
+
+
+    //I JUST COPIED THIS IN HERE SO IT RUNS FIRST I GUESS? DO I STILL NEED TO RUN IT IN THE OTHER ONE THEN?
+    private void MenuIllustration_ctor(On.Menu.MenuIllustration.orig_ctor orig, MenuIllustration self, Menu.Menu menu, MenuObject owner, string folderName, string fileName, Vector2 pos, bool crispPixels, bool anchorCenter)
+    {
+        //REMEMBER WHAT PLAYER NUMBER THIS WAS BEFORE WE DO ANYTHING
+        int index = GetPortraitIndex(fileName); //PLAYER NUMBER
+
+        //GOOD LORD WE REALLY DO NEED TO DO IT IN BOTH PLACES :/ OTHERWISE FSPRITE TRIES TO CREATE AN INVALID SPRITE
+        string newFileName = AdjustedPortraitFile(fileName);
+
+        orig.Invoke(self, menu, owner, folderName, newFileName, pos, crispPixels, anchorCenter);
+
+        if (index > 3 && self.spriteAdded) {
+            //logger.LogMessage("TINT OUR PORTRAIT " + SlugcatStats.Name.ArenaColor(index));
+            self.sprite.color = PlayerGraphics.DefaultSlugcatColor(SlugcatStats.Name.ArenaColor(index));
+        }
+    }
+
+    private void MenuIllustration_LoadFile_string(On.Menu.MenuIllustration.orig_LoadFile_string orig, MenuIllustration self, string folder) 
+    {
+        //REMEMBER WHAT PLAYER NUMBER THIS WAS BEFORE WE DO ANYTHING
+        int index = GetPortraitIndex(self.fileName); //PLAYER NUMBER
+        //logger.LogMessage("STARTING FILE: " + self.fileName);
+        self.fileName = AdjustedPortraitFile(self.fileName); //SHOULD WE SET THI BACK WHEN WE'RE DONE?... NAHHH
+        //logger.LogMessage("--ENDING FILE: " + self.fileName);
+        orig(self, folder);
+        
+        //IF WE WERE A SLUGCAT PORTRAIT PAST PLAYER 4, TINT OUR PORTRAIT
+        if (index > 3 && self.spriteAdded) {
+            //logger.LogMessage("TINT OUR PORTRAIT " + SlugcatStats.Name.ArenaColor(index) + PlayerGraphics.DefaultSlugcatColor(SlugcatStats.Name.ArenaColor(index)) + "  ---   " + self.sprite.color);
+            self.sprite.color = PlayerGraphics.DefaultSlugcatColor(SlugcatStats.Name.ArenaColor(index));
+        }
+    }
+
+    //I'M LOSING MY MIND
+    private void MultiplayerMenu_Update(On.Menu.MultiplayerMenu.orig_Update orig, MultiplayerMenu self) {
+        orig(self);
+
+        if (self.playerJoinButtons != null) {
+            //WE NEED TO DO THIS EVERY GODDANG FRAME BECAUSE I HATE RAINWORLD
+            for (int l = 0; l < self.playerJoinButtons.Length; l++) {
+                if (ModManager.MSC && l > 3) {
+                    //logger.LogMessage("TINT OUR PORTRAIT UPDATE " + PlayerGraphics.DefaultSlugcatColor(SlugcatStats.Name.ArenaColor(l)) + " - " + self.playerJoinButtons[l].portrait.sprite.color);
+                    self.playerJoinButtons[l].portrait.sprite.color = PlayerGraphics.DefaultSlugcatColor(SlugcatStats.Name.ArenaColor(l));
+                    //self.playerJoinButtons[l].portrait.sprite.color = Color.red;
+                }
+            }
+        }
+    }
+
+
+
+    //CONTINUING TO LOSE MY MIND
+    private void PlayerJoinButton_GrafUpdate(On.Menu.PlayerJoinButton.orig_GrafUpdate orig, PlayerJoinButton self, float timeStacker) {
+        Color origColor = self.portrait.sprite.color;
+        orig(self, timeStacker);
+        //NOT ALL PORTRAITS WILL BE WHITE NOW
+        if (self.index > 3 && origColor != Color.white)
+            self.portrait.sprite.color = Color.Lerp(origColor, Color.black, Custom.SCurve(Mathf.Lerp(self.lastPortraitBlack, self.portraitBlack, timeStacker), 0.5f) * 0.75f);
+    }
+
+
     
+    private void PlayerJoinButton_Update(On.Menu.PlayerJoinButton.orig_Update orig, PlayerJoinButton self) {
+
+        //SPECIFICALY PLAYER 5 NEEDS TO HAVE THEIR PORTRAIT REPLACED BECAUSE OTHER PARTS OF THE GAME USE THAT FILENAME
+        if (self.index == 4 && self.portrait.fileName.StartsWith("MultiplayerPortrait4")) {
+            self.portrait.fileName = self.portrait.fileName.Replace("4", "0"); //STUPIT...
+            self.portrait.LoadFile();
+            self.portrait.sprite.SetElementByName(self.portrait.fileName);
+        }
+
+        //NON MSC VERSIONS NEED PORTRAITS
+        if (!ModManager.MSC && self.index > 3 && self.portrait.fileName != "MultiplayerPortrait01") {
+            //OKAY MANUALLY SET AND COLOR OUR MENU I THINK
+            self.portrait.fileName = "MultiplayerPortrait01";
+            self.portrait.LoadFile();
+            self.portrait.sprite.SetElementByName(self.portrait.fileName);
+        }
+
+        orig(self);
+    }
+
+
+
+
+
+
     public void accountForMoreThanFour(On.JollyCoop.JollyMenu.JollySlidingMenu.orig_NumberPlayersChange orig, JollySlidingMenu self, UIconfig config, string value, string oldvalue) {
         orig(self, config, value, oldvalue);
         
@@ -480,42 +588,24 @@ public class ManySlugCatsMod : BaseUnityPlugin {
         for (int index = 0; index < self.gamePadButtonButtons.Length; ++index) self.gamePadButtonButtons[index].nextSelectable[2] = self.playerButtons[index < self.gamePadButtonButtons.Length / 2 ? 0 : 1];
     }
 
-    //----
-
-    private void ArenaGameSession_ctor(On.ArenaGameSession.orig_ctor orig, ArenaGameSession self, RainWorldGame game) {
-        orig(self, game);
-        
-        if (!ModManager.MSC) return;
-        
-        //self.characterStats_Mplayer = new SlugcatStats[4];
-        
-        //var arenaPlayers = self.arenaSitting.players;
-        
-        if (self.chMeta == null) {
-            // for (int index = 0; index < arenaPlayers.Count; ++index) {
-            //     self.characterStats_Mplayer[arenaPlayers[index].playerNumber] = new SlugcatStats(arenaPlayers[index].playerClass, false);
-            // }
-        } else {
-            // self.characterStats_Mplayer[4] = new SlugcatStats(self.chMeta.slugcatClass, false);
-            //
-            // if (self.chMeta.spawnDen2 >= 0) {
-            //     self.characterStats_Mplayer[5] = new SlugcatStats(self.chMeta.slugcatClass, false);
-            // }
-            //
-            // if (self.chMeta.spawnDen3 >= 0) {
-            //     self.characterStats_Mplayer[6] = new SlugcatStats(self.chMeta.slugcatClass, false); 
-            // }
-            //
-            // if (self.chMeta.spawnDen4 >= 0) {
-            //     self.characterStats_Mplayer[7] = new SlugcatStats(self.chMeta.slugcatClass, false);
-            // }
-            //
-            //How should more than four players be handled?
-        }
-    }
-    
     private SlugcatStats.Name Name_ArenaColor(On.SlugcatStats.Name.orig_ArenaColor orig, int playerIndex)
     {
+        //USE MSC COLORS IF AVAILABLE
+        if (ModManager.MSC && playerIndex < 8) {
+            switch(playerIndex)
+            {
+			case 4:
+				return MoreSlugcatsEnums.SlugcatStatsName.Rivulet;
+			case 5:
+				return MoreSlugcatsEnums.SlugcatStatsName.Artificer;
+			case 6:
+				return MoreSlugcatsEnums.SlugcatStatsName.Saint;
+			case 7:
+				return MoreSlugcatsEnums.SlugcatStatsName.Spear;
+            }
+            //IF IT'S NONE OF THESE, WE'LL LOOP BACK AROUND TO SURV
+        }
+
         while (playerIndex > 3)
         {
             playerIndex = playerIndex - 4;
@@ -523,6 +613,8 @@ public class ManySlugCatsMod : BaseUnityPlugin {
 
         return orig(playerIndex);
     }
+
+
 
     private void PlayerSpecificMultiplayerHud_ctor(On.HUD.PlayerSpecificMultiplayerHud.orig_ctor orig, HUD.PlayerSpecificMultiplayerHud self, HUD.HUD hud, ArenaGameSession session, AbstractCreature abstractPlayer)
     {
@@ -537,6 +629,7 @@ public class ManySlugCatsMod : BaseUnityPlugin {
             rank += 1;
         }
 
+        //THEY'RE GOING TO NEED TO GO THROUGH THIS AGAIN...
         if (rank > 0)
         {
             switch (playNum)
@@ -560,7 +653,7 @@ public class ManySlugCatsMod : BaseUnityPlugin {
             }
 
             self.cornerPos = self.cornerPos + new Vector2(40 * rank * self.flip, 0);
-
+            self.scoreCounter.pos = new Vector2(self.cornerPos.x + (float) self.flip * 20f + 0.01f, self.cornerPos.y + 0.01f);
         }
     }
 
@@ -587,16 +680,6 @@ public class ManySlugCatsMod : BaseUnityPlugin {
         orig(self, room, suggestedDens);
     }
 
-    //FOR ARENA IMAGES WHILE MSC IS ENABLED
-    private string MultiplayerMenu_ArenaImage(On.Menu.MultiplayerMenu.orig_ArenaImage orig, MultiplayerMenu self, SlugcatStats.Name classID, int color)
-    {
-        //DON'T LET OUR IMAGE NAME GO OUT OF BOUNDS!
-        while (color > 3)
-        {
-            color = color - 4;
-        }
-        return orig(self, classID, color);
-    }
 
     private Color PlayerGraphics_SlugcatColor(On.PlayerGraphics.orig_SlugcatColor orig, SlugcatStats.Name i)
     {
@@ -951,49 +1034,29 @@ public class ManySlugCatsMod : BaseUnityPlugin {
 
         if (PlyCnt() <= 4) return;
         
-        float shift = 298; //NORMALLY 120
-        if (ModManager.MSC) {
-            foreach (var playerClassButton in self.playerClassButtons) playerClassButton.pos.x -= shift;
+        if (self.playerJoinButtons != null) {
+            //foreach (var playerJoinButton in self.playerJoinButtons) playerJoinButton.pos.x -= shift;
+            for (int i = 0; i < self.playerJoinButtons.Length; i++) {
+                float shift = 235 + i * 10; //298 //NORMALLY 120
+                self.playerJoinButtons[i].pos.x -= shift;
+                if (ModManager.MSC && self.playerClassButtons != null) {
+                    self.playerClassButtons[i].pos.x -= shift;
+                }
+            }
         }
         
-        foreach (var playerJoinButton in self.playerJoinButtons) playerJoinButton.pos.x -= shift;
-
-        self.levelSelector.pos -= new Vector2(165,0);
-        self.levelSelector.lastPos = self.levelSelector.pos;
+        if (self.levelSelector != null) {
+            self.levelSelector.pos -= new Vector2(165, 0);
+            self.levelSelector.lastPos = self.levelSelector.pos;
+        }
     }
 
-    // public JollySlidingMenu(JollySetupDialog menu, MenuObject owner, Vector2 pos)
-	public static void JollySlidingMenu_ctor(On.JollyCoop.JollyMenu.JollySlidingMenu.orig_ctor orig, JollyCoop.JollyMenu.JollySlidingMenu self, JollySetupDialog menu, MenuObject owner, Vector2 pos)
-	{
-		orig(self, menu, owner, pos);
-		
-		if (PlyCnt() > 5)
-		{
-            //for (int i = 0; i < self.playerSelector.Length; i++)
-            //{
-            //	self.playerSelector[i].pos.x -= 200 + (8.5f * (i * PlyCnt() - 4));
-            //    self.playerSelector[i].playerLabelSelector.SetPos(new Vector2(self.playerSelector[i].pos.x, self.playerSelector[i].playerLabelSelector.pos.y));
-            //}
 
-            //WHAT IF WE DID A SECOND ROW INSTEAD... THEY LEFT SO MUCH ROOM
-            
-            for (int i = 0; i < self.playerSelector.Length; i++)
-            {
-                float downShift = -25;
-                if (i > 3)
-                {
-                    downShift = 150f;
-                    self.playerSelector[i].pos.x = self.playerSelector[i-4].pos.x;
-                }
-                self.playerSelector[i].pos.y -= downShift;
-                self.playerSelector[i].playerLabelSelector.SetPos(new Vector2(self.playerSelector[i].pos.x, self.playerSelector[i].playerLabelSelector.pos.y - downShift));
-            }
+    private void SandboxSettingsInterface_AddPositionedScoreButton(On.Menu.SandboxSettingsInterface.orig_AddPositionedScoreButton orig, SandboxSettingsInterface self, SandboxSettingsInterface.ScoreController button, ref IntVector2 ps, Vector2 additionalOffset) {
 
-            //WE HAVE TO SHIFT SOME OF THE OTHER MENU UP TOO
-            self.numberPlayersSlider.SetPos(new Vector2(self.numberPlayersSlider.pos.x, self.numberPlayersSlider.pos.y + 40));
-            //self.numberPlayersSlider.la = menu.Translate("Adjust the number of players"); //CAN'T MOVE THIS... WE'LL JUST HAVE TO PRETEND IT'S SUPPOSED TO GO UNDERNEATH
-        }
-	}
+        additionalOffset.x -= 180;
+        orig(self, button, ref ps, additionalOffset);
+    }
 
     public static void BPPlayer_Update(On.Player.orig_Update orig, Player self, bool eu) {
         orig(self, eu);
@@ -1020,7 +1083,7 @@ public class ManySlugCatsMod : BaseUnityPlugin {
     private void RainWorld_OnModsInit(On.RainWorld.orig_OnModsInit orig, RainWorld self)
 	{
 		orig(self);
-        MachineConnector.SetRegisteredOI("me.moreplayers", new MPOptions());
+        MachineConnector.SetRegisteredOI("manyslugcats", new MPOptions());
  
         for (int i = 0; i < ModManager.ActiveMods.Count; i++)
 		{
@@ -1041,37 +1104,24 @@ public class ManySlugCatsMod : BaseUnityPlugin {
 		bool result = false;
         try
         {
-            Logger.LogInfo("APPLY OPTION: " + splt2[0] + " - " +self.controls.Length);
+            //Logger.LogInfo("APPLY OPTION: " + splt2[0] + " - " +self.controls.Length);
             result = orig.Invoke(self, splt2);
         }
         catch
         {
-            Logger.LogInfo("FAILED TO APPLY OPTION!!");
+            Logger.LogError("FAILED TO APPLY OPTION!!");
             result = false;
         }
 		
-		//6-8-23 WE'RE GONNA TRY DISABLING THIS BECAUSE WE PULL DIRECTLY FROM THE MPOPTIONS NOW
-		// 6-9-23 WE CAN'T DO THAT DUMMY, I DON'T THINK THEY'VE INITIALIZED YET!
-		//5-18-23 AFTER RUNNING THE ORIGINAL, IF WE'RE LOOKING FOR INPUT, SETUP THE REST OF OUR PLAYERS PAST 4
 		if (splt2[0] == "InputSetup2")
 		{
 			result = false; //BECAUSE WE HIT A MATCH
 			Logger.LogInfo("---APPLYING EXTRA INPUT OPTION! " + self.controls.Length + " - " + splt2[1] + " - " + splt2[2]);
-            // Options.ControlSetup myControlArry = self.controls[k];
-			//self.controls[int.Parse(splt2[1], NumberStyles.Any, CultureInfo.InvariantCulture)].FromString(splt2[2]);
-            //THAT JUST CRASHES, SO LETS LOAD THE DATA INTO A HOLDING CELL AND THEN ONLY TRANSFER INTO ENTRIES THAT EXIST.
-            Options.ControlSetup[] myControlArry = self.controls; //WE SET IT TO CONTROL SO THAT THE NUMBER OF ENTRIES IN THE TABLE MATCHES CONTROL
+            //WE SET IT TO CONTROL SO THAT THE NUMBER OF ENTRIES IN THE TABLE MATCHES CONTROL
             int entryNum = int.Parse(splt2[1], NumberStyles.Any, CultureInfo.InvariantCulture);
-            //myControlArry[entryNum].FromString(splt2[2]);
-            //for (int k = 4; k < self.controls.Length; k++) //CAN'T USE THAT! I DON'T THINK MPOPTIONS HAS LOADED YET
-            //{
-            //    Logger.LogInfo("-APPLYING TO ARRAY " + k + " out of: " + myControlArry.Length);
-            //    self.controls[k] = myControlArry[k];
-            //}
-            //APPARENTLY EACH LINE GETS SENT IN INDIVIDUALLY SO WE CAN JUST DO THIS..
             try
             {
-                Logger.LogInfo("-APPLYING TO ARRAY " + entryNum);
+                //Logger.LogInfo("-APPLYING TO ARRAY " + entryNum);
                 self.controls[entryNum].FromString(splt2[2]);// = myControlArry[entryNum];
             }
             catch (Exception arg)
@@ -1122,27 +1172,15 @@ public class ManySlugCatsMod : BaseUnityPlugin {
             self.controls[i] = controlsMemory[i];
 		}
 		
-		
 		string result = orig(self);
 
         //5-18-23 INSTEAD, MAYBE WE OUTPUT THAT STUFF TO A FILE AS A DIFFERENT NAME?
         for (int k = 4; k < PlyCnt(); k++)
         {
             Logger.LogInfo("---SAVING CUTSOM OPTIONS STRING FOR PLAYER: " + k);
-            //controlsMemory[k].gamePad = 0;
-            //controlsMemory[k].str
             result += string.Format(CultureInfo.InvariantCulture, "InputSetup2<optB>{0}<optB>{1}<optA>", k, controlsMemory[k]);
             // !!! WARNING!!!! THE GAME SEEMS TO WANT TO SET P5'S SPECIFIC CONTROLLER TO #3, WHICH CRASHES THE GAME IF NOT PLUGGED IN. UNDO THAT!!!
         }
-
-
-        //DANG, STEAM ALWAYS SETS P5'S GAMEPAD TO 4 BY DEFAULT. WE NEED TO SAVE THE CONTROLS IN A WAY THAT IGNORES THAT
-        // for (int k = 4; k < PlyCnt(); k++)
-        // {
-            // string plrSetting = "InputSetup2<optB>" + k + "<optB>SPECIFIC_GAMEPAD<ctrlA>0<ctrlA><ctrlA>0<ctrlA>0<optA>";
-            // result += plrSetting;
-            // Logger.LogInfo("---SAVING CUTSOM OPTIONS STRING FOR PLAYER: " + plrSetting);
-        // }
 
         self.controls = controlsMemory;
 		self.playerToSetInputFor = servMemory;
@@ -1152,14 +1190,8 @@ public class ManySlugCatsMod : BaseUnityPlugin {
     //THIS IS FOR SAVING OUR DATA (TO THE TEXT FILES AND STUFF)
 	private string Options_ToString(On.Options.orig_ToString orig, Options self)
     {
-        //I'M SORRY, IL'S ARE JUST TOO HARD ; ;
-        string text = "";
         JollyPlayerOptions[] optionsMemory = self.jollyPlayerOptionsArray;
         Options.ControlSetup[] controlsMemory = self.controls;
-
-        //DON'T JUST USE 4. CAP AT 4. OTHERWISE GAME WILL FREAK IF... WAIT WHAT? I DON'T UNERSTAND...
-        //int plyCount = Math.Min(self.jollyPlayerOptionsArray.Length, 4);
-        Debug.Log("JOLLYPLAYEROOPTIONSARRAY LENGTH: " + self.jollyPlayerOptionsArray.Length);
 
         //REBUILD THE ARRAY WITH A MAX OF 4 PLAYERS
         self.jollyPlayerOptionsArray = new JollyPlayerOptions[4];
@@ -1174,36 +1206,14 @@ public class ManySlugCatsMod : BaseUnityPlugin {
         }
 
         //RUN THE ORIGINAL WITH THE SHORTENED TABLES
-        text = orig(self);
+        string text = orig(self);
 		
         //NOW WE SAVE THE EXTRA VALUES 
 		for (int k = 4; k < PlyCnt(); k++)
         {
             Logger.LogInfo("---SAVING CUTSOM OPTIONS STRING FOR PLAYER: " + k);
             text += string.Format(CultureInfo.InvariantCulture, "InputSetup2<optB>{0}<optB>{1}<optA>", k, controlsMemory[k]);
-			Logger.LogInfo("---SAVING CUTSOM COMPLETE! ");
-			
-			
-			//OKAY BUT WHAT IF WE COULD STILL SAVE JOLLYOPTIONS?... BUT IN MPOPTIONS, NOT IN THE TEXT FILE
-			//NAH THIS SUCKS, JUST DO THE SAME THING WE DID FOR INPUTSETUP2
-			/*
-			if (ModManager.JollyCoop) //splt2[0] == "JollySetupPlayers" && 
-			{
-				//OKAY WAIT, THIS ONE IS FOR STORING INTO THE TEXT FILE (OR MPOPTIONS, IN OUR CASE)
-				Logger.LogInfo("--- SAVING EXTRA JOLLY PLAYER OPTIONS! ");
-				try
-				{
-					MPOptions.jollySetup[k - 4].Value = optionsMemory[k].ToString();
-					Logger.LogInfo("--- SUCCESS! " + MPOptions.jollySetup[k - 4].Value);
-				}
-				catch (Exception arg)
-				{
-					Logger.LogError(string.Format("FAILED TO SAVE JOLLY PLAYER OPTIONS! - ", arg));
-				}
-			}
-			*/
         }
-		
 		
 		//6-8-23 -OKAY THE MODDED VERSION KINDA STINKS BECAUSE IT DOESN'T ACTUALLY SAVE MOST OF THE TIME
 		if (ModManager.JollyCoop)
@@ -1215,8 +1225,6 @@ public class ManySlugCatsMod : BaseUnityPlugin {
 			}
 			text += "<optA>";
 		}
-		
-		
 
         //THEN RESTORE THE ARRAY TO IT'S FULL PLAYER COUNT
         self.jollyPlayerOptionsArray = optionsMemory;
@@ -1236,19 +1244,10 @@ public class ManySlugCatsMod : BaseUnityPlugin {
         for (int i = 0; i < jollyPlayerOptionsArray.Length; i++)
         {
             Debug.Log(jollyPlayerOptionsArray[i].ToString());
-            //rainWorld.options.jollyPlayerOptionsArray[j].joined
-            Debug.Log("JOLLYGOROUND " + self.rainWorld.options.jollyPlayerOptionsArray[i].joined);
         }
-
-        Debug.Log("----JOLLY SPAWN BEGIN");
-        //THIS PART RIGHT HERE. FOR STORY MODE AT LEAST THIS IS IRRELEVANT, BUT IF WE AREN'T SET TO JOIN, IT WILL FALL BACK ON THIS CHECK AS A BACKUP 
-        //AND SINCE THE SETUP VALUES FOR PLAYER 5+ DOESN'T EXIST, IT WILL CRASH
-        //CAN WE JUST... CUT THAT PART OUT? DO WE EVEN NEED IT?
-        //I GUESS IF WE HAVEN'T SELECTED A 5 PLAYER GAME, WE COULD BRIEFLY PRETEND OUR ARRAY LENGTH IS 4?...
 		
 		
         //IF WE'RE PLAYING WITH A NORMAL AMOUNT (LESS THAN 5) RUN THIS
-        //if (self.rainWorld.options.JollyPlayerCount <= 4) //|| plyCnt
         if (self.rainWorld.options.JollyPlayerCount < PlayerArrSize)
         {
             //WE HAVE TO BRIEFLY PRETEND OUR PLAYEROPTIONSARRAY IS ONLY AS MANY ENTRIES AS WE'VE SELECTED
@@ -1258,7 +1257,7 @@ public class ManySlugCatsMod : BaseUnityPlugin {
             {
                 self.rainWorld.options.jollyPlayerOptionsArray[j] = optionsMemory[j];
             }
-            Debug.Log("---CUSTOM JOLLY SPAWN" + self.rainWorld.options.jollyPlayerOptionsArray.Length);
+            //Debug.Log("---CUSTOM JOLLY SPAWN" + self.rainWorld.options.jollyPlayerOptionsArray.Length);
             orig(self, location);
 
             //THEN RESTORE THE ARRAY TO IT'S FULL PLAYER COUNT
@@ -1270,11 +1269,6 @@ public class ManySlugCatsMod : BaseUnityPlugin {
         Debug.Log("----JOLLY SPAWN SUCCESS");
     }
 
-    // private void MPInputOptionsMenu_ctor(On.Menu.InputOptionsMenu.orig_ctor orig, InputOptionsMenu self, ProcessManager manager)
-    // {
-    //     orig.Invoke(self, manager);
-    //     self.backButton.pos -= new Vector2(120f, 0);
-    // }
     
     /*
     private void PlayerButton_ctor(On.Menu.InputOptionsMenu.PlayerButton.orig_ctor orig, InputOptionsMenu.PlayerButton self, Menu.Menu menu, MenuObject owner, Vector2 pos, InputOptionsMenu.PlayerButton[] array, int index)
