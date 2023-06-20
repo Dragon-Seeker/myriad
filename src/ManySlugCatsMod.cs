@@ -17,6 +17,7 @@ using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using MoreSlugcats;
 using Rewired;
+using MonoMod.RuntimeDetour;
 
 #pragma warning disable CS0618
 
@@ -29,9 +30,10 @@ namespace ManySlugCats;
 public class ManySlugCatsMod : BaseUnityPlugin {
     
     public static ManualLogSource logger = BepInEx.Logging.Logger.CreateLogSource("ManySlugCats");
+    public delegate int orig_ShortcutTime(Player self);
 
-    BindingFlags otherMethodFlags = BindingFlags.Instance | BindingFlags.NonPublic;
-    BindingFlags myMethodFlags = BindingFlags.Static | BindingFlags.Public;
+    //BindingFlags otherMethodFlags = BindingFlags.Instance | BindingFlags.NonPublic;
+    //BindingFlags myMethodFlags = BindingFlags.Static | BindingFlags.Public;
     
     public static int plyCnt = 8;
 	
@@ -57,6 +59,9 @@ public class ManySlugCatsMod : BaseUnityPlugin {
             On.Menu.MenuIllustration.LoadFile_string += MenuIllustration_LoadFile_string;
             On.Menu.PlayerJoinButton.GrafUpdate += PlayerJoinButton_GrafUpdate;
             On.Menu.PlayerJoinButton.Update += PlayerJoinButton_Update;
+            On.Menu.PlayerResultBox.ctor += PlayerResultBox_ctor;
+            On.Menu.PlayerResultBox.GrafUpdate += PlayerResultBox_GrafUpdate;
+            On.Menu.PlayerResultBox.IdealPos += PlayerResultBox_IdealPos;
 
             //-----
 
@@ -98,7 +103,6 @@ public class ManySlugCatsMod : BaseUnityPlugin {
             //ADJUST MENU LAYOUT
             //On.JollyCoop.JollyMenu.JollySlidingMenu.ctor += JollySlidingMenu_ctor;
             On.Menu.MultiplayerMenu.InitiateGameTypeSpecificButtons += MultiplayerMenu_InitiateGameTypeSpecificButtons;
-            On.Menu.MultiplayerMenu.Update += MultiplayerMenu_Update;
             On.Menu.SandboxSettingsInterface.AddPositionedScoreButton += SandboxSettingsInterface_AddPositionedScoreButton;
             // On.RWInput.PlayerInputLogic += RWInput_PlayerInputLogic;
 
@@ -111,8 +115,18 @@ public class ManySlugCatsMod : BaseUnityPlugin {
             On.ArenaGameSession.SpawnPlayers += ArenaGameSession_SpawnPlayers;
             On.HUD.PlayerSpecificMultiplayerHud.ctor += PlayerSpecificMultiplayerHud_ctor;
             On.SlugcatStats.Name.ArenaColor += Name_ArenaColor;
+            On.ArenaBehaviors.ExitManager.ExitOccupied += ExitManager_ExitOccupied;
 
             On.Player.Update += BPPlayer_Update;
+
+            BindingFlags otherMethodFlags = BindingFlags.Instance | BindingFlags.Public;
+            BindingFlags myMethodFlags = BindingFlags.Static | BindingFlags.Public;
+
+            //Hook myCustomHook = new Hook(
+            //    typeof(Player).GetProperty("InitialShortcutWaitTime", otherMethodFlags).GetGetMethod(), // This gets the getter 
+            //    typeof(ManySlugCatsMod).GetMethod("GetIncreasedWaitTime", myMethodFlags) // This gets our hook method
+            //);
+            //THIS DIDN'T WORK... IT MAY BE THAT IT'S TOO SMALL FOR THE COMPILER TO HANDLE CORRECTLY, LIKE THE OTHER ONES :(
 
             //-----
 
@@ -130,7 +144,29 @@ public class ManySlugCatsMod : BaseUnityPlugin {
         RainWorld.PlayerObjectBodyColors = new Color[PlyCnt()];
     }
 
-    private void Player_Update(On.Player.orig_Update orig, Player self, bool eu) => throw new NotImplementedException();
+
+    public static int GetIncreasedWaitTime(orig_ShortcutTime orig, Player self) {
+        int result = orig(self);
+        return result * 100;
+    }
+
+
+    private bool ExitManager_ExitOccupied(On.ArenaBehaviors.ExitManager.orig_ExitOccupied orig, ArenaBehaviors.ExitManager self, int exit) {
+        
+        bool result = orig(self, exit);
+        int denSize = Mathf.CeilToInt((self.gameSession.Players.Count + 1) / 4f);
+        int inDen = 0;
+
+        for (int i = 0; i < self.playersInDens.Count; i++) {
+            if (self.playersInDens[i].entranceNode == exit)
+                inDen++;
+        }
+        if (inDen >= denSize)
+            return true;
+        return false;
+
+    }
+    
 
 
 
@@ -215,6 +251,7 @@ public class ManySlugCatsMod : BaseUnityPlugin {
 
         string newFileName = fileName;
         string lowerName = fileName.ToLower();
+        //FILE NAMES ARE NOT CASE SENSITIVE. BUT FSPRITE NAMES ARE :/ SO DON'T CHANGE THE CASE
         //logger.LogMessage("STARTING FILE: " + fileName);
 
         //We CANNOT do this for player 5 because MSC slugcats use "MultiplayerPortrait40-" for their canon untinted color portraits -_- thanks rainworld
@@ -225,9 +262,9 @@ public class ManySlugCatsMod : BaseUnityPlugin {
                 newFileName = fileName.Replace("4", "0");
             }
         }
-        else if (lowerName.StartsWith("multiplayerportrait")) {
-            string substr1 = lowerName.Replace("multiplayerportrait", "").Substring(0, 1); //GETS THE PLAYER NUMBER
-            string substr2 = lowerName.Replace("multiplayerportrait", "").Substring(1); //THE REST OF THE NUMBERS
+        else if (fileName.StartsWith("MultiplayerPortrait")) {
+            string substr1 = fileName.Replace("MultiplayerPortrait", "").Substring(0, 1); //GETS THE PLAYER NUMBER
+            string substr2 = fileName.Replace("MultiplayerPortrait", "").Substring(1); //THE REST OF THE NUMBERS
             //IF OUR PLAYER NUM IS HIGHER THAN EXPECTED, RETURN THE 4TH PLAYER IMAGE VERSION
             if (Convert.ToInt32(substr1) > 3)
                 substr1 = "0";
@@ -277,35 +314,56 @@ public class ManySlugCatsMod : BaseUnityPlugin {
         }
     }
 
-    //I'M LOSING MY MIND
-    private void MultiplayerMenu_Update(On.Menu.MultiplayerMenu.orig_Update orig, MultiplayerMenu self) {
-        orig(self);
-
-        if (self.playerJoinButtons != null) {
-            //WE NEED TO DO THIS EVERY GODDANG FRAME BECAUSE I HATE RAINWORLD
-            for (int l = 0; l < self.playerJoinButtons.Length; l++) {
-                if (ModManager.MSC && l > 3) {
-                    //logger.LogMessage("TINT OUR PORTRAIT UPDATE " + PlayerGraphics.DefaultSlugcatColor(SlugcatStats.Name.ArenaColor(l)) + " - " + self.playerJoinButtons[l].portrait.sprite.color);
-                    self.playerJoinButtons[l].portrait.sprite.color = PlayerGraphics.DefaultSlugcatColor(SlugcatStats.Name.ArenaColor(l));
-                    //self.playerJoinButtons[l].portrait.sprite.color = Color.red;
-                }
-            }
-        }
-    }
-
-
 
     //CONTINUING TO LOSE MY MIND
     private void PlayerJoinButton_GrafUpdate(On.Menu.PlayerJoinButton.orig_GrafUpdate orig, PlayerJoinButton self, float timeStacker) {
         Color origColor = self.portrait.sprite.color;
+        
         orig(self, timeStacker);
+
         //NOT ALL PORTRAITS WILL BE WHITE NOW
         if (self.index > 3 && origColor != Color.white)
-            self.portrait.sprite.color = Color.Lerp(origColor, Color.black, Custom.SCurve(Mathf.Lerp(self.lastPortraitBlack, self.portraitBlack, timeStacker), 0.5f) * 0.75f);
+        {
+            Color newColor = PlayerGraphics.DefaultSlugcatColor(SlugcatStats.Name.ArenaColor(self.index));
+            self.portrait.sprite.color = Color.Lerp(newColor, Color.black, Custom.SCurve(Mathf.Lerp(self.lastPortraitBlack, self.portraitBlack, timeStacker), 0.5f) * 0.75f);
+        } 
+    }
+
+    //BASICALLY THE SAME TREATMENT
+    private void PlayerResultBox_GrafUpdate(On.Menu.PlayerResultBox.orig_GrafUpdate orig, PlayerResultBox self, float timeStacker) {
+        
+        orig(self, timeStacker);
+
+        //NOT ALL PORTRAITS WILL BE WHITE NOW
+        int index = self.player.playerNumber;
+        if (index > 3) {
+            Color newColor = PlayerGraphics.DefaultSlugcatColor(SlugcatStats.Name.ArenaColor(index));
+            float num = self.UseWinnerColor(timeStacker);
+            float num2 = self.UseTextWhite(timeStacker);
+            self.portrait.sprite.color = Color.Lerp(Color.black, newColor, self.showAsAlive ? 1f : (0.25f + Mathf.Max(0.75f * num, 0.25f * num2)));
+        }
     }
 
 
-    
+    private Vector2 PlayerResultBox_IdealPos(On.Menu.PlayerResultBox.orig_IdealPos orig, PlayerResultBox self) {
+        
+        Vector2 result = orig(self);
+        
+        //START OVER FROM THE TOP
+        result.y = (self.menu as PlayerResultMenu).topMiddle.y; 
+        result.y -= (600 / self.menu.manager.arenaSitting.players.Count) * (float) self.index;
+        return result;
+    }
+
+    //SQUEEZE THE LABELS A BIT CLOSER TOGETHER SO OVERLAPPING BOXES WON'T BE AN ISSUE
+    private void PlayerResultBox_ctor(On.Menu.PlayerResultBox.orig_ctor orig, PlayerResultBox self, Menu.Menu menu, MenuObject owner, Vector2 pos, Vector2 size, ArenaSitting.ArenaPlayer player, int index) {
+
+        orig(self, menu, owner, pos, size, player, index);
+        self.playerNameLabel.pos.y -= 20f;
+    }
+
+
+
     private void PlayerJoinButton_Update(On.Menu.PlayerJoinButton.orig_Update orig, PlayerJoinButton self) {
 
         //SPECIFICALY PLAYER 5 NEEDS TO HAVE THEIR PORTRAIT REPLACED BECAUSE OTHER PARTS OF THE GAME USE THAT FILENAME
