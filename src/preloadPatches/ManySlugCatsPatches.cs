@@ -15,6 +15,7 @@ namespace ManySlugCats.PreloadPatches;
 public class ManySlugCatsPatches {
     
     private static ManualLogSource logger = Logger.CreateLogSource("ManySlugCats.PreloadPatch");
+    public static int myCount = 8;
 
     // List of assemblies to patch
     public static IEnumerable<string> TargetDLLs  { get; } = new[] {"Rewired_Core.dll", "Rewired_Windows.dll"};
@@ -164,8 +165,9 @@ public class ManySlugCatsPatches {
         }
     }
 
+    
     private static void Replace4WithMore(MethodDefinition methodDef) {
-        ReplaceNumWithNum(4, 8, methodDef);
+        ReplaceNumWithNum(4, myCount, methodDef);
     }
 
     private static void ReplaceNumWithNum(int targetNum, int outputNum, MethodDefinition methodDef) {

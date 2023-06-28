@@ -11,7 +11,8 @@ namespace ManySlugCats.PreloadPatches;
 public class RewiredAdjustUserData
 {
     private static ManualLogSource logger = Logger.CreateLogSource("ManySlugCats.PlayerInjection");
-    
+    public static int myCount = 8;
+
     public static void adjustData() {
         BindingFlags flags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
         
@@ -37,14 +38,18 @@ public class RewiredAdjustUserData
     
         List<Player_Editor> playerList = (List<Player_Editor>)info.GetValue(userData);
     
-        var template = playerList[5];
+        var template = playerList[5]; //OKAY THIS REALLY NEEDS TO BE 5
     
         playerList[5] = null;
-    
-        playerList.Add(null);
-        playerList.Add(null);
-        playerList.Add(null);
-    
+
+        //playerList.Add(null);
+        //playerList.Add(null);
+        //playerList.Add(null);
+        
+        for (int i = 5; i < myCount; i++) {
+            playerList.Add(null);
+        }
+
         logger.LogMessage("Array Size = " + playerList.ToArray().Length);
         
         Action<Player_Editor, int> adjustId = (editor, id) => {
@@ -55,7 +60,7 @@ public class RewiredAdjustUserData
             baseType.GetProperty("id", flags).SetValue(editor, id);
         };
     
-        adjustId(template, 9);
+        adjustId(template, myCount+1); //9
         
         playerList.Add(template);
     
@@ -89,12 +94,16 @@ public class RewiredAdjustUserData
     
             return playerEditor;
         };
-    
-        playerList[5] = create(4, 5);
-        playerList[6] = create(4, 6);
-        playerList[7] = create(4, 7); 
-        playerList[8] = create(4, 8);
-        
+
+        //playerList[5] = create(4, 5);
+        //playerList[6] = create(4, 6);
+        //playerList[7] = create(4, 7); 
+        //playerList[8] = create(4, 8);
+        //ManySlugCatsMod.PlyCnt()
+        for (int i = 5; i <= myCount; i++) {
+            playerList[i] = create(4, i);
+        }
+
         logger.LogMessage("PLAYERS HAVE BEEN ADDED!!!!!@#");
     }
 }

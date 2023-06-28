@@ -36,7 +36,7 @@ public class ManySlugCatsMod : BaseUnityPlugin {
     //BindingFlags myMethodFlags = BindingFlags.Static | BindingFlags.Public;
     
     public static int plyCnt = 8;
-	
+
     public static int PlyCnt() {
         return plyCnt;
     }
@@ -130,6 +130,8 @@ public class ManySlugCatsMod : BaseUnityPlugin {
 
             //-----
 
+            On.ShortcutHandler.ShortCutVessel.ctor += ShortCutVessel_ctor;
+
             var testArray = new String[300];
 
             testArray[0] = "test";
@@ -144,11 +146,18 @@ public class ManySlugCatsMod : BaseUnityPlugin {
         RainWorld.PlayerObjectBodyColors = new Color[PlyCnt()];
     }
 
-
-    public static int GetIncreasedWaitTime(orig_ShortcutTime orig, Player self) {
-        int result = orig(self);
-        return result * 100;
+    private void ShortCutVessel_ctor(On.ShortcutHandler.ShortCutVessel.orig_ctor orig, ShortcutHandler.ShortCutVessel self, IntVector2 pos, Creature creature, AbstractRoom room, int wait) {
+        
+        if (creature is Player && wait > 0) {
+            wait *= 1000;
+        }
+        orig(self, pos, creature, room, wait);
     }
+
+    //public static int GetIncreasedWaitTime(orig_ShortcutTime orig, Player self) {
+    //    int result = orig(self);
+    //    return result * 1000;
+    //}
 
 
     private bool ExitManager_ExitOccupied(On.ArenaBehaviors.ExitManager.orig_ExitOccupied orig, ArenaBehaviors.ExitManager self, int exit) {
@@ -409,16 +418,24 @@ public class ManySlugCatsMod : BaseUnityPlugin {
         orig(self, menu, owner, pos);
 
         int num1 = 70;
-        float num2 = (float)((1024.0 - num1 * 8.0) / 5.0);
-        Vector2 pos1 = new Vector2(-50 + num2, 0.0f) + new Vector2(0.0f, menu.manager.rainWorld.screenSize.y * 0.55f);
 
-        for (int index = 0; index < 8; ++index) {
+        float num2 = (float)((1024.0 - num1 * 8.0) / 5.0);
+
+        if (PlyCnt() > 8)
+            num2 /= (PlyCnt() / 2.5f);
+
+        Vector2 pos1 = new Vector2(-25 + num2, 0.0f) + new Vector2(0.0f, menu.manager.rainWorld.screenSize.y * 0.55f);
+
+        for (int index = 0; index < PlyCnt(); ++index) {
             JollyPlayerSelector playerSelector = self.playerSelector[index];
         
             playerSelector.pos.x -= playerSelector.pos.x - pos1.x;
             
             playerSelector.playerLabelSelector._pos.x -= playerSelector.playerLabelSelector._pos.x - pos1.x;
-            
+
+            if (PlyCnt() > 8)
+                playerSelector.pupButton.pos += new Vector2(-45f, 100f);
+
             pos1 += new Vector2(num2 + num1, 0.0f);
         }
 
@@ -426,7 +443,7 @@ public class ManySlugCatsMod : BaseUnityPlugin {
 
         var slider = self.numberPlayersSlider;
         
-        var config = menu.oi.config.Bind("_cosmetic", Custom.rainWorld.options.JollyPlayerCount, new ConfigAcceptableRange<int>(1, 8));
+        var config = menu.oi.config.Bind("_cosmetic", Custom.rainWorld.options.JollyPlayerCount, new ConfigAcceptableRange<int>(1, PlyCnt()));
 
         var uiConfigType = typeof(UIconfig);
         var flags = BindingFlags.Public | BindingFlags.Instance;
@@ -450,7 +467,7 @@ public class ManySlugCatsMod : BaseUnityPlugin {
 
         slider.pos = self.playerSelector[0].pos + new Vector2((num1 / 2f) + 15, 130f);
 
-        slider._size = new Vector2(Math.Max((int)(self.playerSelector[7].pos - self.playerSelector[0].pos).x, 30), 30f);
+        slider._size = new Vector2(Math.Max((int)(self.playerSelector[PlyCnt() - 1].pos - self.playerSelector[0].pos).x, 30), 30f);
         slider.fixedSize = slider._size;
         
         slider.Initialize();
@@ -481,7 +498,6 @@ public class ManySlugCatsMod : BaseUnityPlugin {
         var inputTesterIndex = self.pages[0].subObjects.IndexOf(self.inputTesterHolder);
         
         var buttonOffset = 60.0;
-        
         for (int index = 0; index < self.deviceButtons.Length; ++index) {
             InputOptionsMenu.DeviceButton deviceButton; 
             
@@ -555,7 +571,7 @@ public class ManySlugCatsMod : BaseUnityPlugin {
         
         //---
 
-        var newPlayerButtons = new InputOptionsMenu.PlayerButton[8];
+        var newPlayerButtons = new InputOptionsMenu.PlayerButton[PlyCnt()];
         
         self.playerButtons.CopyTo(newPlayerButtons, 0);
 
@@ -565,12 +581,18 @@ public class ManySlugCatsMod : BaseUnityPlugin {
 
         self.rememberPlayersSignedIn = new bool[self.playerButtons.Length];
         
-        var perInputOffset = 76;//143.3333282470703;
+        var perInputOffset = 76f;//143.3333282470703;
 
         var initalYOffset = 672;
 
         var xOffset = 32;
-        
+
+        if (PlyCnt() > 8) {
+            perInputOffset /= (PlyCnt() / 8.5f);
+            //COME ON IT LOOKS BETTER THIS WAY...
+            self.backButton.pos -= new Vector2(0, 50);
+        }
+
         for (int index = self.playerButtons.Length - 1; index >= 0; --index) {
             InputOptionsMenu.PlayerButton playerButton;
             
@@ -615,6 +637,10 @@ public class ManySlugCatsMod : BaseUnityPlugin {
 
             playerButton.size /= 2;
             playerButton.lastSize /= 2;
+
+            //INCREASE VISIBILITY
+            playerButton.menuLabel.pos.y += 20;
+            playerButton.menuLabel.label.MoveToFront();
         }
 
         for (int playerNumber = 4; playerNumber < manager.rainWorld.options.controls.Length; ++playerNumber) {
@@ -1096,6 +1122,8 @@ public class ManySlugCatsMod : BaseUnityPlugin {
             //foreach (var playerJoinButton in self.playerJoinButtons) playerJoinButton.pos.x -= shift;
             for (int i = 0; i < self.playerJoinButtons.Length; i++) {
                 float shift = 235 + i * 10; //298 //NORMALLY 120
+                if (PlyCnt() > 8)
+                    shift += i * 30 * (self.playerJoinButtons.Length/8);
                 self.playerJoinButtons[i].pos.x -= shift;
                 if (ModManager.MSC && self.playerClassButtons != null) {
                     self.playerClassButtons[i].pos.x -= shift;
@@ -1198,7 +1226,7 @@ public class ManySlugCatsMod : BaseUnityPlugin {
 				int num = 4; //START AT 4
 				foreach (string text in array3)
 				{
-					if (!(text == string.Empty))
+					if (!(text == string.Empty) && num < PlyCnt()) //CHECK FOR THIS IN CASE WE SAVED EXTRA VALUES
 					{
                         Logger.LogInfo("--- JOLLY PLAYER OPTIONS!(V2) " + text);
                         JollyPlayerOptions jollyPlayerOptions = new JollyPlayerOptions(num);
