@@ -19,13 +19,13 @@ public class MPOptions : OptionInterface
     public MPOptions()
     {
         MPOptions.downpourCoop = this.config.Bind<bool>("downpourCoop", true);
-		MPOptions.unlP1Downpour = this.config.Bind<bool>("unlP1Downpour", false);
+		MPOptions.longPipeWait = this.config.Bind<bool>("longPipeWait", true);
 		MPOptions.grabRelease = this.config.Bind<bool>("grabRelease", true); 
-		MPOptions.maxPlayers = this.config.Bind<int>("maxPlayers", 5, new ConfigAcceptableRange<int>(4, 8));
+		MPOptions.maxPlayers = this.config.Bind<int>("maxPlayers", 5, new ConfigAcceptableRange<int>(4, 16));
     }
 	
 	public static Configurable<bool> downpourCoop;
-	public static Configurable<bool> unlP1Downpour;
+	public static Configurable<bool> longPipeWait;
     public static Configurable<int> maxPlayers;
 	public static Configurable<bool> grabRelease;
 	public OpSliderTick pCountOp;
@@ -84,12 +84,12 @@ public class MPOptions : OptionInterface
 
             OpCheckBox mpBox2;
             //lineCount -= 60;
-            dsc = BPTranslate("In Downpour Campaigns, allow player 1 to play as a different slugcat. (this will likely break things)");
+            dsc = BPTranslate("Greatly increases how long you can wait in a pipe for other players to catch up");
 			Tabs[0].AddItems(new UIelement[]
 			{
-                mpBox2 = new OpCheckBox(MPOptions.unlP1Downpour, new Vector2(margin + 325, lineCount))
+                mpBox2 = new OpCheckBox(MPOptions.longPipeWait, new Vector2(margin + 325, lineCount))
 				{description = dsc},
-				new OpLabel(mpBox2.pos.x + 30, mpBox2.pos.y+3, BPTranslate("Allow Player-1 Character Change"))
+				new OpLabel(mpBox2.pos.x + 30, mpBox2.pos.y+3, BPTranslate("Extended Pipe Waiting"))
                 {description = dsc}  //bumpBehav = chkBox5.bumpBehav, 
 				
 			});
