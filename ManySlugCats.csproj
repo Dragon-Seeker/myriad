@@ -83,6 +83,9 @@
     <Reference Include="UnityEngine.InputLegacyModule" ExcludeFromPatch="True">
       <HintPath>$(RainWorldDir)\RainWorld_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
     </Reference>
+    <Reference Include="com.rlabrecque.steamworks.net" ExcludeFromPatch="True">
+      <HintPath>$(RainWorldDir)\RainWorld_Data\Managed\com.rlabrecque.steamworks.net.dll</HintPath>
+    </Reference>
   </ItemGroup>
   
   <!--[ Start of Patch Build Code ]-->

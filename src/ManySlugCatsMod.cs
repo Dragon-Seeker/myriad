@@ -192,13 +192,13 @@ public class ManySlugCatsMod : BaseUnityPlugin {
     }
 
     // !!!!!!!!!!!!!!!! --- NOT NEEDED ANYMORE but may be good for compat???? --- !!!!!!!!!!!!!!!!!!!!!!!!!
-    /*public static SlugcatStats.Name JollyPlayer5;
+    /*
+    public static SlugcatStats.Name JollyPlayer5;
     public static SlugcatStats.Name JollyPlayer6;
     public static SlugcatStats.Name JollyPlayer7;
     public static SlugcatStats.Name JollyPlayer8;
 
-    private void extendJollyEnumData(On.JollyCoop.JollyEnums.orig_RegisterAllEnumExtensions orig)
-    {
+    private void extendJollyEnumData(On.JollyCoop.JollyEnums.orig_RegisterAllEnumExtensions orig){
         orig();
 
         JollyPlayer5 = new SlugcatStats.Name("JollyPlayer5", true);
@@ -207,25 +207,20 @@ public class ManySlugCatsMod : BaseUnityPlugin {
         JollyPlayer8 = new SlugcatStats.Name("JollyPlayer8", true);
     }
 
-
-    private void removeExtendedJollyEnum(On.JollyCoop.JollyEnums.orig_UnregisterAllEnumExtensions orig)
-    {
+    private void removeExtendedJollyEnum(On.JollyCoop.JollyEnums.orig_UnregisterAllEnumExtensions orig){
         orig();
 
-        if (JollyPlayer5 != null)
-        {
+        if (JollyPlayer5 != null){
             JollyPlayer5.Unregister();
             JollyPlayer5 = null;
         }
 
-        if (JollyPlayer6 != null)
-        {
+        if (JollyPlayer6 != null){
             JollyPlayer6.Unregister();
             JollyPlayer6 = null;
         }
 
-        if (JollyPlayer7 != null)
-        {
+        if (JollyPlayer7 != null){
             JollyPlayer7.Unregister();
             JollyPlayer7 = null;
         }
@@ -236,9 +231,9 @@ public class ManySlugCatsMod : BaseUnityPlugin {
         JollyPlayer8 = null;
     }
     
-    public static bool hideExtraJollyEnums(On.SlugcatStats.orig_HiddenOrUnplayableSlugcat orig, SlugcatStats.Name i) {
-        return orig(i) || (ModManager.JollyCoop && (i == JollyPlayer5 || i == JollyPlayer6 || i == JollyPlayer7 || i == JollyPlayer8));
-    }*/
+    public static bool hideExtraJollyEnums(On.SlugcatStats.orig_HiddenOrUnplayableSlugcat orig, SlugcatStats.Name i) => 
+        orig(i) || (ModManager.JollyCoop && (i == JollyPlayer5 || i == JollyPlayer6 || i == JollyPlayer7 || i == JollyPlayer8));
+    */
     // !!!!!!!!!!!!!!!! --- NOT NEEDED ANYMORE but may be good for compat???? --- !!!!!!!!!!!!!!!!!!!!!!!!!
     
 
@@ -498,6 +493,7 @@ public class ManySlugCatsMod : BaseUnityPlugin {
         var inputTesterIndex = self.pages[0].subObjects.IndexOf(self.inputTesterHolder);
         
         var buttonOffset = 60.0;
+        
         for (int index = 0; index < self.deviceButtons.Length; ++index) {
             InputOptionsMenu.DeviceButton deviceButton; 
             

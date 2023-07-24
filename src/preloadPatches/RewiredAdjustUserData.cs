@@ -5,6 +5,8 @@ using BepInEx.Logging;
 using Rewired;
 using Rewired.Data;
 using Rewired.Utils;
+using System.Collections.ObjectModel;
+using System.Runtime.InteropServices;
 
 namespace ManySlugCats.PreloadPatches;
 
@@ -21,12 +23,14 @@ public class RewiredAdjustUserData
         var usrDataProp = typeof(ReInput).GetProperty("UserData", flags); 
         
         UserData userData = (UserData) usrDataProp.GetValue(null);//rainWorld.rewiredInputManager.userData; 
-        
+
         if (userData == null) {
             logger.LogError("Attempted to adjust the userData but found it to be null somehow! Players will not be injected leading to issues");
         
             throw new NullReferenceException("[ManySlugCats] Could not find [UserData] thru reflection or it is null!");
         } 
+        
+        //userData.customControllers
     
         FieldInfo info = userData.GetType().GetField("players", BindingFlags.Instance | BindingFlags.NonPublic);
 
@@ -87,10 +91,23 @@ public class RewiredAdjustUserData
     
             userData.GetNewPlayerId();
             
+            //descriptiveName
+            var playerName = StringTools.IterateName(playerEditor.name, names: GetPlayerNames());
+            
             baseType.GetProperty("id", flags).SetValue(playerEditor, id); //playerEditor.id = userData.GetNewPlayerId();
-            baseType.GetProperty("name", flags).SetValue(playerEditor,
-                StringTools.IterateName(playerEditor.name, names: GetPlayerNames())); //playerEditor.name = StringTools.IterateName(playerEditor.name, names: userData.GetPlayerNames());
+            baseType.GetProperty("name", flags).SetValue(playerEditor, playerName);
+            baseType.GetProperty("descriptiveName", flags).SetValue(playerEditor, playerName);
             baseType.GetProperty("assignMouseOnStart", flags).SetValue(playerEditor, false); //playerEditor.assignMouseOnStart = false;
+            
+            logger.LogMessage("----------------------------------------------------");
+            // logList(playerEditor.defaultJoystickMaps);
+            // logList(playerEditor.defaultMouseMaps);
+            // logList(playerEditor.defaultKeyboardMaps);
+            // logList(playerEditor.defaultCustomControllerMaps);
+            logList(playerEditor.startingCustomControllers);
+            logger.LogMessage(playerEditor.controllerMapEnablerSettings);
+            logger.LogMessage(playerEditor.controllerMapLayoutManagerSettings);
+            logger.LogMessage("----------------------------------------------------");
     
             return playerEditor;
         };
@@ -105,5 +122,15 @@ public class RewiredAdjustUserData
         }
 
         logger.LogMessage("PLAYERS HAVE BEEN ADDED!!!!!@#");
+    }
+
+    public static void logList<T>(List<T> objects) {
+        foreach (T o in objects) {
+            if (o is Player_Editor.Mapping mapping) {
+                logger.LogMessage(mapping.ToString());
+            } else if (o is Player_Editor.CreateControllerInfo info) {
+                logger.LogMessage($"Id:{info.sourceId}, Tag:{info.tag}");
+            }
+        }
     }
 }
