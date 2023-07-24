@@ -18,6 +18,8 @@ using MonoMod.Cil;
 using MoreSlugcats;
 using Rewired;
 using MonoMod.RuntimeDetour;
+using ManySlugCats.PreloadPatches;
+using JollyCoop;
 
 #pragma warning disable CS0618
 
@@ -34,8 +36,9 @@ public class ManySlugCatsMod : BaseUnityPlugin {
 
     //BindingFlags otherMethodFlags = BindingFlags.Instance | BindingFlags.NonPublic;
     //BindingFlags myMethodFlags = BindingFlags.Static | BindingFlags.Public;
-    
-    public static int plyCnt = 8;
+
+    //public static int plyCnt = 8;
+    public static int plyCnt = ManySlugCatsPatches.myCount; //SET IN THERE BECAUSE IT LOADS FIRST
 
     public static int PlyCnt() {
         return plyCnt;
@@ -54,6 +57,7 @@ public class ManySlugCatsMod : BaseUnityPlugin {
 
             On.JollyCoop.JollyMenu.JollySlidingMenu.ctor += adjustPlayerSelectGUI;
             On.JollyCoop.JollyMenu.JollySlidingMenu.NumberPlayersChange += accountForMoreThanFour;
+            On.JollyCoop.JollyMenu.JollySlidingMenu.Singal += JollySlidingMenu_Singal;
             
             On.Menu.MenuIllustration.ctor += MenuIllustration_ctor;
             On.Menu.MenuIllustration.LoadFile_string += MenuIllustration_LoadFile_string;
@@ -115,7 +119,14 @@ public class ManySlugCatsMod : BaseUnityPlugin {
             On.ArenaGameSession.SpawnPlayers += ArenaGameSession_SpawnPlayers;
             On.HUD.PlayerSpecificMultiplayerHud.ctor += PlayerSpecificMultiplayerHud_ctor;
             On.SlugcatStats.Name.ArenaColor += Name_ArenaColor;
+            On.SlugcatStats.Name.Init += Name_Init;
+            On.SlugcatStats.HiddenOrUnplayableSlugcat += SlugcatStats_HiddenOrUnplayableSlugcat;
+            On.PlayerGraphics.DefaultSlugcatColor += PlayerGraphics_DefaultSlugcatColor;
             On.ArenaBehaviors.ExitManager.ExitOccupied += ExitManager_ExitOccupied;
+            On.Menu.InputTesterHolder.InputTester.ctor += InputTester_ctor;
+            On.Menu.InputTesterHolder.InputTester.GetToPos += InputTester_GetToPos;
+            On.Menu.InputTesterHolder.InputTester.TestButton.ctor += TestButton_ctor;
+            On.Menu.InputTesterHolder.Back.Update += Back_Update;
 
             On.Player.Update += BPPlayer_Update;
 
@@ -146,9 +157,85 @@ public class ManySlugCatsMod : BaseUnityPlugin {
         RainWorld.PlayerObjectBodyColors = new Color[PlyCnt()];
     }
 
+    private Vector2 InputTester_GetToPos(On.Menu.InputTesterHolder.InputTester.orig_GetToPos orig, InputTesterHolder.InputTester self) {
+
+        Vector2 result = orig(self);
+        if (PlyCnt() > 8 && self.playerIndex % 2 != 0)
+            result -= new Vector2(60, 0);
+        return result;
+    }
+
+    public void Back_Update(On.Menu.InputTesterHolder.Back.orig_Update orig, InputTesterHolder.Back self) {
+        
+        orig(self);
+        if (PlyCnt() > 8) {
+            //self.textLabel.pos.y -= 60f;
+            //self.textLabel.pos.x += 55f;
+            self.textLabel.pos += new Vector2(-280, 90);
+        }
+    }
+
+    public void InputTester_ctor(On.Menu.InputTesterHolder.InputTester.orig_ctor orig, InputTesterHolder.InputTester self, Menu.Menu menu, MenuObject owner, int playerIndex) 
+    {
+        // self.rad = 15; //TOO EARLY! IT DIDN'T WORK
+        orig(self, menu, owner, playerIndex);
+		self.rad = 22; //THIS SHOULD WORK NOW. AND I BELEIVE GRAFUPDATE() SHOULD HANDLE THE REST
+		self.crossSpriteH.scaleX = self.rad * 2f;
+		self.crossSpriteV.scaleY = self.rad * 2f;
+        self.centerKnobSprite.scale = 0.7f;
+        //BASELINE y = -15
+
+        AdjustTestButton(self, 4, 210, -20); //Pickup/Eat
+        AdjustTestButton(self, 5, 0, 10); //Jump
+        AdjustTestButton(self, 6, 0, 15); //Throw
+        AdjustTestButton(self, 7, 210, -5); //Pause
+
+        //THE SYMBOLS DONT MOVE! >:(
+        //AdjustTestButton(self, 0, 112 - 15, -0); //left
+        //AdjustTestButton(self, 1, 56, -56 + 15); //up
+        //AdjustTestButton(self, 2, 15, 0); //right
+        //AdjustTestButton(self, 3, 56, 56 + 0); //down
+    }
+
+    private void TestButton_ctor(On.Menu.InputTesterHolder.InputTester.TestButton.orig_ctor orig, InputTesterHolder.InputTester.TestButton self, Menu.Menu menu, MenuObject owner, Vector2 pos, string symbolName, int symbolRotat, string labelText, int buttonIndex, int playerIndex) {
+
+        if (symbolName != null && symbolName == "Menu_Symbol_Arrow") {
+            pos *= 0.4f; //ARROWS ARE SLIPPERY . SHRINK THEM BEFOREHAND
+            if (symbolRotat == 2) //DOWN ARROW
+                pos.y = 0;
+            //THEN SHIFT THEM ALL OVER
+            pos += new Vector2(60, -15);
+        }
+        //YOU KNOW WHAT, THEY'RE ALL LOW! MOVE THEM ALL UP
+        pos += new Vector2(0, 5);
+
+        orig(self, menu, owner, pos, symbolName, symbolRotat, labelText, buttonIndex, playerIndex);
+
+    }
+
+
+    public static void AdjustTestButton(InputTesterHolder.InputTester self, int index, float xShift, float yShift)
+	{
+		self.testButtons[index].roundedRect.pos += new Vector2(xShift, yShift);
+		
+		if (self.testButtons[index].symbolSprite != null) {
+            self.testButtons[index].symbolSprite.x += xShift;
+            self.testButtons[index].symbolSprite.y += yShift;
+            self.testButtons[index].symbolSprite.SetPosition(self.testButtons[index].symbolSprite.x, self.testButtons[index].symbolSprite.y);
+            Debug.Log("SYMBOL SPRITE!");
+        }
+		else if (self.testButtons[index].extraRect != null)
+			self.testButtons[index].extraRect.pos += new Vector2(xShift, yShift);
+		
+		if (self.testButtons[index].labelText != null)
+			self.testButtons[index].menuLabel.pos += new Vector2(xShift, yShift);
+	}
+	
+
+    
     private void ShortCutVessel_ctor(On.ShortcutHandler.ShortCutVessel.orig_ctor orig, ShortcutHandler.ShortCutVessel self, IntVector2 pos, Creature creature, AbstractRoom room, int wait) {
         
-        if (creature is Player && wait > 0) {
+        if (MPOptions.longPipeWait.Value && creature is Player && wait > 0) {
             wait *= 1000;
         }
         orig(self, pos, creature, room, wait);
@@ -243,8 +330,11 @@ public class ManySlugCatsMod : BaseUnityPlugin {
 
         string lowerName = fileName.ToLower();
         if (lowerName.StartsWith("multiplayerportrait")) {
-            string substr1 = lowerName.Replace("multiplayerportrait", "").Substring(0, 1); //GETS THE PLAYER NUMBER
-            string substr2 = lowerName.Replace("multiplayerportrait", "").Substring(1); //THE REST OF THE NUMBERS
+            int pDigits = 1; //ACCOUNT FOR DOUBLE DIGIT PLAYER NUMBERS
+            if (fileName.Length == 22 || fileName.IndexOf("-") == 22)
+                pDigits = 2; //A DOUBLE DIGIT PLAYER NUMBER
+            string substr1 = lowerName.Replace("multiplayerportrait", "").Substring(0, pDigits); //GETS THE PLAYER NUMBER
+            string substr2 = lowerName.Replace("multiplayerportrait", "").Substring(pDigits); //THE REST OF THE NUMBERS
             result = Convert.ToInt32(substr1);
         }
         return result;
@@ -267,8 +357,11 @@ public class ManySlugCatsMod : BaseUnityPlugin {
             }
         }
         else if (fileName.StartsWith("MultiplayerPortrait")) {
-            string substr1 = fileName.Replace("MultiplayerPortrait", "").Substring(0, 1); //GETS THE PLAYER NUMBER
-            string substr2 = fileName.Replace("MultiplayerPortrait", "").Substring(1); //THE REST OF THE NUMBERS
+            int pDigits = 1; //ACCOUNT FOR DOUBLE DIGIT PLAYER NUMBERS
+            if (fileName.Length == 22 || fileName.IndexOf("-") == 22)
+                pDigits = 2; //A DOUBLE DIGIT PLAYER NUMBER
+            string substr1 = fileName.Replace("MultiplayerPortrait", "").Substring(0, pDigits); //GETS THE PLAYER NUMBER
+            string substr2 = fileName.Replace("MultiplayerPortrait", "").Substring(pDigits); //THE REST OF THE NUMBERS
             //IF OUR PLAYER NUM IS HIGHER THAN EXPECTED, RETURN THE 4TH PLAYER IMAGE VERSION
             if (Convert.ToInt32(substr1) > 3)
                 substr1 = "0";
@@ -408,31 +501,80 @@ public class ManySlugCatsMod : BaseUnityPlugin {
         
         self.UpdatePlayerSlideSelectable(result - 1);
     }
-
+	
+	
+	public SimpleButton[] jollySwapButtons;
+	
     public void adjustPlayerSelectGUI(On.JollyCoop.JollyMenu.JollySlidingMenu.orig_ctor orig, JollySlidingMenu self, JollySetupDialog menu, MenuObject owner, Vector2 pos) {
         orig(self, menu, owner, pos);
 
-        int num1 = 70;
-
-        float num2 = (float)((1024.0 - num1 * 8.0) / 5.0);
-
-        if (PlyCnt() > 8)
-            num2 /= (PlyCnt() / 2.5f);
-
-        Vector2 pos1 = new Vector2(-25 + num2, 0.0f) + new Vector2(0.0f, menu.manager.rainWorld.screenSize.y * 0.55f);
+        //float num1 = 70;
+        //float num2 = (float)((1024.0 - num1 * 8.0) / 5.0);
+        //Vector2 pos1 = new Vector2(-25 + num2, 0.0f) + new Vector2(0.0f, menu.manager.rainWorld.screenSize.y * 0.55f);
+		
+		//TRYING SOMETHING FUNKY
+		jollySwapButtons = new SimpleButton[PlyCnt()];
 
         for (int index = 0; index < PlyCnt(); ++index) {
             JollyPlayerSelector playerSelector = self.playerSelector[index];
         
-            playerSelector.pos.x -= playerSelector.pos.x - pos1.x;
+            //playerSelector.pos.x -= playerSelector.pos.x - pos1.x;
+            //playerSelector.playerLabelSelector._pos.x -= playerSelector.playerLabelSelector._pos.x - pos1.x;
+            //pos1 += new Vector2(num2 + num1, 0.0f);
+
+            //LETS TRY SOMETHING SIMPLER...
+            float newX = ((menu.manager.rainWorld.screenSize.x) / PlyCnt()) * index;
+            newX += 5 + Mathf.Lerp(700f, 0f, (Custom.rainWorld.options.ScreenSize.x / 1360)); //AN ATTEMPT TO FIX THE WEIRD SCREEN SIZE SCALING
+            playerSelector.pos.x = newX + 0;
+            playerSelector.playerLabelSelector._pos.x = newX + 0;
+
+            if (PlyCnt() > 8) {
+                playerSelector.pupButton.pos += new Vector2(-110f, 100f); //-45
+                playerSelector.pupButton.roundedRect.size *= 0.8f;
+                playerSelector.pupButton.selectRect.size *= 0.8f;
+            }
+			
+            jollySwapButtons[index] = new SimpleButton(self.menu, self, "<->", "JOLLYSWAP" + index.ToString(), playerSelector.pos + new Vector2(-20, 130) , new Vector2(40f, 20f));
+            menu.elementDescription.Add(jollySwapButtons[index].signalText, menu.Translate("Swap Player <p_n> and Player <p_n2>").Replace("<p_n>", (index + 0).ToString()).Replace("<p_n2>", (index + 1).ToString()));
+            self.subObjects.Add(jollySwapButtons[index]);
             
-            playerSelector.playerLabelSelector._pos.x -= playerSelector.playerLabelSelector._pos.x - pos1.x;
+            if (index > 0) {
+                // <0 1^ 2> 3v
+                jollySwapButtons[index].nextSelectable[3] = playerSelector.pLabelSelectorWrapper; //DOWN
+                jollySwapButtons[index].nextSelectable[1] = self.sliderWrapper; //UP
+                jollySwapButtons[index].nextSelectable[0] = jollySwapButtons[index - 1]; //LEFT
+                jollySwapButtons[index].nextSelectable[2] = jollySwapButtons[index]; //RIGHT - ASSIGN IT TO OURSELF FOR NOW. IF THERES ANOTHER ONE TO OUR RIGHT, IT'LL CHANGE OURS
+                jollySwapButtons[index - 1].nextSelectable[2] = jollySwapButtons[index];
 
-            if (PlyCnt() > 8)
-                playerSelector.pupButton.pos += new Vector2(-45f, 100f);
+                playerSelector.pLabelSelectorWrapper.nextSelectable[1] = jollySwapButtons[index];
+                playerSelector.pLabelSelectorWrapper.nextSelectable[3] = playerSelector.pupButton;
+                playerSelector.pLabelSelectorWrapper.nextSelectable[0] = self.playerSelector[index-1].pLabelSelectorWrapper;
+                self.playerSelector[index].pLabelSelectorWrapper.nextSelectable[2] = self.playerSelector[index].pLabelSelectorWrapper; //SELF, UNLESS THE ONE NEXT TO US UPDATES IT
+                self.playerSelector[index - 1].pLabelSelectorWrapper.nextSelectable[2] = self.playerSelector[index].pLabelSelectorWrapper;
+                
+                if (PlyCnt() > 8) {
+                    self.playerSelector[index].pupButton.nextSelectable[0] = self.playerSelector[index - 1].pupButton;
+                    self.playerSelector[index].pupButton.nextSelectable[2] = self.playerSelector[index].pupButton; //SELF, UNLESS THE ONE NEXT TO US UPDATES IT
+                    self.playerSelector[index - 1].pupButton.nextSelectable[2] = self.playerSelector[index].pupButton;
+                }
+                    
+            }
+            else {
+                //JUST PRETEND THIS FIRST ONE DOESN'T EXIST
+                jollySwapButtons[0].roundedRect.pos.x -= 1000;
+                jollySwapButtons[0].menuLabel.pos.x -= 1000;
+                jollySwapButtons[0].selectRect.pos.x -= 1000;
 
-            pos1 += new Vector2(num2 + num1, 0.0f);
+                playerSelector.pLabelSelectorWrapper.nextSelectable[3] = playerSelector.pupButton;
+                playerSelector.pLabelSelectorWrapper.nextSelectable[0] = self.playerSelector[index].pLabelSelectorWrapper;
+                if (PlyCnt() > 8)
+                    playerSelector.pupButton.nextSelectable[0] = self.playerSelector[index].pupButton;
+            }
+
+            playerSelector.pupButton.nextSelectable[1] = playerSelector.pLabelSelectorWrapper;
         }
+
+        jollySwapButtons[1].nextSelectable[0] = jollySwapButtons[1];
 
         //---
 
@@ -460,7 +602,8 @@ public class ManySlugCatsMod : BaseUnityPlugin {
         slider.min = bl ? (int) config.info.acceptable.Clamp(int.MinValue) : 0;
         slider.max = bl ? (int) config.info.acceptable.Clamp(int.MaxValue) : (slider._IsTick ? 15 : 100);
 
-        slider.pos = self.playerSelector[0].pos + new Vector2((num1 / 2f) + 15, 130f);
+        float num1 = 70;
+        slider.pos = self.playerSelector[0].pos + new Vector2((num1 / 2f) + 15, 142f);
 
         slider._size = new Vector2(Math.Max((int)(self.playerSelector[PlyCnt() - 1].pos - self.playerSelector[0].pos).x, 30), 30f);
         slider.fixedSize = slider._size;
@@ -470,7 +613,41 @@ public class ManySlugCatsMod : BaseUnityPlugin {
         //---
         
         //Rebind buttons is needed to fix navigating sortof... Needs to be better handled I think
-        self.BindButtons();
+        //self.BindButtons(); //THIS DOESN'T WORK! BREAKS TOO MANY SELECTIONS. FIXING UP TOP
+    }
+
+
+    private void JollySlidingMenu_Singal(On.JollyCoop.JollyMenu.JollySlidingMenu.orig_Singal orig, JollySlidingMenu self, MenuObject sender, string message) {
+
+        orig(self, sender, message);
+        if (message.Contains("JOLLYSWAP")) {
+            for (int i = 0; i < self.playerSelector.Length; ++i){
+                if (message == "JOLLYSWAP" + i.ToString()) {
+                    JollyPlayerOptions jOptA = Custom.rainWorld.options.jollyPlayerOptionsArray[i];
+                    JollyPlayerOptions jOptB = Custom.rainWorld.options.jollyPlayerOptionsArray[i - 1];
+                    Custom.rainWorld.options.jollyPlayerOptionsArray[i] = jOptB;
+                    Custom.rainWorld.options.jollyPlayerOptionsArray[i - 1] = jOptA;
+					bool swapPup = self.JollyOptions(i).isPup != self.JollyOptions(i-1).isPup;
+					
+                    self.SetPortraitsDirty(); //REFRESH THE PORTRAITS!
+                    self.playerSelector[i].dirty = true;
+                    self.playerSelector[i-1].dirty = true;
+                    
+					//IF ONE OF US WAS A PUP AND THE OTHER WASN'T, TOGGLE BOTH PUP BUTTONS
+					if (swapPup) {
+						self.playerSelector[i].pupButton.Toggle();
+						self.playerSelector[i-1].pupButton.Toggle();
+					}
+					
+					//TRY AND UPDATE THE NAMES TOO
+					self.playerSelector[i].playerLabelSelector.value = JollyCustom.GetPlayerName(i);
+					self.playerSelector[i-1].playerLabelSelector.value = JollyCustom.GetPlayerName(i-1);
+					
+					//UPDATE WHO IS ACTUALLY ACTIVE
+                    self.NumberPlayersChange(self.numberPlayersSlider.cfgEntry.BoundUIconfig, self.numberPlayersSlider.value, self.numberPlayersSlider.value);
+                }
+            }
+        }
     }
 
     //----
@@ -482,7 +659,7 @@ public class ManySlugCatsMod : BaseUnityPlugin {
 
         //---
 
-        var newDeviceButton = new InputOptionsMenu.DeviceButton[10];
+        var newDeviceButton = new InputOptionsMenu.DeviceButton[PlyCnt()+2];
 
         self.deviceButtons.CopyTo(newDeviceButton, 0);
         
@@ -493,7 +670,14 @@ public class ManySlugCatsMod : BaseUnityPlugin {
         var inputTesterIndex = self.pages[0].subObjects.IndexOf(self.inputTesterHolder);
         
         var buttonOffset = 60.0;
-        
+        var deviceBtnHeight = 680.0; //620
+
+        if (PlyCnt() > 8) {
+            deviceBtnHeight = 740;
+            buttonOffset /= (PlyCnt() / 11.0f); //8.5
+        }
+
+
         for (int index = 0; index < self.deviceButtons.Length; ++index) {
             InputOptionsMenu.DeviceButton deviceButton; 
             
@@ -504,7 +688,7 @@ public class ManySlugCatsMod : BaseUnityPlugin {
                 
                 if (index == 0 && (self.CurrLang != InGameTranslator.LanguageID.English)) str = InGameTranslator.EvenSplit(str, 1);
                 
-                deviceButton = new InputOptionsMenu.DeviceButton(self, self.pages[0], new Vector2(450f, (float) (620.0 - (double) index * buttonOffset)) + vector2_1, str, self.deviceButtons, index);
+                deviceButton = new InputOptionsMenu.DeviceButton(self, self.pages[0], new Vector2(450f, (float) (deviceBtnHeight - (double) index * buttonOffset)) + vector2_1, str, self.deviceButtons, index);
 
                 self.deviceButtons[index] = deviceButton;
                 
@@ -512,7 +696,7 @@ public class ManySlugCatsMod : BaseUnityPlugin {
             } else {
                 deviceButton = self.deviceButtons[index];
 
-                deviceButton.pos = new Vector2(450f, (float)(620.0 - (double)index * buttonOffset)) + vector2_1;
+                deviceButton.pos = new Vector2(450f, (float)(deviceBtnHeight - (double)index * buttonOffset)) + vector2_1;
                 deviceButton.buttonArray = self.deviceButtons;
             }
             
@@ -579,14 +763,14 @@ public class ManySlugCatsMod : BaseUnityPlugin {
         
         var perInputOffset = 76f;//143.3333282470703;
 
-        var initalYOffset = 672;
+        var initalYOffset = 665;
 
         var xOffset = 32;
 
         if (PlyCnt() > 8) {
-            perInputOffset /= (PlyCnt() / 8.5f);
-            //COME ON IT LOOKS BETTER THIS WAY...
-            self.backButton.pos -= new Vector2(0, 50);
+            initalYOffset = 740;
+            perInputOffset /= (PlyCnt() / 9.8f);
+            self.backButton.pos -= new Vector2(85, 0); //COME ON IT LOOKS BETTER THIS WAY...
         }
 
         for (int index = self.playerButtons.Length - 1; index >= 0; --index) {
@@ -668,31 +852,123 @@ public class ManySlugCatsMod : BaseUnityPlugin {
         for (int index = 0; index < self.gamePadButtonButtons.Length; ++index) self.gamePadButtonButtons[index].nextSelectable[2] = self.playerButtons[index < self.gamePadButtonButtons.Length / 2 ? 0 : 1];
     }
 
+
+    //ADDING FAKE CHARACTERS FOR THE ARENA MODE COLORS
+    private void Name_Init(On.SlugcatStats.Name.orig_Init orig) {
+        orig();
+        // ExtEnum<SlugcatStats.Name>.values.AddEntry(SlugcatStats.Name.White.value);
+        ExtEnum<SlugcatStats.Name>.values.AddEntry("J5");
+        ExtEnum<SlugcatStats.Name>.values.AddEntry("J6");
+        ExtEnum<SlugcatStats.Name>.values.AddEntry("J7");
+        ExtEnum<SlugcatStats.Name>.values.AddEntry("J8");
+        ExtEnum<SlugcatStats.Name>.values.AddEntry("J9");
+        ExtEnum<SlugcatStats.Name>.values.AddEntry("J10");
+        ExtEnum<SlugcatStats.Name>.values.AddEntry("J11");
+        ExtEnum<SlugcatStats.Name>.values.AddEntry("J12");
+        ExtEnum<SlugcatStats.Name>.values.AddEntry("J13");
+        ExtEnum<SlugcatStats.Name>.values.AddEntry("J14");
+        ExtEnum<SlugcatStats.Name>.values.AddEntry("J15");
+        ExtEnum<SlugcatStats.Name>.values.AddEntry("J16");
+        ExtEnum<SlugcatStats.Name>.values.AddEntry("JPlus");
+    }
+
+    //SO THEY DON'T SHOW UP IN THE SELECT SCREEN
+    private bool SlugcatStats_HiddenOrUnplayableSlugcat(On.SlugcatStats.orig_HiddenOrUnplayableSlugcat orig, SlugcatStats.Name i) {
+
+        bool extraPlayer = (
+            i == EnumExt_MyNames.J5 ||
+            i == EnumExt_MyNames.J6 ||
+            i == EnumExt_MyNames.J7 ||
+            i == EnumExt_MyNames.J8 ||
+            i == EnumExt_MyNames.J9 ||
+            i == EnumExt_MyNames.J10 ||
+            i == EnumExt_MyNames.J11 ||
+            i == EnumExt_MyNames.J12 ||
+            i == EnumExt_MyNames.J13 ||
+            i == EnumExt_MyNames.J14 ||
+            i == EnumExt_MyNames.J15 ||
+            i == EnumExt_MyNames.J16 ||
+            i == EnumExt_MyNames.JPlus);
+        return orig(i) || extraPlayer;
+    }
+
+
     private SlugcatStats.Name Name_ArenaColor(On.SlugcatStats.Name.orig_ArenaColor orig, int playerIndex)
     {
-        //USE MSC COLORS IF AVAILABLE
-        if (ModManager.MSC && playerIndex < 8) {
-            switch(playerIndex)
-            {
-			case 4:
-				return MoreSlugcatsEnums.SlugcatStatsName.Rivulet;
-			case 5:
-				return MoreSlugcatsEnums.SlugcatStatsName.Artificer;
-			case 6:
-				return MoreSlugcatsEnums.SlugcatStatsName.Saint;
-			case 7:
-				return MoreSlugcatsEnums.SlugcatStatsName.Spear;
-            }
-            //IF IT'S NONE OF THESE, WE'LL LOOP BACK AROUND TO SURV
-        }
+        //THIS VERSION WORKS EVEN IF MSC IS NOT ENABLED
+		switch(playerIndex)
+		{
+		case 4:
+			return EnumExt_MyNames.J5;
+		case 5:
+			return EnumExt_MyNames.J6;
+		case 6:
+			return EnumExt_MyNames.J7;
+		case 7:
+			return EnumExt_MyNames.J8;
+		case 8:
+			return EnumExt_MyNames.J9;
+		case 9:
+			return EnumExt_MyNames.J10;
+		case 10:
+			return EnumExt_MyNames.J11;
+		case 11:
+			return EnumExt_MyNames.J12;
+		case 12:
+			return EnumExt_MyNames.J13;
+		case 13:
+			return EnumExt_MyNames.J14;
+		case 14:
+			return EnumExt_MyNames.J15;
+		case 15:
+			return EnumExt_MyNames.J16;
+		}
 
-        while (playerIndex > 3)
-        {
-            playerIndex = playerIndex - 4;
-        }
+        if (playerIndex > 15) //MORE THAN 16?
+            return EnumExt_MyNames.JPlus; //OR ELSE IT WILL RETURN NULL AND CRASH MOST THINGS
 
         return orig(playerIndex);
     }
+
+
+
+    private Color PlayerGraphics_DefaultSlugcatColor(On.PlayerGraphics.orig_DefaultSlugcatColor orig, SlugcatStats.Name i) {
+
+        Color result = orig(i);
+
+        float dim = 0.8f;
+
+        if (i == EnumExt_MyNames.J10) //Sofanthiel
+            return new Color(0.09f, 0.14f, 0.31f);
+        if (i == EnumExt_MyNames.J5) //Rivulet
+            return new Color(0.56863f, 0.8f, 0.94118f);
+        if (i == EnumExt_MyNames.J6) //Artificer
+            return new Color(0.43922f, 0.13725f, 0.23529f);
+        if (i == EnumExt_MyNames.J7) //Saint
+            return new Color(0.66667f, 0.9451f, 0.33725f);
+        if (i == EnumExt_MyNames.J8) //Spear
+            return new Color(0.31f, 0.18f, 0.41f);
+        if (i == EnumExt_MyNames.J9) //Gourmand
+            return new Color(0.94118f, 0.75686f, 0.59216f);
+        if (i == EnumExt_MyNames.J11) //pup1
+            return new Color(0.6f * dim, 0.7f * dim, 0.9f * dim); //TOO CLOSE TO RIVULET! DIM IT A LITTLE...
+        if (i == EnumExt_MyNames.J12) //pup2
+            return new Color(0.48f, 0.87f, 0.81f);
+        if (i == EnumExt_MyNames.J13) //Pebbles
+            return new Color(1f, 0.4f, 0.79607844f);
+        if (i == EnumExt_MyNames.J14) //Moon
+            return new Color(0.13f, 0.53f, 0.69f);
+        if (i == EnumExt_MyNames.J15) //NSH
+            return new Color(0f, 1f, 0f);
+        if (i == EnumExt_MyNames.J16) //Sliver
+            return new Color(0.89f * dim, 0.89f * dim, 0.79f * dim); //TOO CLOSE TO SURVIVOR! DIM IT A LITTLE...
+        if (i == EnumExt_MyNames.JPlus)
+            return new Color(1f, 1f, 1f);
+
+        return result;
+    }
+	
+	
 
 
 
@@ -1108,7 +1384,7 @@ public class ManySlugCatsMod : BaseUnityPlugin {
             self.classButton.GetButtonBehavior.greyedOut = false;
     }
     
-	//CRASH FOR World/RainWorld_Data/StreamingAssets\illustrations\multiplayerportrait41-white.png
+	//OKAY WEIRD BUT WE A DEFINITELY DUPLICATING MENU OBJECTS WHEN SWITCHING BETWEEN ARENA MODES WHILE MSC IS DISABLED...
     private void MultiplayerMenu_InitiateGameTypeSpecificButtons(On.Menu.MultiplayerMenu.orig_InitiateGameTypeSpecificButtons orig, MultiplayerMenu self) {
         orig(self);
 
@@ -1117,12 +1393,35 @@ public class ManySlugCatsMod : BaseUnityPlugin {
         if (self.playerJoinButtons != null) {
             //foreach (var playerJoinButton in self.playerJoinButtons) playerJoinButton.pos.x -= shift;
             for (int i = 0; i < self.playerJoinButtons.Length; i++) {
-                float shift = 235 + i * 10; //298 //NORMALLY 120
-                if (PlyCnt() > 8)
-                    shift += i * 30 * (self.playerJoinButtons.Length/8);
+                //float shift = 235 + i * 10; //298 //NORMALLY 120
+                //float shift = 235 + i * 4.1f * self.playerJoinButtons.Length * Mathf.Lerp((1366 / Custom.rainWorld.options.ScreenSize.x), 1f, 0.4f);
+                float shift = 235 + i * (PlyCnt() > 8 ? 4.1f : 1.2f) * self.playerJoinButtons.Length * Mathf.Lerp((1366 / Custom.rainWorld.options.ScreenSize.x), 1f, 0.4f);
+                if (PlyCnt() > 8) {
+                    //EXTRA SHIFT
+                    shift -= 15;
+
+                    //SHRINK THE BUTTONS!!
+                    self.playerJoinButtons[i].size /= 2f;
+                    self.playerJoinButtons[i].lastSize /= 2f;
+                    self.playerJoinButtons[i].portrait.sprite.scale = 0.5f;
+                    self.playerJoinButtons[i].portrait.pos -= self.playerJoinButtons[i].size / 2f;
+                    foreach (var playerButtonSubObject in self.playerJoinButtons[i].subObjects) {
+                        if (!(playerButtonSubObject is RectangularMenuObject rectMenuObject)) return;
+                        rectMenuObject.size /= 2;
+                        rectMenuObject.lastSize /= 2;
+                        //rectMenuObject.pos += rectMenuObject.size;
+                    }
+                }
                 self.playerJoinButtons[i].pos.x -= shift;
                 if (ModManager.MSC && self.playerClassButtons != null) {
                     self.playerClassButtons[i].pos.x -= shift;
+                    //IF WE ARE USING SHRUNK ICONS, SHIFT EVERY OTHER CLASS BUTTON UP TOP 
+                    if (PlyCnt() > 8) {
+                        self.playerClassButtons[i].pos.x -= self.playerJoinButtons[i].size.x / 2f;
+                        self.playerClassButtons[i].size.y *= 0.75f;
+                        if (i % 2 == 0)
+                            self.playerClassButtons[i].pos.y += self.playerJoinButtons[i].size.y * 2f;
+                    }
                 }
             }
         }
@@ -1427,4 +1726,20 @@ public class ManySlugCatsMod : BaseUnityPlugin {
     }
 
     //----
+
+    public static class EnumExt_MyNames {
+        public static SlugcatStats.Name J5 = new SlugcatStats.Name("J5", true);
+        public static SlugcatStats.Name J6 = new SlugcatStats.Name("J6", true);
+        public static SlugcatStats.Name J7 = new SlugcatStats.Name("J7", true);
+        public static SlugcatStats.Name J8 = new SlugcatStats.Name("J8", true);
+        public static SlugcatStats.Name J9 = new SlugcatStats.Name("J9", true);
+        public static SlugcatStats.Name J10 = new SlugcatStats.Name("J10", true);
+        public static SlugcatStats.Name J11 = new SlugcatStats.Name("J11", true);
+        public static SlugcatStats.Name J12 = new SlugcatStats.Name("J12", true);
+        public static SlugcatStats.Name J13 = new SlugcatStats.Name("J13", true);
+        public static SlugcatStats.Name J14 = new SlugcatStats.Name("J14", true);
+        public static SlugcatStats.Name J15 = new SlugcatStats.Name("J15", true);
+        public static SlugcatStats.Name J16 = new SlugcatStats.Name("J16", true);
+        public static SlugcatStats.Name JPlus = new SlugcatStats.Name("JPlus", true);
+    }
 }
