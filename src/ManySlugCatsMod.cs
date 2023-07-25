@@ -129,6 +129,7 @@ public class ManySlugCatsMod : BaseUnityPlugin {
             On.Menu.InputTesterHolder.Back.Update += Back_Update;
 
             On.Player.Update += BPPlayer_Update;
+            On.ShelterDoor.Update += ShelterDoor_Update;
 
             BindingFlags otherMethodFlags = BindingFlags.Instance | BindingFlags.Public;
             BindingFlags myMethodFlags = BindingFlags.Static | BindingFlags.Public;
@@ -1451,6 +1452,40 @@ public class ManySlugCatsMod : BaseUnityPlugin {
                 }
             }
         }
+
+        //MAKE SHELTERS CLOSE EASIER IF AT LEAST 4 PEOPLE ARE READY TO SLEEP
+        if (playersReadyToSleep >= 4 && forceShutTimer >= 200) {
+            if (self.room != null && self.room.abstractRoom.shelter && self.AI == null && self.room.game.IsStorySession && !self.dead && !self.Sleeping && self.room.shelterDoor != null && !self.room.shelterDoor.Broken) {
+                if (self.shortcutDelay < 1 && self.readyForWin) {
+                    if (ModManager.CoopAvailable)
+                        self.ReadyForWinJolly = true;
+                    self.room.shelterDoor.Close(); //THIS JUST CHECKS FOR CLOSE
+                }
+            }
+        }
+    }
+
+
+    public static int playersReadyToSleep = 0;
+    public static int forceShutTimer = 0;
+    private void ShelterDoor_Update(On.ShelterDoor.orig_Update orig, ShelterDoor self, bool eu) {
+
+        orig(self, eu);
+
+        playersReadyToSleep = 0;
+        //COUNT PLAYERS READY TO HIBERNATE
+        for (int k = 0; k < self.room.game.Players.Count; k++) {
+            if (self.room.game.Players[k].realizedCreature != null && self.room.game.Players[k].realizedCreature is Player player) {
+                if (player.ReadyForWinJolly)
+                    playersReadyToSleep++;
+            }
+        }
+
+        //GIVE THE STRAGGLERS 6 SECONDS TO CRAWL INSIDE
+        if (playersReadyToSleep >= 4)
+            forceShutTimer++;
+        else
+            forceShutTimer = 0;
     }
 
     private bool JollyCustom_ForceActivateWithMSC(On.JollyCoop.JollyCustom.orig_ForceActivateWithMSC orig)
