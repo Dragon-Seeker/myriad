@@ -517,7 +517,39 @@ public class ManySlugCatsMod : BaseUnityPlugin {
 
         for (int index = 0; index < PlyCnt(); ++index) {
             JollyPlayerSelector playerSelector = self.playerSelector[index];
-        
+
+            if (PlyCnt() > 8) {
+                playerSelector.portraitRectangle.size /= 2;
+                playerSelector.portraitRectangle.lastSize /= 2;
+
+                playerSelector.portraitRectangle.pos += new Vector2(18, 4);
+                playerSelector.portraitRectangle.lastPos = playerSelector.portraitRectangle.pos;
+
+                var portaitPos = playerSelector.portraitRectangle.pos + new Vector2(25, 25);  //new Vector2((18 * 2) + 8, (12 * 2) + 8);
+
+                playerSelector.RemoveSubObject(playerSelector.portrait);
+
+                playerSelector.portrait = new MenuIllustration((Menu.Menu) menu, playerSelector, "", "MultiplayerPortrait" + index.ToString() + "1",
+                    portaitPos, true, true);
+
+                playerSelector.subObjects.Add(playerSelector.portrait);
+
+                playerSelector.portrait.sprite.scale = 0.5f;
+
+                // var portaitSpritPos = new Vector2(18, 12);
+                //
+                // playerSelector.portrait.pos += portaitSpritPos;
+                // playerSelector.portrait.lastPos = playerSelector.portrait.pos;
+
+                playerSelector.classButton.SetSize(playerSelector.classButton.size -= new Vector2(18, 0));
+
+                playerSelector.classButton.menuLabel.label.scale = 0.90f;
+                
+                //----
+
+                playerSelector.playerLabelSelector.size -= new Vector2(18, 0);
+            }
+            
             //playerSelector.pos.x -= playerSelector.pos.x - pos1.x;
             //playerSelector.playerLabelSelector._pos.x -= playerSelector.playerLabelSelector._pos.x - pos1.x;
             //pos1 += new Vector2(num2 + num1, 0.0f);
@@ -529,7 +561,7 @@ public class ManySlugCatsMod : BaseUnityPlugin {
             playerSelector.playerLabelSelector._pos.x = newX + 0;
 
             if (PlyCnt() > 8) {
-                playerSelector.pupButton.pos += new Vector2(-110f, 100f); //-45
+                playerSelector.pupButton.pos += new Vector2(-85f, 95f); //-45
                 playerSelector.pupButton.roundedRect.size *= 0.8f;
                 playerSelector.pupButton.selectRect.size *= 0.8f;
             }
