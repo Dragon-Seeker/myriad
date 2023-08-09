@@ -10,10 +10,10 @@
     <Reference Include="../lib/*.dll">
       <Private>false</Private>
     </Reference>
-    <Reference Include="Rewired_Core"> <!--ExcludeFromPatch="True"-->
+    <Reference Include="Rewired_Core">
       <HintPath>$(RainWorldDir)\RainWorld_Data\Managed\Rewired_Core.dll</HintPath>
     </Reference>
-    <Reference Include="Rewired_Windows" ExcludeFromPatch="True">
+    <Reference Include="Rewired_Windows">
       <HintPath>$(RainWorldDir)\RainWorld_Data\Managed\Rewired_Windows.dll</HintPath>
     </Reference>
     <Reference Include="0Harmony">
@@ -23,10 +23,10 @@
     <Reference Include="0Harmony20">
       <HintPath>$(RainWorldDir)\BepInEx\core\0Harmony20.dll</HintPath>
     </Reference>
-    <Reference Include="Assembly-CSharp" ExcludeFromPatch="True">
+    <Reference Include="Assembly-CSharp">
       <HintPath>$(RainWorldDir)\BepInEx\utils\PUBLIC-Assembly-CSharp.dll</HintPath>
     </Reference>
-    <Reference Include="Assembly-CSharp-firstpass" ExcludeFromPatch="True">
+    <Reference Include="Assembly-CSharp-firstpass">
       <HintPath>$(RainWorldDir)\RainWorld_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
     <Reference Include="BepInEx">
@@ -47,7 +47,7 @@
     <Reference Include="HarmonyXInterop">
       <HintPath>$(RainWorldDir)\BepInEx\core\HarmonyXInterop.dll</HintPath>
     </Reference>
-    <Reference Include="HOOKS-Assembly-CSharp" ExcludeFromPatch="True">
+    <Reference Include="HOOKS-Assembly-CSharp">
       <HintPath>$(RainWorldDir)\BepInEx\plugins\HOOKS-Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Cecil">
@@ -74,16 +74,16 @@
     <Reference Include="UnityEngine">
       <HintPath>$(RainWorldDir)\RainWorld_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
-    <Reference Include="UnityEngine.CoreModule" ExcludeFromPatch="True">
+    <Reference Include="UnityEngine.CoreModule">
       <HintPath>$(RainWorldDir)\RainWorld_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
-    <Reference Include="UnityEngine.ImageConversionModule" ExcludeFromPatch="True">
+    <Reference Include="UnityEngine.ImageConversionModule">
       <HintPath>$(RainWorldDir)\RainWorld_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
     </Reference>
-    <Reference Include="UnityEngine.InputLegacyModule" ExcludeFromPatch="True">
+    <Reference Include="UnityEngine.InputLegacyModule">
       <HintPath>$(RainWorldDir)\RainWorld_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
     </Reference>
-    <Reference Include="com.rlabrecque.steamworks.net" ExcludeFromPatch="True">
+    <Reference Include="com.rlabrecque.steamworks.net">
       <HintPath>$(RainWorldDir)\RainWorld_Data\Managed\com.rlabrecque.steamworks.net.dll</HintPath>
     </Reference>
   </ItemGroup>
@@ -97,44 +97,44 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="GatherReferences" AfterTargets="ResolveReferences">
-    <!-- { Remove any references to DLL's that are to be patched but allow for others if needed } -->
-    <ItemGroup>
-      <PatchReference Include="@(ReferencePath)"/> <!--  Exclude="@(ReferencePath-&gt;WithMetadataValue('ExcludeFromPatch', 'true'))" -->
-    </ItemGroup>
-  </Target>
+<!--  <Target Name="GatherReferences" AfterTargets="ResolveReferences">-->
+<!--    &lt;!&ndash; { Remove any references to DLL's that are to be patched but allow for others if needed } &ndash;&gt;-->
+<!--    <ItemGroup>-->
+<!--      <PatchReference Include="@(ReferencePath)"/> &lt;!&ndash;  Exclude="@(ReferencePath-&gt;WithMetadataValue('ExcludeFromPatch', 'true'))" &ndash;&gt;-->
+<!--    </ItemGroup>-->
+<!--  </Target>-->
 
-  <Target Name="BuildPreloadPatches" AfterTargets="PostBuildEvent">
-    <!-- { Getting the patch files to be included with the Patch DLL } -->
-    <ItemGroup>
-      <PreloadPatches Include="$(ProjectDir)/src/preloadPatches/*.cs" />
-    </ItemGroup>
+<!--  <Target Name="BuildPreloadPatches" AfterTargets="PostBuildEvent">-->
+<!--    &lt;!&ndash; { Getting the patch files to be included with the Patch DLL } &ndash;&gt;-->
+<!--    <ItemGroup>-->
+<!--      <PreloadPatches Include="$(ProjectDir)/src/preloadPatches/*.cs" />-->
+<!--    </ItemGroup>-->
 
-    <!-- { OutputPath combinded with the DLL name } -->
-    <PropertyGroup>
-      <OutputPatchPath>$(OutputPath)/$(ProjectName)_PreloadPatch.dll</OutputPatchPath>
-    </PropertyGroup>
-    
-    <Message Text="Building Preload Patches" />
-    <CSC Sources="@(PreloadPatches)" References="@(PatchReference)" TargetType="library" OutputAssembly="$(OutputPatchPath)" EmitDebugInformation="true" />
-  </Target>
+<!--    &lt;!&ndash; { OutputPath combinded with the DLL name } &ndash;&gt;-->
+<!--    <PropertyGroup>-->
+<!--      <OutputPatchPath>$(OutputPath)/$(ProjectName)_PreloadPatch.dll</OutputPatchPath>-->
+<!--    </PropertyGroup>-->
+<!--    -->
+<!--    <Message Text="Building Preload Patches" />-->
+<!--    <CSC Sources="@(PreloadPatches)" References="@(PatchReference)" TargetType="library" OutputAssembly="$(OutputPatchPath)" EmitDebugInformation="true" />-->
+<!--  </Target>-->
   
   <!--[ End of Patch Build Code ]-->
 
   <!--[ Basically this function will copy the built files and mod info to the rainworld mod folder thru the "RainWorldDir" enviroment variable  ]-->
-  <Target Name="PostBuild-CopyToRainWorldDir" AfterTargets="PostBuildEvent" Condition="Exists('$(RainWorldDir)')">
-    <!-- { Create Asset object for transfer later } -->
-    <ItemGroup>
-      <Assets Include="$(ProjectDir)/assets/**/*.*" />
-    </ItemGroup>
+<!--  <Target Name="PostBuild-CopyToRainWorldDir" AfterTargets="PostBuildEvent" Condition="Exists('$(RainWorldDir)')">-->
+<!--    &lt;!&ndash; { Create Asset object for transfer later } &ndash;&gt;-->
+<!--    <ItemGroup>-->
+<!--      <Assets Include="$(ProjectDir)/assets/**/*.*" />-->
+<!--    </ItemGroup>-->
 
-    <!-- { Transfer main plugin portion of the Mod } -->
-    <Copy SourceFiles="@(Assets)" DestinationFiles="$(RainWorldDir)/RainWorld_Data/StreamingAssets/mods/$(ProjectName)/%(RecursiveDir)%(Filename)%(Extension)" />
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(RainWorldDir)/RainWorld_Data/StreamingAssets/mods/$(ProjectName)/plugins" />
+<!--    &lt;!&ndash; { Transfer main plugin portion of the Mod } &ndash;&gt;-->
+<!--    <Copy SourceFiles="@(Assets)" DestinationFiles="$(RainWorldDir)/RainWorld_Data/StreamingAssets/mods/$(ProjectName)/%(RecursiveDir)%(Filename)%(Extension)" />-->
+<!--    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(RainWorldDir)/RainWorld_Data/StreamingAssets/mods/$(ProjectName)/plugins" />-->
 
-    <!-- { Transfer prelaunch patchers of the Mod } -->
-    <Copy SourceFiles="$(OutputPatchPath)" DestinationFolder="$(RainWorldDir)/RainWorld_Data/StreamingAssets/mods/$(ProjectName)/patchers" />
-  </Target>
+<!--    &lt;!&ndash; { Transfer prelaunch patchers of the Mod } &ndash;&gt;-->
+<!--    <Copy SourceFiles="$(OutputPatchPath)" DestinationFolder="$(RainWorldDir)/RainWorld_Data/StreamingAssets/mods/$(ProjectName)/patchers" />-->
+<!--  </Target>-->
 
   <!-- -->
 
