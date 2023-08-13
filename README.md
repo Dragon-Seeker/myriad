@@ -12,9 +12,9 @@ This means that you should not expect much to work with everything and reporting
 
 ## Building
 
-The Buildscript Myriad uses is a combination of various scripts used by other modders. It is required that you set up an Environment Variable labeled `RainWorldDir` to the folder in which Rainwrold is kept in order to easily build and test. 
+The Project currently uses [Cake](https://github.com/cake-build/cake) build tools for the easy of use it provides for doing tasks various tasks in a actual programming language rather than XML. You can build using the `build.ps1` or `build.sh` and Cake will do the rest. It is recommended that you set up an Environment Variable labeled `RainWorldDir` to the folder in which Rainwrold is kept in order to easily build and test. 
 
-**Important:** This mod makes the Controller Library (Rewired) failover to SDL2 instead of other controller interaction methods like Dualsense or XInput. This means that you need to download the latest version of SDL2 from the [github](https://github.com/libsdl-org/SDL/) and place it in the same location as the above Environment Variable. A better method will be included in the future as it will hopefully be shipped with the mod and loaded thru internal means.
+**Important:** This mod makes the Controller Library (Rewired) failover to SDL2 instead of other controller interaction methods like Dualsense or XInput. A version of such currently exists within the `Assets` folder for the repo and will come within the Mod be default. (You can download the latest version of SDL2 from the [github](https://github.com/libsdl-org/SDL/) and place it in the same location as the above Environment Variable if such dose not work)
 
 ## Issues
 
