@@ -18,14 +18,14 @@ public static class Settings {
 
     //--
     
-    public static String RainWorldDir = Environment.GetEnvironmentVariable("RainWorldDir");
+    public static String? RainWorldDir = Environment.GetEnvironmentVariable("RainWorldDir");
 
     public static String ASSETS_DIR = "assets/";
     
     public static String PLUGINS_DIR = "plugins/";
     public static String PATCHER_DIR = "patchers/";
 
-    public static String MOD_COPY_TO_PATH = $"{RainWorldDir}/RainWorld_Data/StreamingAssets/mods/{PROJECT_NAME}";
+    public static String? MOD_COPY_TO_PATH = RainWorldDir != null ? $"{RainWorldDir}/RainWorld_Data/StreamingAssets/mods/{PROJECT_NAME}" : null;
 }
 
 public static class Program {
@@ -73,7 +73,7 @@ public sealed class ZipMod : FrostingTask<BuildContext> {
 [IsDependentOn(typeof(BuildTask))]
 public sealed class CopyToDirectories : FrostingTask<BuildContext> {
     public override void Run(BuildContext context) {
-        copyToPath(context, new DirectoryPath(Settings.MOD_COPY_TO_PATH), false);
+        if(Settings.MOD_COPY_TO_PATH != null) copyToPath(context, new DirectoryPath(Settings.MOD_COPY_TO_PATH), false);
         copyToPath(context, new DirectoryPath($"../output/temp/{Settings.PROJECT_NAME}"), true);
     }
 
