@@ -10,6 +10,7 @@ using UnityEngine;
 using RWCustom;
 using BepInEx;
 using BepInEx.Logging;
+using JetBrains.Annotations;
 using JollyCoop.JollyMenu;
 using Menu;
 using Menu.Remix.MixedUI;
@@ -18,8 +19,9 @@ using MonoMod.Cil;
 using MoreSlugcats;
 using Rewired;
 using MonoMod.RuntimeDetour;
-using ManySlugCats.PreloadPatches;
 using JollyCoop;
+using System.Runtime.CompilerServices;
+using Logger = BepInEx.Logging.Logger;
 
 #pragma warning disable CS0618
 
@@ -38,12 +40,53 @@ public class ManySlugCatsMod : BaseUnityPlugin {
     //BindingFlags myMethodFlags = BindingFlags.Static | BindingFlags.Public;
 
     //public static int plyCnt = 8;
-    public static int plyCnt = ManySlugCatsPatches.myCount; //SET IN THERE BECAUSE IT LOADS FIRST
+    public static int plyCnt = Reflect_GetPlayerCount(); //SET IN THERE BECAUSE IT LOADS FIRST
 
     public static int PlyCnt() {
         return plyCnt;
     }
 
+    public static int Reflect_GetPlayerCount() {
+        int playerCount = 4;
+
+        Type type = wrapTryCatch(
+            () => Type.GetType("ManySlugCats.PreloadPatches.ManySlugCatsPatches"), 
+            "Unable to fine the Type [ManySlugCatsPatches] which means the player count will be default of 4"
+            );
+        
+        if (type != null) {
+            FieldInfo field = wrapTryCatch(
+                () => type.GetField("myCount", BindingFlags.Public | BindingFlags.Static), 
+                "Unable to find the Field [ManySlugCatsPatches::myCount] which means the player count will be default of 4"
+                );
+
+            if(field != null) playerCount = (int) field.GetValue(null);
+        }
+
+        return playerCount;
+    }
+    
+    public static T? wrapTryCatch<T>(Func<T> supplier, Func<String> message) where T : class {
+        return wrapTryCatch(supplier, message());
+    }
+
+    public static T? wrapTryCatch<T>(Func<T> supplier, String message) where T : class {
+        return wrapTryCatch(supplier, exception => {
+            logger.LogError(message);
+            logger.LogError(exception.Message);
+        });
+    }
+
+    public static T? wrapTryCatch<T>(Func<T> supplier, Action<Exception> logException) where T : class {
+        try {
+            return supplier();
+        } catch (Exception e) {
+            logException(e);
+        }
+        
+        return null;
+    }
+    
     public void OnEnable() {
         try {
             //new MorePlayers().OnEnable();

@@ -13,23 +13,19 @@ using System.Linq;
 
 public static class Settings {
     public static String PROJECT_NAME = "myriad";
-    
-    public static List<String> PRELOAD_PATCH_BLACKLIST = new List<String>() {
-        "Rewired_Windows",
-        "Assembly-CSharp",
-        "Assembly-CSharp-firstpass",
-        "HOOKS-Assembly-CSharp",
-        "UnityEngine.CoreModule",
-        "UnityEngine.ImageConversionModule",
-        "UnityEngine.InputLegacyModule",
-        "com.rlabrecque.steamworks.net"
-    };
+    public static String GAME_VER = ""; //+15.6
+    public static String MOD_VER = "0.1.0";
 
+    //--
+    
     public static String RainWorldDir = Environment.GetEnvironmentVariable("RainWorldDir");
 
-    public static String ASSETS_DIR = "/assets/";
+    public static String ASSETS_DIR = "assets/";
+    
+    public static String PLUGINS_DIR = "plugins/";
+    public static String PATCHER_DIR = "patchers/";
 
-    public static String MOD_COPY_TO_PATH = RainWorldDir + "/RainWorld_Data/StreamingAssets/mods/" + PROJECT_NAME;
+    public static String MOD_COPY_TO_PATH = $"{RainWorldDir}/RainWorld_Data/StreamingAssets/mods/{PROJECT_NAME}";
 }
 
 public static class Program {
@@ -45,75 +41,82 @@ public class BuildContext : FrostingContext {
     public DirectoryPath projectPath;
     public DirectoryPath outputPath;
 
-    public CustomProjectParserResult projectData;
+    public CustomProjectParserResult mainProjectData;
+    public CustomProjectParserResult preloadProjectData;
     public string MsBuildConfiguration { get; set; }
 
     public BuildContext(ICakeContext context) : base(context) {
         projectPath = context.MakeAbsolute(new DirectoryPath("../main"));
         outputPath = projectPath.Combine("bin/Debug");
 
-        projectData = context.ParseProject("../main/ManySlugCats.csproj", "Debug");
+        mainProjectData = context.ParseProject("../main/Myriad.csproj", "Debug");
+        preloadProjectData = context.ParseProject("../preload_patch/Myriad_PreloadPatcher.csproj", "Debug");
 
         MsBuildConfiguration = context.Argument("configuration", "Debug");
     }
 }
 
-/*
- <Target Name="PostBuild-CopyToRainWorldDir" AfterTargets="PostBuildEvent" Condition="Exists('$(RainWorldDir)')">
-    <!-- { Create Asset object for transfer later } -->
-    <ItemGroup>
-      <Assets Include="$(ProjectDir)/assets/**//*.*" />
-    </ItemGroup>
+[IsDependentOn(typeof(ZipMod))]
+public sealed class Default : FrostingTask {}
 
-    <!-- { Transfer main plugin portion of the Mod } -->
-    <Copy SourceFiles="@(Assets)" DestinationFiles="$(RainWorldDir)/RainWorld_Data/StreamingAssets/mods/$(ProjectName)/%(RecursiveDir)%(Filename)%(Extension)" />
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(RainWorldDir)/RainWorld_Data/StreamingAssets/mods/$(ProjectName)/plugins" />
-
-    <!-- { Transfer prelaunch patchers of the Mod } -->
-    <Copy SourceFiles="$(OutputPatchPath)" DestinationFolder="$(RainWorldDir)/RainWorld_Data/StreamingAssets/mods/$(ProjectName)/patchers" />
-    </Target>
-*/
-
-[TaskName("CopyToRainworldDir")]
-[IsDependentOn(typeof(PreloadPatchBuildTask))]
-public sealed class CopyToRainworldDir : FrostingTask<BuildContext> {
+[TaskName("ZipMod")]
+[IsDependentOn(typeof(CopyToDirectories))]
+public sealed class ZipMod : FrostingTask<BuildContext> {
     public override void Run(BuildContext context) {
-
-        var copyDir = new DirectoryPath(Settings.MOD_COPY_TO_PATH);
+        context.DeleteFile($"../output/versions/{Settings.PROJECT_NAME}-{Settings.MOD_VER}.zip");
         
-        // **/*.*
-        context.CopyDirectory(context.projectPath.Combine(new DirectoryPath(Settings.ASSETS_DIR)), new DirectoryPath(Settings.MOD_COPY_TO_PATH));
-        context.CopyFileToDirectory(context.projectData.OutputPath.FullPath + context.projectData.AssemblyName, copyDir.Combine($"{Settings.PROJECT_NAME}/plugins"));
-        
-        String preloadPatchName = $"{Settings.PROJECT_NAME}_PreloadPatch";
-        
-        context.CopyFileToDirectory(context.outputPath.CombineWithFilePath($"{preloadPatchName}.dll"), copyDir.Combine($"{Settings.PROJECT_NAME}/patchers"));
+        context.Zip("../output/temp", $"../output/versions/{Settings.PROJECT_NAME}-{Settings.MOD_VER}.zip");
     }
 }
 
-/*
-  <Target Name="BuildPreloadPatches" AfterTargets="PostBuildEvent">
-    <!-- { Getting the patch files to be included with the Patch DLL } -->
-    <ItemGroup>
-      <PreloadPatches Include="$(ProjectDir)/src/preloadPatches/*.cs" />
-    </ItemGroup>
-
-    <!-- { OutputPath combinded with the DLL name } -->
-    <PropertyGroup>
-      <OutputPatchPath>$(OutputPath)/$(ProjectName)_PreloadPatch.dll</OutputPatchPath>
-    </PropertyGroup>
-    
-    <Message Text="Building Preload Patches" />
-    <CSC Sources="@(PreloadPatches)" References="@(PatchReference)" TargetType="library" OutputAssembly="$(OutputPatchPath)" EmitDebugInformation="true" />
-  </Target>
- */
-
-[TaskName("PreloadPatchBuild")]
-[IsDependeeOf(typeof(Default))]
-public sealed class PreloadPatchBuildTask : FrostingTask<BuildContext> {
-    
+[TaskName("CopyToRainworldDir")]
+[IsDependentOn(typeof(BuildTask))]
+public sealed class CopyToDirectories : FrostingTask<BuildContext> {
     public override void Run(BuildContext context) {
-        String preloadPatchName = $"{Settings.PROJECT_NAME}_PreloadPatch";
+        copyToPath(context, new DirectoryPath(Settings.MOD_COPY_TO_PATH), false);
+        copyToPath(context, new DirectoryPath($"../output/temp/{Settings.PROJECT_NAME}"), true);
+    }
+
+    private void copyToPath(BuildContext context, DirectoryPath output, bool cleanOutput) {
+        if(cleanOutput) context.CleanDirectory(output);
+        
+        context.CreateDirectory(output);
+        
+        // **/*.*
+        context.CopyDirectory(
+            context.projectPath.Combine(new DirectoryPath(Settings.ASSETS_DIR)),
+            output
+        );
+        
+        context.CreateDirectory(output.Combine(Settings.PLUGINS_DIR));
+        
+        context.CopyFileToDirectory(
+            context.mainProjectData.OutputPaths[0].FullPath + $"/{context.mainProjectData.AssemblyName}.dll", 
+            output.Combine(Settings.PLUGINS_DIR)
+        );
+
+        context.CreateDirectory(output.Combine(Settings.PATCHER_DIR));
+        
+        context.CopyFileToDirectory(
+            context.preloadProjectData.OutputPaths[0].FullPath + $"/{context.preloadProjectData.AssemblyName}.dll",
+            output.Combine(Settings.PATCHER_DIR)
+        );
+    }
+}
+
+[TaskName("Build")]
+[IsDependentOn(typeof(CleanTask))]
+public sealed class BuildTask : FrostingTask<BuildContext> {
+    public override void Run(BuildContext context) {
+        var mainBuildSettings = new DotNetBuildSettings();
+
+        mainBuildSettings.Configuration = context.MsBuildConfiguration;
+
+        context.DotNetBuild("../main/Myriad.csproj", mainBuildSettings);
+        
+        //---
+        
+        /*String preloadPatchName = $"{Settings.PROJECT_NAME}_PreloadPatch";
         
         FilePath asssemblyPath = context.outputPath.CombineWithFilePath($"{preloadPatchName}.dll");
         FilePath symbolsPath = context.outputPath.CombineWithFilePath($"{preloadPatchName}.pdb");
@@ -124,18 +127,18 @@ public sealed class PreloadPatchBuildTask : FrostingTask<BuildContext> {
             .AppendSwitchQuoted("/out",":", asssemblyPath.FullPath)
             .AppendSwitchQuoted("/pdb",":", symbolsPath.FullPath)
             .Append("/recurse:*.cs");
-
+        
         List<ProjectAssemblyReference> assemblyReferences = context.projectData.References.ToList();
-
+        
         assemblyReferences.RemoveAll(reference => Settings.PRELOAD_PATCH_BLACKLIST.Contains(reference.Name));
-
+        
         foreach (ProjectAssemblyReference refence in assemblyReferences) {
             if (refence.HintPath == null) {
                 Console.WriteLine(refence.Name);
                 
                 continue;
             }
-
+        
             String pathResolved = Settings.RainWorldDir + refence.HintPath.ToString().Split("$(RainWorldDir)")[1];
             
             Console.WriteLine(pathResolved);
@@ -153,28 +156,21 @@ public sealed class PreloadPatchBuildTask : FrostingTask<BuildContext> {
         
         if (result != 0) {
             throw new Exception(string.Format("csc.exe exited with {0}", result));
-        }
-    }
-}
+        }*/
+        
+        var preloadBuildSettings = new DotNetBuildSettings();
 
-[TaskName("Build")]
-[IsDependentOn(typeof(CleanTask))]
-public sealed class BuildTask : FrostingTask<BuildContext> {
-    public override void Run(BuildContext context) {
-        var buildSettings = new DotNetBuildSettings();
+        preloadBuildSettings.Configuration = context.MsBuildConfiguration;
 
-        buildSettings.Configuration = context.MsBuildConfiguration;
-
-        context.DotNetBuild("../main/ManySlugCats.csproj", buildSettings);
+        context.DotNetBuild("../preload_patch/Myriad_PreloadPatcher.csproj", preloadBuildSettings);
     }
 }
 
 [TaskName("Clean")]
 public sealed class CleanTask : FrostingTask<BuildContext> {
     public override void Run(BuildContext context) {
+        context.CleanDirectory($"../preload_patcher/bin/{context.MsBuildConfiguration}");
         context.CleanDirectory($"../main/bin/{context.MsBuildConfiguration}");
     }
 }
 
-[IsDependentOn(typeof(BuildTask))]
-public sealed class Default : FrostingTask {}

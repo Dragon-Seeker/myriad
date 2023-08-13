@@ -15,7 +15,7 @@ namespace ManySlugCats.PreloadPatches;
 
 public class ManySlugCatsPatches {
 
-    private static ManualLogSource logger = Logger.CreateLogSource("ManySlugCats.PreloadPatch");
+    private static ManualLogSource logger = Logger.CreateLogSource("Myriad.PreloadPatch");
     
     public static int myCount = 16;
 
@@ -24,7 +24,6 @@ public class ManySlugCatsPatches {
 
     private static bool patched_Rewired_Core = false;
     private static bool patched_Rewired_Windows = false;
-
     
     // Patches the assemblies
     public static void Patch(AssemblyDefinition assembly) {
@@ -67,9 +66,11 @@ public class ManySlugCatsPatches {
     // Class: [ ConfigVars ], Method: [ DoesPlatformUseSDL2 ]
     public static void patch_ConfigVars_DoesPlatformUseSDL2(ModuleDefinition module) {
         try {
-            TypeDefinition classDef = module.Types.First(t => t.FullName.Contains("ConfigVars"));
+            TypeDefinition classDef = module.Types
+                .First(t => t.FullName.Contains("ConfigVars"));
             
-            MethodDefinition methodDef = classDef.Methods.First(m => m.Name == "DoesPlatformUseSDL2");
+            MethodDefinition methodDef = classDef.Methods
+                .First(m => m.Name == "DoesPlatformUseSDL2");
 
             methodDef.Body
                 .SimplifyMacros(); //Call to fix issues with offset or something idk, allows for the replacement of any int now but idk why!!!!
@@ -93,6 +94,10 @@ public class ManySlugCatsPatches {
 
         var nativeDllPath = Path.Combine(executionBasePath + "SDL2.dll");
 
+        logger.LogMessage(executionBasePath);
+        logger.LogMessage(executionBasePath);
+        logger.LogMessage(executionBasePath);
+        
         // string binPath = System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, ""); // note: don't use CurrentEntryAssembly or anything like that.
         //
         // logger.LogWarning(binPath);
@@ -133,18 +138,13 @@ public class ManySlugCatsPatches {
 
             Collection<Instruction> instructions = methodDef.Body.Instructions;
 
-            // for (int i = 0; i < instructions.Count; i++)
-            // {
-            //     logger.LogMessage($"Instruction {i}: {instructions[i]}");
-            // }
-
-            var instructionBeforeTarget = instructions.First(i => i.OpCode == OpCodes.Ret);
+            Instruction instructionBeforeTarget = instructions.First(i => i.OpCode == OpCodes.Ret);
 
             int indexOfRet = instructions.IndexOf(instructionBeforeTarget);
 
-            var targetInstruction = instructions[indexOfRet + 2]; //instructions[0];
+            Instruction targetInstruction = instructions[indexOfRet + 2]; //instructions[0];
 
-            var methodProcess = methodDef.Body.GetILProcessor();
+            ILProcessor methodProcess = methodDef.Body.GetILProcessor();
 
             methodProcess.InsertBefore(
                 targetInstruction,
@@ -153,11 +153,6 @@ public class ManySlugCatsPatches {
                     module.ImportReference(typeof(ManySlugCatsPatches).GetMethod("hook_BeforePlayerListGeneration"))
                 )
             );
-
-            // for (int i = 0; i < indexOfRet + 7; i++)
-            // {
-            //     Console.WriteLine($"Instruction {i}: {instructions[i]}");
-            // }
         } catch (Exception e) {
             logger.LogError("Patch [patch_BBctKivJxEjGKRzyEkHSRjJoJqnW_zQQfvDZMmpVqPPLYlLuSJXXpwJcI] has seemingly thrown an exception!");
             logger.LogError(e);
@@ -170,7 +165,7 @@ public class ManySlugCatsPatches {
      */
     public static void hook_BeforePlayerListGeneration() {
         try {
-            Type.GetType("ManySlugCats.PreloadPatches.RewiredAdjustUserData")
+            Type.GetType("Myriad.PreloadPatches.RewiredAdjustUserData")
                 .GetMethod("adjustData")
                 .Invoke(null, Array.Empty<object>());
 
@@ -205,10 +200,6 @@ public class ManySlugCatsPatches {
         });
 
         TypeDefinition classDef = module.Types.First(t => t.FullName == "QhRUnWbULvmdFTzNHeLFXfWeuhyi");
-
-        // foreach (MethodDefinition methodDefinition in classDef.Methods) {
-        //     logger.LogMessage(methodDefinition);
-        // }
 
         foreach (string patchableMethod in patchableMethods) {
             try {

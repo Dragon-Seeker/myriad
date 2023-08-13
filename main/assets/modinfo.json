@@ -1,8 +1,11 @@
 ﻿{
-  "id": "manyslugcats",
-  "name": "Many Slug Cats",
+  "id": "myriad",
+  "name": "Myriad of Slug Cats",
   "version": "0.1.0",
-  "authors": "blodhgarm",
+  "authors": [
+    "Blodhgarm",
+    "WillowWispy"
+  ],
   "target_game_version": "v1.9",
   "description": "Mod that aims to make Rainworld support more than just four players",
   "tags": [],

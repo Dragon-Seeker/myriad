@@ -3,9 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManySlugCats", "main\ManySlugCats.csproj", "{1B8B9056-928A-4868-900B-B6A9BDDC1724}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Myriad", "main\Myriad.csproj", "{1B8B9056-928A-4868-900B-B6A9BDDC1724}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Build", "build\Build.csproj", "{885A4759-4E41-4A87-A962-A40DA254AE35}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Myriad_PreloadPatcher", "preload_patch\Myriad_PreloadPatcher.csproj", "{D5EE8BD0-6C73-4E79-A61D-9759AC193681}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,5 +26,9 @@ Global
 		{885A4759-4E41-4A87-A962-A40DA254AE35}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{885A4759-4E41-4A87-A962-A40DA254AE35}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{885A4759-4E41-4A87-A962-A40DA254AE35}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D5EE8BD0-6C73-4E79-A61D-9759AC193681}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D5EE8BD0-6C73-4E79-A61D-9759AC193681}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D5EE8BD0-6C73-4E79-A61D-9759AC193681}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D5EE8BD0-6C73-4E79-A61D-9759AC193681}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
