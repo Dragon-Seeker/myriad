@@ -30,10 +30,10 @@ using Logger = BepInEx.Logging.Logger;
 
 namespace ManySlugCats;
 
-[BepInPlugin("manyslugcats", "Many Slug Cats", "1.0.0")]
-public class ManySlugCatsMod : BaseUnityPlugin {
+[BepInPlugin("myriad", "Myriad of Slug Cats", "0.1.0")]
+public class MyriadMod : BaseUnityPlugin {
     
-    public static ManualLogSource logger = BepInEx.Logging.Logger.CreateLogSource("ManySlugCats");
+    public static ManualLogSource logger = BepInEx.Logging.Logger.CreateLogSource("Myriad");
     public delegate int orig_ShortcutTime(Player self);
 
     //BindingFlags otherMethodFlags = BindingFlags.Instance | BindingFlags.NonPublic;
@@ -50,17 +50,23 @@ public class ManySlugCatsMod : BaseUnityPlugin {
         int playerCount = 4;
 
         Type type = wrapTryCatch(
-            () => Type.GetType("ManySlugCats.PreloadPatches.ManySlugCatsPatches"), 
-            "Unable to fine the Type [ManySlugCatsPatches] which means the player count will be default of 4"
+            () => Type.GetType("Myriad.PreloadPatches.MyriadPreloadPatches, Myriad_PreloadPatcher"), 
+            "Unable to [get] the Type [MyriadPreloadPatches] which means the player count will be default of 4"
             );
         
         if (type != null) {
             FieldInfo field = wrapTryCatch(
                 () => type.GetField("myCount", BindingFlags.Public | BindingFlags.Static), 
-                "Unable to find the Field [ManySlugCatsPatches::myCount] which means the player count will be default of 4"
+                "Unable to [get] the Field [MyriadPreloadPatches::myCount] which means the player count will be default of 4"
                 );
 
-            if(field != null) playerCount = (int) field.GetValue(null);
+            if (field != null) {
+                playerCount = (int) field.GetValue(null);
+            } else {
+                logger.LogError("Unable to [find] the Field [MyriadPreloadPatches::myCount] which means the player count will be default of 4");
+            }
+        } else {
+            logger.LogError("Unable to [find] the Type [MyriadPreloadPatches] which means the player count will be default of 4");
         }
 
         return playerCount;

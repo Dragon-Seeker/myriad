@@ -11,9 +11,9 @@ using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace ManySlugCats.PreloadPatches;
+namespace Myriad.PreloadPatches;
 
-public class ManySlugCatsPatches {
+public class MyriadPreloadPatches {
 
     private static ManualLogSource logger = Logger.CreateLogSource("Myriad.PreloadPatch");
     
@@ -92,11 +92,24 @@ public class ManySlugCatsPatches {
     private static void LoadSDL2DependenciesEarly() {
         string executionBasePath = System.AppDomain.CurrentDomain.BaseDirectory;
 
-        var nativeDllPath = Path.Combine(executionBasePath + "SDL2.dll");
+        List<String> possiblePaths = new List<string>() {
+            executionBasePath,
+            Path.Combine(executionBasePath + "RainWorld_Data\\StreamingAssets\\mods\\myriad\\")
+        };
 
-        logger.LogMessage(executionBasePath);
-        logger.LogMessage(executionBasePath);
-        logger.LogMessage(executionBasePath);
+        String? validPath = null;
+        
+        foreach (string possiblePath in possiblePaths){
+            var pathOfFile = Path.Combine(possiblePath + "SDL2.dll");
+
+            logger.LogMessage(pathOfFile);
+            
+            if (File.Exists(pathOfFile)) {
+                validPath = pathOfFile;
+                
+                break;
+            }
+        }
         
         // string binPath = System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, ""); // note: don't use CurrentEntryAssembly or anything like that.
         //
@@ -104,16 +117,16 @@ public class ManySlugCatsPatches {
         //
         // SetDllDirectory(null);
         
-        if (File.Exists(nativeDllPath)) {
+        if (validPath != null) {
             logger.LogMessage("Was able to locate SDL2 Control Library");
         } else {
             throw new IOException("Unable to find the Required SDL2.dll! It is required for the mod to function properly at all!");
         }
 
-        if (LoadLibrary(nativeDllPath) == IntPtr.Zero) {
+        if (LoadLibrary(validPath) == IntPtr.Zero) {
             logger.LogError(new Win32Exception(Marshal.GetLastWin32Error()).Message);
         
-            logger.LogError($"Failed to load {nativeDllPath}, verify that the file exists and is not corrupted.");
+            logger.LogError($"Failed to load {validPath}, verify that the file exists and is not corrupted.");
             logger.LogError("Make sure you downloaded the correct version of SDL2 for the games Execution Environment i.e 32bit");
         } else {
             logger.LogMessage("Loaded SDL2 Properly within the Game!");
@@ -150,7 +163,7 @@ public class ManySlugCatsPatches {
                 targetInstruction,
                 Instruction.Create(
                     OpCodes.Call,
-                    module.ImportReference(typeof(ManySlugCatsPatches).GetMethod("hook_BeforePlayerListGeneration"))
+                    module.ImportReference(typeof(MyriadPreloadPatches).GetMethod("hook_BeforePlayerListGeneration"))
                 )
             );
         } catch (Exception e) {

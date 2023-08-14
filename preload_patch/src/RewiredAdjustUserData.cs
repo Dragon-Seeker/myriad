@@ -6,14 +6,14 @@ using Rewired;
 using Rewired.Data;
 using Rewired.Utils;
 
-namespace ManySlugCats.PreloadPatches;
+namespace Myriad.PreloadPatches;
 
 public class RewiredAdjustUserData {
     private static ManualLogSource logger = Logger.CreateLogSource("Myriad.PlayerInjection");
     
     private static readonly BindingFlags flags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
     
-    public static int myCount = ManySlugCatsPatches.myCount;
+    public static int myCount = MyriadPreloadPatches.myCount;
 
     public static void adjustData() {
         logger.LogMessage("Attempting to adjust Player Data!");
@@ -38,15 +38,19 @@ public class RewiredAdjustUserData {
     
         List<Player_Editor> playerList = (List<Player_Editor>)info.GetValue(userData);
     
+        logger.LogMessage("Obtained PlayerList, attempting to adjust list to proper size!");
+        
         Player_Editor templatePlayerEditor = playerList[5]; //OKAY THIS REALLY NEEDS TO BE 5
     
         playerList[5] = null;
         
         for (int i = 5; i < myCount; i++) playerList.Add(null);
         
-        adjustPlayerID(templatePlayerEditor, myCount+1); //9
+        adjustPlayerID(templatePlayerEditor, myCount + 1); //9
         
         playerList.Add(templatePlayerEditor);
+        
+        logger.LogMessage("Add needed null space within the main list!");
         
         //
         
