@@ -180,8 +180,8 @@ public class MyriadMod : BaseUnityPlugin {
             On.Player.Update += BPPlayer_Update;
             On.ShelterDoor.Update += ShelterDoor_Update;
 
-            BindingFlags otherMethodFlags = BindingFlags.Instance | BindingFlags.Public;
-            BindingFlags myMethodFlags = BindingFlags.Static | BindingFlags.Public;
+            //BindingFlags otherMethodFlags = BindingFlags.Instance | BindingFlags.Public;
+            //BindingFlags myMethodFlags = BindingFlags.Static | BindingFlags.Public;
 
             //Hook myCustomHook = new Hook(
             //    typeof(Player).GetProperty("InitialShortcutWaitTime", otherMethodFlags).GetGetMethod(), // This gets the getter 
@@ -285,7 +285,8 @@ public class MyriadMod : BaseUnityPlugin {
     
     private void ShortCutVessel_ctor(On.ShortcutHandler.ShortCutVessel.orig_ctor orig, ShortcutHandler.ShortCutVessel self, IntVector2 pos, Creature creature, AbstractRoom room, int wait) {
         
-        if (MPOptions.longPipeWait.Value && creature is Player && wait > 0) {
+        //DISABLING IF CO-OP LEASH IS ENABLED, SINCE THE CHANGE IS JARRING
+        if (MPOptions.longPipeWait.Value && !coopLeashEnabled && creature is Player && wait > 0) {
             wait *= 1000;
         }
         orig(self, pos, creature, room, wait);
@@ -1535,7 +1536,7 @@ public class MyriadMod : BaseUnityPlugin {
         }
 
         //MAKE SHELTERS CLOSE EASIER IF AT LEAST 4 PEOPLE ARE READY TO SLEEP
-        if (playersReadyToSleep >= 4 && forceShutTimer >= 200) {
+        if (playersReadyToSleep >= 4 && forceShutTimer >= forceTimeLimit) {
             if (self.room != null && self.room.abstractRoom.shelter && self.AI == null && self.room.game.IsStorySession && !self.dead && !self.Sleeping && self.room.shelterDoor != null && !self.room.shelterDoor.Broken) {
                 if (self.shortcutDelay < 1 && self.readyForWin) {
                     if (ModManager.CoopAvailable)
@@ -1549,9 +1550,13 @@ public class MyriadMod : BaseUnityPlugin {
 
     public static int playersReadyToSleep = 0;
     public static int forceShutTimer = 0;
+    public const int forceTimeLimit = 120;
     private void ShelterDoor_Update(On.ShelterDoor.orig_Update orig, ShelterDoor self, bool eu) {
 
         orig(self, eu);
+
+        if (self.isAncient)
+            return; //SKIP ALL THIS FOR ANCIENT SHELTERS. THEY'VE GOT PLENTY OF ROOM
 
         playersReadyToSleep = 0;
         //COUNT PLAYERS READY TO HIBERNATE
@@ -1562,11 +1567,42 @@ public class MyriadMod : BaseUnityPlugin {
             }
         }
 
-        //GIVE THE STRAGGLERS 6 SECONDS TO CRAWL INSIDE
+        //GIVE THE STRAGGLERS A FEW SECONDS TO CRAWL INSIDE
         if (playersReadyToSleep >= 4)
             forceShutTimer++;
         else
             forceShutTimer = 0;
+
+        //IF SHELTER DOORS ARE CLOSING, TELEPORT ANY PLAYERS IN A CORRIDOR INTO THE MAIN ROOM.
+        if (self.closeSpeed > 0f) {
+            //FIND THE FIRST SLUG WHO ISN'T IN A COORIDOR
+            Player host = null;
+            for (int i = 0; i < self.room.game.Players.Count; i++) {
+                if (self.room.game.Players[i].realizedCreature != null
+                    && self.room.game.Players[i].realizedCreature is Player player
+                    && player.room == self.room
+                    && player.bodyMode != Player.BodyModeIndex.CorridorClimb) {
+                    host = player; //THIS WILL BE THE GUY WE TELEPORT TO
+                    break;
+                }
+            }
+
+            //TAKE EVERYONE WHO IS STILL IN A CORRIDOR AND TP THEM TO THE HOST
+            for (int i = 0; i < self.room.game.Players.Count; i++) {
+                if (host != null && self.room.game.Players[i].realizedCreature != null
+                    && self.room.game.Players[i].realizedCreature is Player player
+                    && player.room == self.room
+                    && player.bodyMode == Player.BodyModeIndex.CorridorClimb) {
+                    for (int j = 0; j < player.bodyChunks.Length; j++) {
+                        player.bodyChunks[j].vel = Custom.DegToVec(UnityEngine.Random.value * 360f) * 4f;
+                        player.bodyChunks[j].pos = host.bodyChunks[j].pos;
+                        player.bodyChunks[j].lastPos = host.bodyChunks[j].pos;
+                    }
+                    player.shortcutDelay = 40;
+                }
+            }
+
+        }
     }
 
     private bool JollyCustom_ForceActivateWithMSC(On.JollyCoop.JollyCustom.orig_ForceActivateWithMSC orig)
@@ -1580,22 +1616,22 @@ public class MyriadMod : BaseUnityPlugin {
     private void RainWorld_OnModsInit(On.RainWorld.orig_OnModsInit orig, RainWorld self)
 	{
 		orig(self);
-        MachineConnector.SetRegisteredOI("manyslugcats", new MPOptions());
+        MachineConnector.SetRegisteredOI("myriad", new MPOptions());
  
         for (int i = 0; i < ModManager.ActiveMods.Count; i++)
 		{
 			if (ModManager.ActiveMods[i].id == "willowwisp.bellyplus")
-            {
 				rotundWorldEnabled = true;
-				Debug.Log("ROTUND WORLD DETECTED");
-			}
+            if (ModManager.ActiveMods[i].id == "WillowWisp.CoopLeash")
+                coopLeashEnabled = true;
         }
 		
     }
 	
 	public static bool rotundWorldEnabled = false;
-    
-	private bool Options_ApplyOption(On.Options.orig_ApplyOption orig, Options self, string[] splt2)
+    public static bool coopLeashEnabled = false;
+
+    private bool Options_ApplyOption(On.Options.orig_ApplyOption orig, Options self, string[] splt2)
     {
         
 		bool result = false;
