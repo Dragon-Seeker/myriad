@@ -43,7 +43,7 @@ public class MyriadPreloadPatches {
 
             if (assembly.FullName.Contains("Rewired_Windows") && !patched_Rewired_Windows) {
                 foreach (var module in assembly.Modules) {
-                    patch_QhRUnWbULvmdFTzNHeLFXfWeuhyi(module);
+                    //patch_QhRUnWbULvmdFTzNHeLFXfWeuhyi(module);
                 }
 
                 patched_Rewired_Windows = true;
@@ -89,15 +89,56 @@ public class MyriadPreloadPatches {
             logger.LogError(e);
         }
     }
+    
+    /*
+        [Warning:Myriad.PreloadPatch] 6
+        [Warning:Myriad.PreloadPatch] D:\SteamLibrary\steamapps\common\Rain World\\
+        [Warning:Myriad.PreloadPatch] D:\SteamLibrary\steamapps\common\Rain World\\D:\SteamLibrary\steamapps\common\
+        [Message:Myriad.PreloadPatch] D:\SteamLibrary\steamapps\common\Rain World\SDL2.dll
+        [Message:Myriad.PreloadPatch] D:\SteamLibrary\steamapps\common\Rain World\RainWorld_Data\StreamingAssets\mods\myriadSDL2.dll
+        [Message:Myriad.PreloadPatch] D:SteamLibrary\steamapps\common\workshop\content\312520\3029456904SDL2.dll
+     */
 
     private static void LoadSDL2DependenciesEarly() {
+        
+        //SteamLibrary\steamapps\common\Rain World
         string executionBasePath = System.AppDomain.CurrentDomain.BaseDirectory;
-
+        
+        string devSDL2Path = Path.Combine(executionBasePath, Path.Combine(new [] { "RainWorld_Data", "StreamingAssets", "mods", "myriad" }));
+        
+        List<string> listPathParts = new List<string>(executionBasePath.Split(Path.DirectorySeparatorChar));
+        //logger.LogWarning(listPathParts.Count());
+        
+        // String debugOut = "";
+        // foreach (string listPathPart in listPathParts) debugOut += (listPathPart + "*");
+        // logger.LogWarning(debugOut);
+        
+        listPathParts.RemoveAt(listPathParts.Count - 1);
+        listPathParts.RemoveAt(listPathParts.Count - 1);
+        listPathParts.RemoveAt(listPathParts.Count - 1);
+        
+        // debugOut = "";
+        // foreach (string listPathPart in listPathParts) debugOut += (listPathPart + "*");
+        // logger.LogWarning(debugOut);
+        
+        string driveLetter = listPathParts[0];
+        listPathParts.RemoveAt(0);
+        
+        //SteamLibrary\steamapps
+        string baseSteamLibPath = driveLetter + Path.DirectorySeparatorChar + Path.Combine(listPathParts.ToArray());
+        
+        //logger.LogWarning(baseSteamLibPath);
+        
+        string workshopSDL2Path = Path.Combine(baseSteamLibPath, Path.Combine(new [] { "workshop", "content", "312520", "3029456904" }));
+        
+        //logger.LogWarning(workshopSDL2Path);
+        
         List<String> possiblePaths = new List<string>() {
             executionBasePath,
-            Path.Combine(executionBasePath + "RainWorld_Data\\StreamingAssets\\mods\\myriad\\")
+            devSDL2Path + "\\",
+            workshopSDL2Path + "\\" //SteamLibrary\steamapps\workshop\content\312520\3029456904
         };
-
+        
         String? validPath = null;
         
         foreach (string possiblePath in possiblePaths){
@@ -108,7 +149,7 @@ public class MyriadPreloadPatches {
             if (File.Exists(pathOfFile)) {
                 validPath = pathOfFile;
                 
-                break;
+                //break;
             }
         }
         
@@ -192,6 +233,8 @@ public class MyriadPreloadPatches {
     
     //---------------------------------------------------------------------------------------------------------------------------------
 
+    //Old XInput Adjustment code
+    
     private static int controllerCount = 16;
 
     //class: [ QhRUnWbULvmdFTzNHeLFXfWeuhyi ], Method: [  ]
