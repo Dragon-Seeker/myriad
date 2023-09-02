@@ -824,7 +824,9 @@ public class MyriadMod : BaseUnityPlugin {
 
                 //var rollOverNum = (index > 5 ? (index % 4 - 1) : index - 1); //This is just to stop errors! Should be replaced with text or something?
                 
-                deviceButton.numberImage = new MenuIllustration(self, deviceButton, "", index == 0 ? "GamepadAny" : "Gamepad" + (index - 1), deviceButton.size / 2f, true, true);
+                string numImg = index == 0 ? "GamepadAny" : "Gamepad10"; //THE GAME DOESN'T SEEM TO KNOW WHAT TO DO WITH THIS AND SO IT SHOWS NO NUMBER. PERFECT
+                //index == 0 ? "GamepadAny" : "Gamepad" + (index - 1)
+                deviceButton.numberImage = new MenuIllustration(self, deviceButton, "", numImg, deviceButton.size / 2f, true, true);
                 
                 deviceButton.subObjects.Add(deviceButton.numberImage);
                 

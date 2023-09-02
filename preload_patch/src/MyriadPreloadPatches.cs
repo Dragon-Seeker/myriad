@@ -16,8 +16,9 @@ namespace Myriad.PreloadPatches;
 public class MyriadPreloadPatches {
 
     private static ManualLogSource logger = Logger.CreateLogSource("Myriad.PreloadPatch");
-    
-    public static int myCount = 16;
+
+    //public static int myCount = 16;
+    public static int myCount = SaveStuff.LoadSettings().pCap; //PULL FROM TEXT FILE, IF IT EXIST
 
     // List of assemblies to patch
     public static IEnumerable<string> TargetDLLs { get; } = new[] { "Rewired_Core.dll", "Rewired_Windows.dll" };
