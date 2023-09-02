@@ -1,0 +1,14 @@
+{
+  "Title": "Myriad of Slug Cats",
+  "Description": "Mod that aims to make Rainworld support more than just four players\r\n\r\nGithub: https://github.com/Dragon-Seeker/myriad",
+  "ID": "myriad",
+  "Version": "0.1.2",
+  "TargetGameVersion": "v1.9.06",
+  "Requirements": "",
+  "RequirementNames": "",
+  "Authors": "Blodhgarm, WillowWispy",
+  "Visibility": "Unlisted",
+  "Tags": [],
+  "WorkshopID": 3029456904,
+  "UploadFilesOnly": false
+}
