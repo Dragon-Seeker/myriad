@@ -6,7 +6,6 @@ using BepInEx.Logging;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
 using Mono.Collections.Generic;
-using MonoMod.Cil;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -18,7 +17,7 @@ public class MyriadPreloadPatches {
     private static ManualLogSource logger = Logger.CreateLogSource("Myriad.PreloadPatch");
 
     //public static int myCount = 16;
-    public static int myCount = SaveStuff.LoadSettings().pCap; //PULL FROM TEXT FILE, IF IT EXIST
+    //public static int playerCount = SaveStuff.LoadSettings().pCap; //PULL FROM TEXT FILE, IF IT EXIST
 
     // List of assemblies to patch
     public static IEnumerable<string> TargetDLLs { get; } = new[] { "Rewired_Core.dll", "Rewired_Windows.dll" };
@@ -89,15 +88,6 @@ public class MyriadPreloadPatches {
             logger.LogError(e);
         }
     }
-    
-    /*
-        [Warning:Myriad.PreloadPatch] 6
-        [Warning:Myriad.PreloadPatch] D:\SteamLibrary\steamapps\common\Rain World\\
-        [Warning:Myriad.PreloadPatch] D:\SteamLibrary\steamapps\common\Rain World\\D:\SteamLibrary\steamapps\common\
-        [Message:Myriad.PreloadPatch] D:\SteamLibrary\steamapps\common\Rain World\SDL2.dll
-        [Message:Myriad.PreloadPatch] D:\SteamLibrary\steamapps\common\Rain World\RainWorld_Data\StreamingAssets\mods\myriadSDL2.dll
-        [Message:Myriad.PreloadPatch] D:SteamLibrary\steamapps\common\workshop\content\312520\3029456904SDL2.dll
-     */
 
     private static void LoadSDL2DependenciesEarly() {
         
@@ -152,12 +142,6 @@ public class MyriadPreloadPatches {
                 //break;
             }
         }
-        
-        // string binPath = System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, ""); // note: don't use CurrentEntryAssembly or anything like that.
-        //
-        // logger.LogWarning(binPath);
-        //
-        // SetDllDirectory(null);
         
         if (validPath != null) {
             logger.LogMessage("Was able to locate SDL2 Control Library");
@@ -235,7 +219,7 @@ public class MyriadPreloadPatches {
 
     //Old XInput Adjustment code
     
-    private static int controllerCount = 16;
+    /*private static int controllerCount = 16;
 
     //class: [ QhRUnWbULvmdFTzNHeLFXfWeuhyi ], Method: [  ]
     public static void patch_QhRUnWbULvmdFTzNHeLFXfWeuhyi(ModuleDefinition module) {
@@ -249,7 +233,7 @@ public class MyriadPreloadPatches {
          * CUkyANOuFqmdjVxOuUXHFiMmRdqm : 1
          * OThhbPDYAeefCPgboVjnGYlZfAHF : 1
          * mOwoiTszqUSvvufezLHkDmyvQZyn : 3
-         */
+         #1#
 
         List<String> patchableMethods = new(new[] {
             ".ctor", "deviceCount", "Initialize", "Update", "OnDestroy", "mgNyFCYOmaDhuDlmPtVuuEkxCLGY", "CUkyANOuFqmdjVxOuUXHFiMmRdqm",
@@ -291,7 +275,7 @@ public class MyriadPreloadPatches {
 
 
     private static void Replace4WithMore(MethodDefinition methodDef) {
-        ReplaceNumWithNum(4, myCount, methodDef);
+        ReplaceNumWithNum(4, playerCount, methodDef);
     }
 
     private static void ReplaceNumWithNum(int targetNum, int outputNum, MethodDefinition methodDef) {
@@ -336,7 +320,7 @@ public class MyriadPreloadPatches {
         }
 
         methodDef.Body.OptimizeMacros(); // Just incase
-    }
+    }*/
     
     //---------------------------------------------------------------------------------------------------------------------------------
 

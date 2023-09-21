@@ -50,23 +50,23 @@ public class MyriadMod : BaseUnityPlugin {
         int playerCount = 4;
 
         Type type = wrapTryCatch(
-            () => Type.GetType("Myriad.PreloadPatches.MyriadPreloadPatches, Myriad_PreloadPatcher"), 
-            "Unable to [get] the Type [MyriadPreloadPatches] which means the player count will be default of 4"
+            () => Type.GetType("Myriad.PreloadPatches.RewiredAdjustUserData, Myriad_PreloadPatcher"), 
+            "Unable to [get] the Type [RewiredAdjustUserData] which means the player count will be default of 4"
             );
         
         if (type != null) {
             FieldInfo field = wrapTryCatch(
-                () => type.GetField("myCount", BindingFlags.Public | BindingFlags.Static), 
-                "Unable to [get] the Field [MyriadPreloadPatches::myCount] which means the player count will be default of 4"
+                () => type.GetField("totalPlayerCount", BindingFlags.Public | BindingFlags.Static), 
+                "Unable to [get] the Field [RewiredAdjustUserData::myCount] which means the player count will be default of 4"
                 );
 
             if (field != null) {
                 playerCount = (int) field.GetValue(null);
             } else {
-                logger.LogError("Unable to [find] the Field [MyriadPreloadPatches::myCount] which means the player count will be default of 4");
+                logger.LogError("Unable to [find] the Field [RewiredAdjustUserData::totalPlayerCount] which means the player count will be default of 4");
             }
         } else {
-            logger.LogError("Unable to [find] the Type [MyriadPreloadPatches] which means the player count will be default of 4");
+            logger.LogError("Unable to [find] the Type [RewiredAdjustUserData] which means the player count will be default of 4");
         }
 
         return playerCount;

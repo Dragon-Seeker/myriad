@@ -13,7 +13,7 @@ public class RewiredAdjustUserData {
     
     private static readonly BindingFlags flags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
     
-    public static int myCount = MyriadPreloadPatches.myCount;
+    public static int totalPlayerCount = SaveStuff.LoadSettings().pCap;
 
     public static void adjustData() {
         logger.LogMessage("Attempting to adjust Player Data!");
@@ -44,9 +44,9 @@ public class RewiredAdjustUserData {
     
         playerList[5] = null;
         
-        for (int i = 5; i < myCount; i++) playerList.Add(null);
+        for (int i = 5; i < totalPlayerCount; i++) playerList.Add(null);
         
-        adjustPlayerID(templatePlayerEditor, myCount + 1); //9
+        adjustPlayerID(templatePlayerEditor, totalPlayerCount + 1); //9
         
         playerList.Add(templatePlayerEditor);
         
@@ -54,7 +54,7 @@ public class RewiredAdjustUserData {
         
         //
         
-        for (int i = 5; i <= myCount; i++) {
+        for (int i = 5; i <= totalPlayerCount; i++) {
             userData.GetNewPlayerId();
 
             var template = playerList[4];

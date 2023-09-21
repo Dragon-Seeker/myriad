@@ -11,7 +11,7 @@
       <Private>false</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Rain World\RainWorld_Data\Managed\Newtonsoft.Json.dll</HintPath>
+      <HintPath>$(RainWorldDir)\RainWorld_Data\Managed\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Rewired_Core">
       <HintPath>$(RainWorldDir)\RainWorld_Data\Managed\Rewired_Core.dll</HintPath>

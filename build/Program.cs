@@ -7,25 +7,66 @@ using Cake.Core;
 using Cake.Core.IO;
 using Cake.Frosting;
 using Cake.Incubator.Project;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text.Json.Nodes;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
-public static class Settings {
-    public static String PROJECT_NAME = "myriad";
-    public static String GAME_VER = ""; //+15.6
-    public static String MOD_VER = "0.1.0";
+
+public class ProjectSettings {
+
+    public static ProjectSettings INSTANCE = null;
+
+    public String? PROJECT_NAME = null;
+    //public String? GAME_VER = null; 
+    public String? MOD_VER = null;
 
     //--
-    
-    public static String? RainWorldDir = Environment.GetEnvironmentVariable("RainWorldDir");
 
-    public static String ASSETS_DIR = "assets/";
+    public String ASSETS_DIR = "assets/";
     
-    public static String PLUGINS_DIR = "plugins/";
-    public static String PATCHER_DIR = "patchers/";
+    public String PLUGINS_DIR = "plugins/";
+    public String PATCHER_DIR = "patchers/";
+    
+    public String? RainWorldDir = Environment.GetEnvironmentVariable("RainWorldDir");
 
-    public static String? MOD_COPY_TO_PATH = RainWorldDir != null ? $"{RainWorldDir}/RainWorld_Data/StreamingAssets/mods/{PROJECT_NAME}" : null;
+    public String? MOD_COPY_TO_PATH;
+    
+    public ProjectSettings(DirectoryPath path) {
+        string fileName = path.Combine(ASSETS_DIR).GetFilePath("modinfo.json").FullPath;
+
+        string stuff = File.ReadAllText(fileName);
+        
+        Console.WriteLine(stuff);
+        
+        JsonObject? jsonObject = JsonSerializer.Deserialize<JsonObject>(stuff, options: null);
+        
+        if (jsonObject != null) {
+            if (jsonObject.ContainsKey("id")) {
+                PROJECT_NAME = jsonObject["id"].GetValue<String>();
+            } 
+            if (jsonObject.ContainsKey("version")) {
+                MOD_VER = jsonObject["version"].GetValue<String>();
+            }
+        }
+        
+        MOD_COPY_TO_PATH = RainWorldDir != null ? $"{RainWorldDir}/RainWorld_Data/StreamingAssets/mods/{PROJECT_NAME}" : null;
+    }
+
+    public static ProjectSettings create(DirectoryPath path) {
+        INSTANCE = new ProjectSettings(path);
+
+        return INSTANCE;
+    }
+    
+   
+}
+
+public class ModInfo {
+    
 }
 
 public static class Program {
@@ -53,6 +94,8 @@ public class BuildContext : FrostingContext {
         preloadProjectData = context.ParseProject("../preload_patch/Myriad_PreloadPatcher.csproj", "Debug");
 
         MsBuildConfiguration = context.Argument("configuration", "Debug");
+
+        ProjectSettings.create(new DirectoryPath("../main"));
     }
 }
 
@@ -63,9 +106,14 @@ public sealed class Default : FrostingTask {}
 [IsDependentOn(typeof(CopyToDirectories))]
 public sealed class ZipMod : FrostingTask<BuildContext> {
     public override void Run(BuildContext context) {
-        context.DeleteFile($"../output/versions/{Settings.PROJECT_NAME}-{Settings.MOD_VER}.zip");
+        string zipFileLocation =
+            $"../output/versions/{ProjectSettings.INSTANCE.PROJECT_NAME}-{ProjectSettings.INSTANCE.MOD_VER}.zip";
         
-        context.Zip("../output/temp", $"../output/versions/{Settings.PROJECT_NAME}-{Settings.MOD_VER}.zip");
+        if (context.FileExists(zipFileLocation)) {
+            context.DeleteFile(zipFileLocation);
+        }
+        
+        context.Zip("../output/temp", zipFileLocation);
     }
 }
 
@@ -73,8 +121,8 @@ public sealed class ZipMod : FrostingTask<BuildContext> {
 [IsDependentOn(typeof(BuildTask))]
 public sealed class CopyToDirectories : FrostingTask<BuildContext> {
     public override void Run(BuildContext context) {
-        if(Settings.MOD_COPY_TO_PATH != null) copyToPath(context, new DirectoryPath(Settings.MOD_COPY_TO_PATH), false);
-        copyToPath(context, new DirectoryPath($"../output/temp/{Settings.PROJECT_NAME}"), true);
+        if(ProjectSettings.INSTANCE.MOD_COPY_TO_PATH != null) copyToPath(context, new DirectoryPath(ProjectSettings.INSTANCE.MOD_COPY_TO_PATH), false);
+        copyToPath(context, new DirectoryPath($"../output/temp/{ProjectSettings.INSTANCE.PROJECT_NAME}"), true);
     }
 
     private void copyToPath(BuildContext context, DirectoryPath output, bool cleanOutput) {
@@ -84,22 +132,22 @@ public sealed class CopyToDirectories : FrostingTask<BuildContext> {
         
         // **/*.*
         context.CopyDirectory(
-            context.projectPath.Combine(new DirectoryPath(Settings.ASSETS_DIR)),
+            context.projectPath.Combine(new DirectoryPath(ProjectSettings.INSTANCE.ASSETS_DIR)),
             output
         );
         
-        context.CreateDirectory(output.Combine(Settings.PLUGINS_DIR));
+        context.CreateDirectory(output.Combine(ProjectSettings.INSTANCE.PLUGINS_DIR));
         
         context.CopyFileToDirectory(
             context.mainProjectData.OutputPaths[0].FullPath + $"/{context.mainProjectData.AssemblyName}.dll", 
-            output.Combine(Settings.PLUGINS_DIR)
+            output.Combine(ProjectSettings.INSTANCE.PLUGINS_DIR)
         );
 
-        context.CreateDirectory(output.Combine(Settings.PATCHER_DIR));
+        context.CreateDirectory(output.Combine(ProjectSettings.INSTANCE.PATCHER_DIR));
         
         context.CopyFileToDirectory(
             context.preloadProjectData.OutputPaths[0].FullPath + $"/{context.preloadProjectData.AssemblyName}.dll",
-            output.Combine(Settings.PATCHER_DIR)
+            output.Combine(ProjectSettings.INSTANCE.PATCHER_DIR)
         );
     }
 }
