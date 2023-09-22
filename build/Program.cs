@@ -135,20 +135,24 @@ public sealed class CopyToDirectories : FrostingTask<BuildContext> {
             context.projectPath.Combine(new DirectoryPath(ProjectSettings.INSTANCE.ASSETS_DIR)),
             output
         );
-        
-        context.CreateDirectory(output.Combine(ProjectSettings.INSTANCE.PLUGINS_DIR));
-        
-        context.CopyFileToDirectory(
-            context.mainProjectData.OutputPaths[0].FullPath + $"/{context.mainProjectData.AssemblyName}.dll", 
-            output.Combine(ProjectSettings.INSTANCE.PLUGINS_DIR)
-        );
 
-        context.CreateDirectory(output.Combine(ProjectSettings.INSTANCE.PATCHER_DIR));
+        var pluginPath = output.Combine(ProjectSettings.INSTANCE.PLUGINS_DIR);
+        var myriadTarget = context.mainProjectData.OutputPaths[0].FullPath + $"/{context.mainProjectData.AssemblyName}";
         
-        context.CopyFileToDirectory(
-            context.preloadProjectData.OutputPaths[0].FullPath + $"/{context.preloadProjectData.AssemblyName}.dll",
-            output.Combine(ProjectSettings.INSTANCE.PATCHER_DIR)
-        );
+        context.CreateDirectory(pluginPath);
+        
+        context.CopyFileToDirectory(myriadTarget + ".dll", pluginPath);
+        context.CopyFileToDirectory(myriadTarget + ".pdb", pluginPath);
+        //context.CopyFileToDirectory(myriadTarget + ".xml", pluginPath);
+
+        var patchPath = output.Combine(ProjectSettings.INSTANCE.PATCHER_DIR);
+        var patchTarget = context.preloadProjectData.OutputPaths[0].FullPath + $"/{context.preloadProjectData.AssemblyName}";
+        
+        context.CreateDirectory(patchPath);
+        
+        context.CopyFileToDirectory(patchTarget + ".dll", patchPath);
+        context.CopyFileToDirectory(patchTarget + ".pdb", patchPath);
+        //context.CopyFileToDirectory(patchTarget + ".xml", patchPath);
     }
 }
 

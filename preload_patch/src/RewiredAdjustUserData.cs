@@ -13,10 +13,16 @@ public class RewiredAdjustUserData {
     
     private static readonly BindingFlags flags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
     
-    public static int totalPlayerCount = SaveStuff.LoadSettings().pCap;
+    public static int totalPlayerCount = PreloadMaxPlayerSettings.getPlayerCap();
 
     public static void adjustData() {
+        if (totalPlayerCount <= 4) {
+            logger.LogMessage("No adjustments will be applied!");
+            return;
+        }
+        
         logger.LogMessage("Attempting to adjust Player Data!");
+        logger.LogMessage(totalPlayerCount);
 
         var usrDataProp = typeof(ReInput).GetProperty("UserData", flags); 
         
