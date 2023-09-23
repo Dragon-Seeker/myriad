@@ -1,9 +1,11 @@
 ﻿using JollyCoop.JollyMenu;
+using Myriad.utils;
 using System.Linq;
 using UnityEngine;
 
 namespace Myriad.hooks; 
 
+[Mixin(typeof(RainWorldGame))]
 public class RainWorldGameMixin {
     public static RainWorldGameMixin INSTANCE = new RainWorldGameMixin();
 

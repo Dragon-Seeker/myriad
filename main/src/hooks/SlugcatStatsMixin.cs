@@ -1,5 +1,8 @@
-﻿namespace Myriad.hooks; 
+﻿using Myriad.utils;
 
+namespace Myriad.hooks; 
+
+[Mixin(typeof(SlugcatStats))]
 public class SlugcatStatsMixin {
     public static SlugcatStatsMixin INSTANCE = new SlugcatStatsMixin();
 
@@ -51,7 +54,7 @@ public class SlugcatStatsMixin {
             14 => ExtraSlugcatNames.J15,
             15 => ExtraSlugcatNames.J16,
             //MORE THAN 16?
-            > 15 => ExtraSlugcatNames.JPlus, //OR ELSE IT WILL RETURN NULL AND CRASH MOST THINGS
+            > 15 => ExtraSlugcatNames.getName(playerIndex), //OR ELSE IT WILL RETURN NULL AND CRASH MOST THINGS
             _ => null
         };
 

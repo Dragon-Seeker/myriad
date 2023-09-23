@@ -1,10 +1,13 @@
-﻿using Menu;
+﻿using HUD;
+using Menu;
+using Myriad.utils;
 using System;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
 namespace Myriad.hooks.menu; 
 
+[Mixin(typeof(InputOptionsMenu))]
 public class InputOptionsMenuMixin {
     public static InputOptionsMenuMixin INSTANCE = new InputOptionsMenuMixin();
 

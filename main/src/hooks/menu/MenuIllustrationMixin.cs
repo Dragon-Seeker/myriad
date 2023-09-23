@@ -1,8 +1,11 @@
 ﻿using Menu;
+using MonoMod.Utils;
+using Myriad.utils;
 using UnityEngine;
 
 namespace Myriad.hooks.menu; 
 
+[Mixin(typeof(MenuIllustration))]
 public class MenuIllustrationMixin {
 
     public static MenuIllustrationMixin INSTANCE = new MenuIllustrationMixin();

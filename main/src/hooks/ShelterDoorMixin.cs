@@ -1,7 +1,9 @@
-﻿using RWCustom;
+﻿using Myriad.utils;
+using RWCustom;
 
 namespace Myriad.hooks; 
 
+[Mixin(typeof(ShelterDoor))]
 public class ShelterDoorMixin {
 
     public const int forceTimeLimit = 120;

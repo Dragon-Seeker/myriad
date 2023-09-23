@@ -2,14 +2,19 @@
 using JollyCoop.JollyMenu;
 using Menu;
 using Menu.Remix.MixedUI;
+using Mono.Cecil.Cil;
+using MonoMod.Cil;
+using Myriad.utils;
 using RWCustom;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using UnityEngine;
 
 namespace Myriad.hooks.jollycoop; 
 
+[Mixin(typeof(JollySlidingMenu))]
 public class JollySlidingMenuMixin {
 
     public static JollySlidingMenuMixin INSTANCE = new JollySlidingMenuMixin();
@@ -18,6 +23,25 @@ public class JollySlidingMenuMixin {
         On.JollyCoop.JollyMenu.JollySlidingMenu.ctor += adjustPlayerSelectGUI;
         On.JollyCoop.JollyMenu.JollySlidingMenu.NumberPlayersChange += accountForMoreThanFour;
         On.JollyCoop.JollyMenu.JollySlidingMenu.Singal += JollySlidingMenu_Singal;
+
+        //Needed to prevent the cap of only 31 as a span...
+        IL.Menu.Remix.MixedUI.OpSliderTick.ctor_ConfigurableBase_Vector2_int_bool += il => {
+            List<Func<Instruction, bool>> predicates = new List<Func<Instruction, bool>>();
+
+            predicates.Add(i => i.MatchLdcI4(31));
+
+            var cursor = new ILCursor(il);
+            var x = 0;
+
+            while (cursor.TryGotoNext(MoveType.After, predicates.ToArray())) {
+                x++;
+                //cursor.Emit(OpCodes.Ldloc, player); //THESE LIKE, BECOME ARGUMENTS WITHIN EMITDELEGATE  I THINK?
+                //cursor.Emit(OpCodes.Ldloc, k);
+
+                //cursor.EmitDelegate((float rad, Player player, int k) =>
+                cursor.EmitDelegate((int oldNum) => 128);
+            }
+        };
     }
     
     public void accountForMoreThanFour(On.JollyCoop.JollyMenu.JollySlidingMenu.orig_NumberPlayersChange orig, JollySlidingMenu self, UIconfig config, string value, string oldvalue) {
@@ -39,8 +63,7 @@ public class JollySlidingMenuMixin {
         
         self.UpdatePlayerSlideSelectable(result - 1);
     }
-	
-	
+    
 	public SimpleButton[] jollySwapButtons;
 	
     public void adjustPlayerSelectGUI(On.JollyCoop.JollyMenu.JollySlidingMenu.orig_ctor orig, JollySlidingMenu self, JollySetupDialog menu, MenuObject owner, Vector2 pos) {

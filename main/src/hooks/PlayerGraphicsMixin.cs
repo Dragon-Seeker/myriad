@@ -1,8 +1,10 @@
-﻿using RWCustom;
+﻿using Myriad.utils;
+using RWCustom;
 using UnityEngine;
 
 namespace Myriad.hooks; 
 
+[Mixin(typeof(PlayerGraphics))]
 public class PlayerGraphicsMixin {
 
     public static PlayerGraphicsMixin INSTANCE = new PlayerGraphicsMixin();
@@ -33,7 +35,7 @@ public class PlayerGraphicsMixin {
         if (name == ExtraSlugcatNames.J14)   extraResult = new Color(0.13f, 0.53f, 0.69f); //Moon
         if (name == ExtraSlugcatNames.J15)   extraResult = new Color(0f, 1f, 0f); //NSH
         if (name == ExtraSlugcatNames.J16)   extraResult = new Color(0.89f * dim, 0.89f * dim, 0.79f * dim); //Sliver - TOO CLOSE TO SURVIVOR! DIM IT A LITTLE...
-        if (name == ExtraSlugcatNames.JPlus) extraResult = new Color(1f, 1f, 1f);
+        if (ExtraSlugcatNames.isAbove16(name)) extraResult = new Color(1f, 1f, 1f);
 
         return extraResult ?? result;
     }

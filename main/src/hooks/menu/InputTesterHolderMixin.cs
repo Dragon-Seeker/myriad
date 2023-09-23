@@ -1,8 +1,10 @@
 ﻿using Menu;
+using Myriad.utils;
 using UnityEngine;
 
 namespace Myriad.hooks.menu; 
 
+[Mixin(typeof(InputTesterHolder))]
 public class InputTesterHolderMixin {
     public static InputTesterHolderMixin INTANCE = new InputTesterHolderMixin();
 

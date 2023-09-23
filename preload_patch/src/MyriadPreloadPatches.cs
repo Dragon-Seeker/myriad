@@ -15,10 +15,7 @@ namespace Myriad.PreloadPatches;
 public class MyriadPreloadPatches {
 
     private static ManualLogSource logger = Logger.CreateLogSource("Myriad.PreloadPatch");
-
-    //public static int myCount = 16;
-    //public static int playerCount = SaveStuff.LoadSettings().pCap; //PULL FROM TEXT FILE, IF IT EXIST
-
+    
     // List of assemblies to patch
     public static IEnumerable<string> TargetDLLs { get; } = new[] { "Rewired_Core.dll", "Rewired_Windows.dll" };
 
@@ -53,9 +50,13 @@ public class MyriadPreloadPatches {
             logger.LogError("It seems something has gone wrong with preload patching! Things will be broken!");
             logger.LogError(e);
         }
-
-        if (!patched_Rewired_Core || !patched_Rewired_Windows) {
-            logger.LogWarning("Unable to patch the needed DLL's, something must have gone wrong or they could not be located!");
+        
+        if (!patched_Rewired_Core) {
+            logger.LogWarning("Unable to patch [Rewired_Core], something must have gone wrong or they could not be located!");
+        }
+        
+        if (!patched_Rewired_Windows) {
+            logger.LogWarning("Unable to patch [Rewired_Core], something must have gone wrong or they could not be located!");
         }
     }
 
@@ -89,44 +90,38 @@ public class MyriadPreloadPatches {
         }
     }
 
+    /// <summary>
+    /// Method used to force load SDL2 from myriad files to allow for such to be found within Rewired
+    /// </summary>
+    /// <exception cref="IOException"></exception>
     private static void LoadSDL2DependenciesEarly() {
         
-        //SteamLibrary\steamapps\common\Rain World
-        string executionBasePath = System.AppDomain.CurrentDomain.BaseDirectory;
+        // Location 1: Base Rainworld Folder
+        string executionBasePath = AppDomain.CurrentDomain.BaseDirectory;
+        // Location 2: Internal Mod location
+        string internalSDL2Path = Path.Combine(executionBasePath, Path.Combine(new [] { "RainWorld_Data", "StreamingAssets", "mods", "myriad" }));
         
-        string devSDL2Path = Path.Combine(executionBasePath, Path.Combine(new [] { "RainWorld_Data", "StreamingAssets", "mods", "myriad" }));
+        logger.LogWarning(executionBasePath);
         
         List<string> listPathParts = new List<string>(executionBasePath.Split(Path.DirectorySeparatorChar));
-        //logger.LogWarning(listPathParts.Count());
+
+        // Remove the empty element at the start and then Backtracks two directories by two to get to the base 'steamapps' folder
+        listPathParts.RemoveRange(listPathParts.Count - 3, 3);
         
-        // String debugOut = "";
-        // foreach (string listPathPart in listPathParts) debugOut += (listPathPart + "*");
-        // logger.LogWarning(debugOut);
-        
-        listPathParts.RemoveAt(listPathParts.Count - 1);
-        listPathParts.RemoveAt(listPathParts.Count - 1);
-        listPathParts.RemoveAt(listPathParts.Count - 1);
-        
-        // debugOut = "";
-        // foreach (string listPathPart in listPathParts) debugOut += (listPathPart + "*");
-        // logger.LogWarning(debugOut);
-        
+        //Saves the Drive letter due to combine weird issues and such.
         string driveLetter = listPathParts[0];
         listPathParts.RemoveAt(0);
         
-        //SteamLibrary\steamapps
+        //..\{steam_folder}\steamapps\
         string baseSteamLibPath = driveLetter + Path.DirectorySeparatorChar + Path.Combine(listPathParts.ToArray());
         
-        //logger.LogWarning(baseSteamLibPath);
-        
+        // Location 3: Workshop location
         string workshopSDL2Path = Path.Combine(baseSteamLibPath, Path.Combine(new [] { "workshop", "content", "312520", "3029456904" }));
         
-        //logger.LogWarning(workshopSDL2Path);
-        
         List<String> possiblePaths = new List<string>() {
-            executionBasePath,
-            devSDL2Path + "\\",
-            workshopSDL2Path + "\\" //SteamLibrary\steamapps\workshop\content\312520\3029456904
+            executionBasePath,       //..{steam_folder}\steamapps\common\Rain World\
+            internalSDL2Path + "\\", //..{steam_folder}\steamapps\common\Rain World\RainWorld_Data\StreamingAssets\mods\myriad\
+            workshopSDL2Path + "\\"  //..{steam_folder}\steamapps\workshop\content\312520\3029456904\
         };
         
         String? validPath = null;

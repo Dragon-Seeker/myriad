@@ -1,9 +1,11 @@
 ﻿using Menu;
+using Myriad.utils;
 using RWCustom;
 using UnityEngine;
 
 namespace Myriad.hooks.menu; 
 
+[Mixin(typeof(PlayerJoinButton))]
 public class PlayerJoinButtonMixin {
 
     public static PlayerJoinButtonMixin INSTANCE = new PlayerJoinButtonMixin();

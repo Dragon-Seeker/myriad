@@ -51,10 +51,20 @@ public class PortraitUtils {
             if (Convert.ToInt32(substr1) > 3) substr1 = "0";
             
             newFileName = "MultiplayerPortrait" + substr1 + substr2; //REBUILD IT
-        } else if (lowerName.StartsWith("gamepad") && lowerName.Length == 8) {
-            int playNum = int.Parse(lowerName.Replace("gamepad", "")); //GETS THE PLAYER NUMBER
+        } else if (lowerName.StartsWith("gamepad")) {
+            string possibleNumber = lowerName.Replace("gamepad", "");
+
+            int? parsedNum = null;
             
-            if (playNum > 4) newFileName = "GamepadAny"; //JUST A PLACEHOLDER
+            if (possibleNumber.Length > 0) {
+                try {
+                    parsedNum = int.Parse(possibleNumber);
+                } catch (FormatException ignore) {}
+            }
+
+            if (parsedNum != null && parsedNum > 4) {
+                newFileName = "GamepadAny"; //JUST A PLACEHOLDER
+            }
         }
         //logger.LogMessage("EDITED FILE: " + newFileName);
 

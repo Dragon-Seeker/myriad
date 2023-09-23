@@ -1,5 +1,6 @@
 ﻿using BepInEx.Logging;
 using JollyCoop.JollyMenu;
+using Myriad.utils;
 using Rewired;
 using System;
 using System.Globalization;
@@ -7,6 +8,7 @@ using System.Text.RegularExpressions;
 
 namespace Myriad.hooks; 
 
+[Mixin(typeof(Options))]
 public class OptionsMixin {
 
     public ManualLogSource Logger = null;

@@ -1,5 +1,8 @@
-﻿namespace Myriad.hooks; 
+﻿using Myriad.utils;
 
+namespace Myriad.hooks; 
+
+[Mixin(typeof(Player))]
 public class PlayerMixin {
 
     public static PlayerMixin INSTANCE = new PlayerMixin();

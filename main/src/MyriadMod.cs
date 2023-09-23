@@ -87,7 +87,7 @@ public class MyriadMod : BaseUnityPlugin {
             MenuIllustrationMixin.INSTANCE.init();
             PlayerJoinButtonMixin.INSTANCE.init();
             PlayerResultBoxMixin.INSTANCE.init();
-            MultiplayerMenuMixin.INSTANCE.init();
+            MultiplayerMenuMixin.INSTANCE.init(Logger);
             InputTesterHolderMixin.INTANCE.init();
 
             PlayerSpecificMultiplayerHudMixin.INSTANCE.init();
@@ -145,7 +145,15 @@ public class MyriadMod : BaseUnityPlugin {
             //-----
 
             On.ShortcutHandler.ShortCutVessel.ctor += ShortCutVessel_ctor;
-            
+
+            On.Menu.SandboxEditorSelector.ctor += (orig, self, menu, owner, overlayOwner) => {
+                if (plyCnt > 16) {
+                    //Better solution is required to add more support of 16 and this is kinda just a hack... that sort dosn't work
+                    SandboxEditorSelector.Width = 64;
+                }
+
+                orig(self, menu, owner, overlayOwner);
+            };
             
             logger.LogMessage("Checking Patch");
         } catch (Exception e) {

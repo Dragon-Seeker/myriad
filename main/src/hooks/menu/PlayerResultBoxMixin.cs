@@ -1,8 +1,10 @@
 ﻿using Menu;
+using Myriad.utils;
 using UnityEngine;
 
 namespace Myriad.hooks.menu; 
 
+[Mixin(typeof(PlayerResultBox))]
 public class PlayerResultBoxMixin {
 
     public static PlayerResultBoxMixin INSTANCE = new PlayerResultBoxMixin();

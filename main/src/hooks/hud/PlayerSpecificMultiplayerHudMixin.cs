@@ -1,7 +1,10 @@
-﻿using UnityEngine;
+﻿using HUD;
+using Myriad.utils;
+using UnityEngine;
 
 namespace Myriad.hooks.hud; 
 
+[Mixin(typeof(PlayerSpecificMultiplayerHud))]
 public class PlayerSpecificMultiplayerHudMixin {
     public static PlayerSpecificMultiplayerHudMixin INSTANCE = new PlayerSpecificMultiplayerHudMixin();
 
