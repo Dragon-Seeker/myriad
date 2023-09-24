@@ -1,0 +1,13 @@
+﻿Swap Player <p_n> and Player <p_n2>|
+Number of controls|
+Players:|
+A restart is required to apply changes|
+Extended Pipe Waiting|
+Greatly increases the maximum waiting period for other players in Smart Shortcuts|
+Downpour Co-op|
+Enable Co-Op for downpour campaigns. Some features may not work as expected|
+Only 4 players need to stand still in a shelter to trigger the door close|
+Arena shelters can hold additional slugcats|
+Please report bugs & crashes on the steam workshop or Discord|
+Recommended mods for large groups are Stick Together and SBCameraScroll|
+Some mods may not support more than 4 players|

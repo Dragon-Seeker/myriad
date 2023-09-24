@@ -13,7 +13,7 @@ namespace Myriad;
 /// Should be fine to class load such if need be due to it containing no game depended files meaning its safe for a preload patch.
 /// </summary>
 public class PreloadMaxPlayerSettings {
-    public const int defMaxCap = 8;
+    public const int defMaxCap = 16; // Change within future to be a lower number again?
 
     //public static readonly string SavePath = Path.Combine(Application.dataPath, "Myriad", "Myriad.json");
     public static readonly string SavePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Videocult", "Rain World", "Myriad", "Myriad.json");

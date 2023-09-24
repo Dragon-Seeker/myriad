@@ -161,13 +161,38 @@ public class MPOptions : OptionInterface {
 
 
             descLine -= 35;
-            Tabs[0].AddItems(new OpLabel(25f, descLine, Translate("Recommended mods for large groups are Stick-Together and SBCameraScroll")));
+            Tabs[0].AddItems(new OpLabel(25f, descLine, Translate("Recommended mods for large groups are Stick Together and SBCameraScroll")));
             descLine -= 20;
             Tabs[0].AddItems(new OpLabel(25f, descLine, Translate("Some mods may not support more than 4 players")));
             error = false;
         } catch (Exception e) {
             error = true;
             //MorePlayers.Logger.LogInfo("CATCH! ERROR 2 " + e);
+        }
+    }
+}
+
+public static class SaveStuff {
+
+    public const int defMaxCap = 8;
+
+    //public static readonly string SavePath = Path.Combine(Application.dataPath, "Myriad", "Myriad.json");
+    
+    public static readonly string SavePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Videocult", "Rain World", "Myriad", "Myriad.json");
+    
+
+    public class MyData {
+        public int pCap;
+    }
+
+    public static MyData LoadSettings() {
+        
+        if (File.Exists(SavePath)) {
+            return JsonConvert.DeserializeObject<MyData>(File.ReadAllText(SavePath));
+        } else {
+            return new MyData() {
+                pCap = defMaxCap
+            };
         }
     }
 }
