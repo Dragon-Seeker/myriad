@@ -155,7 +155,7 @@ public class MPOptions : OptionInterface
 
 
             descLine -= 35;
-            Tabs[0].AddItems(new OpLabel(25f, descLine, Translate("Recommended mods for large groups are Stick-Together and SBCameraScroll")));
+            Tabs[0].AddItems(new OpLabel(25f, descLine, Translate("Recommended mods for large groups are Stick Together and SBCameraScroll")));
             descLine -= 20;
             Tabs[0].AddItems(new OpLabel(25f, descLine, Translate("Some mods may not support more than 4 players")));
 
@@ -169,7 +169,7 @@ public class MPOptions : OptionInterface
 
 public static class SaveStuff {
 
-    public const int defMaxCap = 8;
+    public const int defMaxCap = 16;
 
     //public static readonly string SavePath = Path.Combine(Application.dataPath, "Myriad", "Myriad.json");
     
