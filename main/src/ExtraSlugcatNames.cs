@@ -46,6 +46,6 @@ public class ExtraSlugcatNames {
     }
 
     public static bool isAbove16(SlugcatStats.Name name) {
-        return !BASE_EXTRA_NAMES.ContainsValue(name);
+        return EXTRA_NAMES.ContainsValue(name) && !BASE_EXTRA_NAMES.ContainsValue(name);
     }
 }

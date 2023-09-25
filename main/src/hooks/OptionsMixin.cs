@@ -59,8 +59,12 @@ public class OptionsMixin {
             int entryNum = int.Parse(splt2[1], NumberStyles.Any, CultureInfo.InvariantCulture);
             
             try {
-                //Logger.LogInfo("-APPLYING TO ARRAY " + entryNum);
-                self.controls[entryNum].FromString(splt2[2]);// = myControlArry[entryNum];
+                if (entryNum < self.controls.Length) {
+                    //Logger.LogInfo("-APPLYING TO ARRAY " + entryNum);
+                    self.controls[entryNum].FromString(splt2[2]);// = myControlArry[entryNum];
+                } else {
+                    Logger.LogDebug($"Unable to read Extra Player Input Settings due to being outside the bounds! [Bounds: (0, {self.controls.Length}), Index: {entryNum}]");
+                }
             } catch (Exception e) {
                 Logger.LogError($"FAILED READ/APPLY EXTRA INPUT SETTINGS! - [Exception: {e.Message}]");
                 Logger.LogError(e.StackTrace);
