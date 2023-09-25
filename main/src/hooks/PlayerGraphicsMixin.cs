@@ -29,12 +29,12 @@ public class PlayerGraphicsMixin {
         if (name == ExtraSlugcatNames.J7)    extraResult = new Color(0.66667f, 0.9451f, 0.33725f); //Saint
         if (name == ExtraSlugcatNames.J8)    extraResult = new Color(0.31f, 0.18f, 0.41f); //Spear
         if (name == ExtraSlugcatNames.J9)    extraResult = new Color(0.94118f, 0.75686f, 0.59216f); //Gourmand
-        if (name == ExtraSlugcatNames.J11)   extraResult = new Color(0.6f * dim, 0.7f * dim, 0.9f * dim); //pup1 - TOO CLOSE TO RIVULET! DIM IT A LITTLE...
-        if (name == ExtraSlugcatNames.J12)   extraResult = new Color(0.48f, 0.87f, 0.81f); //pup2
-        if (name == ExtraSlugcatNames.J13)   extraResult = new Color(1f, 0.4f, 0.79607844f); //Pebbles
-        if (name == ExtraSlugcatNames.J14)   extraResult = new Color(0.13f, 0.53f, 0.69f); //Moon
-        if (name == ExtraSlugcatNames.J15)   extraResult = new Color(0f, 1f, 0f); //NSH
-        if (name == ExtraSlugcatNames.J16)   extraResult = new Color(0.89f * dim, 0.89f * dim, 0.79f * dim); //Sliver - TOO CLOSE TO SURVIVOR! DIM IT A LITTLE...
+        if (name == ExtraSlugcatNames.J11)   extraResult = new Color(1f, 0.4f, 0.79607844f); //Pebbles
+        if (name == ExtraSlugcatNames.J12)   extraResult = new Color(0.13f, 0.53f, 0.69f); //Moon
+        if (name == ExtraSlugcatNames.J13)   extraResult = new Color(0f, 1f, 0f); //NSH
+        if (name == ExtraSlugcatNames.J14)   extraResult = new Color(0.89f * dim, 0.89f * dim, 0.79f * dim); //Sliver - TOO CLOSE TO SURVIVOR! DIM IT A LITTLE...
+        if (name == ExtraSlugcatNames.J15)   extraResult = new Color(1f, 0.6f, 0f); //Orange Liz
+        if (name == ExtraSlugcatNames.J16)   extraResult = new Color(1f, 0f, 0f); //Red Liz
         if (ExtraSlugcatNames.isAbove16(name)) extraResult = new Color(1f, 1f, 1f);
 
         return extraResult ?? result;
