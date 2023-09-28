@@ -1,14 +1,17 @@
 {
-  "Title": "Myriad of Slug Cats",
-  "Description": "Mod that aims to make Rainworld support more than just four players\r\n\r\nGithub: https://github.com/Dragon-Seeker/myriad",
+  "Title": "Myriad of Slugcats [Beta]",
+  "Description": "Play Rain World with up to 16 players! This mod extends the maximum player count for Jolly Co-Op, Expeditions, and Arena Mode.\r\n\r\nWorks with Steam Remote play and Parsec, but Parsec is much more stable with large groups.\r\n\r\n[u][b]RECOMMENDED MODS FOR LARGE GROUPS:[/b][/u]\r\n-[u][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3026749851]Stick Together[/url][/u]\r\n-[u][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2928752589\u0026searchtext=SBCamera]SBCameraScroll[/url][/u]\r\n\r\n[u][b]IMPORTANT SETUP NOTES[/b][/u]\r\nIf using Parsec, Parsec caps controller connections at 10, excluding any controllers used by the host. Any additional players must either use keyboard or add controllers through a different remote session, like Steam Remote Play.\r\n[hr]\r\n[u][url=https://discord.gg/cj4tvcjcQ8]Myriad Discord server[/url][/u]\r\n[u][url=https://github.com/Dragon-Seeker/myriad]Github[/url][/u]\r\n\r\nThis is the opening week beta so please report any bugs or mod incompatibilities that you find!",
   "ID": "myriad",
-  "Version": "0.1.2",
+  "Version": "0.3.1",
   "TargetGameVersion": "v1.9.06",
   "Requirements": "",
   "RequirementNames": "",
   "Authors": "Blodhgarm, WillowWispy",
   "Visibility": "Unlisted",
-  "Tags": [],
+  "Tags": [
+    "Game Mechanics"
+  ],
   "WorkshopID": 3029456904,
-  "UploadFilesOnly": false
+  "UploadFilesOnly": true,
+  "UploadThumbnail": false
 }
