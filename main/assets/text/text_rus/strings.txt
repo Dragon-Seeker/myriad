@@ -1,0 +1,13 @@
+﻿Swap Player <p_n> and Player <p_n2>|Поменяйте местами игрока <p_n> и игрока <p_n2>
+Number of controlsКоличество элементов управления
+Players:|Игроки:
+A restart is required to apply changes|Для применения изменений требуется перезапуск
+Extended Pipe Waiting|Расширенное ожидание трубы
+Greatly increases the maximum waiting period for other players in Smart Shortcuts|Значительно увеличивает максимальный период ожидания для других игроков в Smart Shortcuts
+Downpour Co-op|Downpour Co-op
+Enable Co-Op for downpour campaigns. Some features may not work as expected|Включите кооперацию для кампаний с ливнем. Некоторые функции могут работать не так, как ожидается
+Only 4 players need to stand still in a shelter to trigger the door close|Только 4 игрока должны стоять неподвижно в убежище, чтобы вызвать закрытие двери
+Arena shelters can hold additional slugcats|Убежища на арене могут вмещать дополнительных слизней
+Please report bugs & crashes on the steam workshop or Discord|Пожалуйста, сообщайте об ошибках и сбоях в steam workshop или Discord
+Recommended mods for large groups are Stick Together and SBCameraScroll|Рекомендуемые моды для больших групп - Stick Together и SBCameraScroll
+Some mods may not support more than 4 players|Некоторые моды не поддерживают более 4 игроков
