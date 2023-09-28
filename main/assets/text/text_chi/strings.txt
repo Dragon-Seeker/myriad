@@ -1,13 +1,13 @@
-﻿Swap Player <p_n> and Player <p_n2>|
-Number of controls|
-Players:|
-A restart is required to apply changes|
-Extended Pipe Waiting|
-Greatly increases the maximum waiting period for other players in Smart Shortcuts|
-Downpour Co-op|
-Enable Co-Op for downpour campaigns. Some features may not work as expected|
-Only 4 players need to stand still in a shelter to trigger the door close|
-Arena shelters can hold additional slugcats|
-Please report bugs & crashes on the steam workshop or Discord|
-Recommended mods for large groups are Stick Together and SBCameraScroll|
-Some mods may not support more than 4 players|
+﻿Swap Player <p_n> and Player <p_n2>|玩家 <p_n> 和玩家 <p_n2>互换
+Number of controls|数量控制
+Players:|玩家：
+A restart is required to apply changes|需要重新启动以应用更改
+Extended Pipe Waiting|延长管道等待时间
+Greatly increases the maximum waiting period for other players in Smart Shortcuts|大大延长了智能捷径中其他玩家的最长等待时间
+Downpour Co-op|倾盆大雨惬意合作
+Enable Co-Op for downpour campaigns. Some features may not work as expected|启用倾盆大雨战役的惬意合作模式。某些功能可能无法正常工作
+Only 4 players need to stand still in a shelter to trigger the door close|只需4名玩家站在避难所内静止不动，即可触发关门
+Arena shelters can hold additional slugcats|竞技场避难所可容纳额外的蛞蝓猫
+Please report bugs & crashes on the steam workshop or Discord|请在Steam创意工坊或Discord上报告错误和崩溃
+Recommended mods for large groups are Stick Together and SBCameraScroll|适合大型联机的推荐模组包括“贴贴”和“SBCameraScroll”
+Some mods may not support more than 4 players|一些模组可能不支持4名以上玩家
