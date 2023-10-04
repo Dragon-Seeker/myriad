@@ -200,7 +200,7 @@ public class JollySlidingMenuMixin {
         slider.max = bl ? (int) config.info.acceptable.Clamp(int.MaxValue) : (slider._IsTick ? 15 : 100);
 
         float num1 = 70;
-        slider.pos = self.playerSelector[0].pos + new Vector2((num1 / 2f) + 15, 142f);
+        slider.pos = self.playerSelector[0].pos + new Vector2((num1 / 2f) + 15, 149f); //UPPING A FEW PIXELS SO IT OVERLAPS LESS WITH THE PLAYER-SWAP BUTTONS
 
         slider._size = new Vector2(Math.Max((int)(self.playerSelector[plyCnt - 1].pos - self.playerSelector[0].pos).x, 30), 30f);
         slider.fixedSize = slider._size;

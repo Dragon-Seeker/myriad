@@ -36,38 +36,39 @@ public class InputTesterHolderMixin {
     public void InputTester_ctor(On.Menu.InputTesterHolder.InputTester.orig_ctor orig, InputTesterHolder.InputTester self, Menu.Menu menu, MenuObject owner, int playerIndex) {
         // self.rad = 15; //TOO EARLY! IT DIDN'T WORK
         orig(self, menu, owner, playerIndex);
-        
-		self.rad = 22; //THIS SHOULD WORK NOW. AND I BELEIVE GRAFUPDATE() SHOULD HANDLE THE REST
-		self.crossSpriteH.scaleX = self.rad * 2f;
-		self.crossSpriteV.scaleY = self.rad * 2f;
-        self.centerKnobSprite.scale = 0.7f;
-        //BASELINE y = -15
 
-        AdjustTestButton(self, 4, 210, -20); //Pickup/Eat
-        AdjustTestButton(self, 5, 0, 10); //Jump
-        AdjustTestButton(self, 6, 0, 15); //Throw
-        AdjustTestButton(self, 7, 210, -5); //Pause
+        if (MyriadMod.PlyCnt() > 8) {
+            self.rad = 22; //THIS SHOULD WORK NOW. AND I BELEIVE GRAFUPDATE() SHOULD HANDLE THE REST
+            self.crossSpriteH.scaleX = self.rad * 2f;
+            self.crossSpriteV.scaleY = self.rad * 2f;
+            self.centerKnobSprite.scale = 0.7f;
+            //BASELINE y = -15
 
-        //THE SYMBOLS DONT MOVE! >:(
-        //AdjustTestButton(self, 0, 112 - 15, -0); //left
-        //AdjustTestButton(self, 1, 56, -56 + 15); //up
-        //AdjustTestButton(self, 2, 15, 0); //right
-        //AdjustTestButton(self, 3, 56, 56 + 0); //down
+            AdjustTestButton(self, 4, 210, -20); //Pickup/Eat
+            AdjustTestButton(self, 5, 0, 10); //Jump
+            AdjustTestButton(self, 6, 0, 15); //Throw
+            AdjustTestButton(self, 7, 210, -5); //Pause
+
+            //THE SYMBOLS DONT MOVE! >:(
+            //AdjustTestButton(self, 0, 112 - 15, -0); //left
+            //AdjustTestButton(self, 1, 56, -56 + 15); //up
+            //AdjustTestButton(self, 2, 15, 0); //right
+            //AdjustTestButton(self, 3, 56, 56 + 0); //down
+        }
     }
 
     private void TestButton_ctor(On.Menu.InputTesterHolder.InputTester.TestButton.orig_ctor orig, InputTesterHolder.InputTester.TestButton self, Menu.Menu menu, MenuObject owner, Vector2 pos, string symbolName, int symbolRotat, string labelText, int buttonIndex, int playerIndex) {
-        if (symbolName != null && symbolName == "Menu_Symbol_Arrow") {
-            pos *= 0.4f; //ARROWS ARE SLIPPERY . SHRINK THEM BEFOREHAND
-            
-            if (symbolRotat == 2) pos.y = 0; //DOWN ARROW
-            
-            //THEN SHIFT THEM ALL OVER
-            pos += new Vector2(60, -15);
-        }
-        
-        //YOU KNOW WHAT, THEY'RE ALL LOW! MOVE THEM ALL UP
-        pos += new Vector2(0, 5);
+       
+        if (MyriadMod.PlyCnt() > 8) {
+            if (symbolName != null && symbolName == "Menu_Symbol_Arrow") {
+                pos *= 0.4f; //ARROWS ARE SLIPPERY . SHRINK THEM BEFOREHAND
+                if (symbolRotat == 2) pos.y = 0; //DOWN ARROW        
+                pos += new Vector2(60, -15); //THEN SHIFT THEM ALL OVER
+            }
 
+            //YOU KNOW WHAT, THEY'RE ALL LOW! MOVE THEM ALL UP
+            pos += new Vector2(0, 5);
+        }
         orig(self, menu, owner, pos, symbolName, symbolRotat, labelText, buttonIndex, playerIndex);
     }
     

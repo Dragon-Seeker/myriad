@@ -72,7 +72,9 @@ public class MyriadMod : BaseUnityPlugin {
     
     public static bool rotundWorldEnabled = false;
     public static bool coopLeashEnabled = false;
-    
+    public static string incompatibleMod = "";
+    public bool shownIncompatWarning = false;
+
     public void OnEnable() {
         try {
             
@@ -132,15 +134,8 @@ public class MyriadMod : BaseUnityPlugin {
             On.Menu.SandboxSettingsInterface.AddPositionedScoreButton += SandboxSettingsInterface_AddPositionedScoreButton;
             On.ArenaGameSession.SpawnPlayers += ArenaGameSession_SpawnPlayers;
             On.ArenaBehaviors.ExitManager.ExitOccupied += ExitManager_ExitOccupied;
-            
-            //BindingFlags otherMethodFlags = BindingFlags.Instance | BindingFlags.Public;
-            //BindingFlags myMethodFlags = BindingFlags.Static | BindingFlags.Public;
 
-            //Hook myCustomHook = new Hook(
-            //    typeof(Player).GetProperty("InitialShortcutWaitTime", otherMethodFlags).GetGetMethod(), // This gets the getter 
-            //    typeof(ManySlugCatsMod).GetMethod("GetIncreasedWaitTime", myMethodFlags) // This gets our hook method
-            //);
-            //THIS DIDN'T WORK... IT MAY BE THAT IT'S TOO SMALL FOR THE COMPILER TO HANDLE CORRECTLY, LIKE THE OTHER ONES :(
+            On.Menu.MainMenu.ctor += MainMenu_ctor;
 
             //-----
 
@@ -164,7 +159,19 @@ public class MyriadMod : BaseUnityPlugin {
 
         RainWorld.PlayerObjectBodyColors = new Color[PlyCnt()];
     }
-    
+
+    private void MainMenu_ctor(On.Menu.MainMenu.orig_ctor orig, MainMenu self, ProcessManager manager, bool showRegionSpecificBkg) {
+
+        orig(self, manager, showRegionSpecificBkg);
+
+        if (incompatibleMod != "" && !shownIncompatWarning) {
+            self.popupAlert = new DialogBoxNotify(self, self.pages[0], self.Translate("Myriad incompatible mod detected: \n" + incompatibleMod), "ALERT", new Vector2(manager.rainWorld.options.ScreenSize.x / 2f - 240f + (1366f - manager.rainWorld.options.ScreenSize.x) / 2f, 284f), new Vector2(480f, 180f), false);
+            self.pages[0].subObjects.Add(self.popupAlert);
+            shownIncompatWarning = true;
+            return;
+        }
+    }
+
     private void RainWorld_OnModsInit(On.RainWorld.orig_OnModsInit orig, RainWorld self) {
         orig(self);
 
@@ -175,6 +182,11 @@ public class MyriadMod : BaseUnityPlugin {
         foreach (ModManager.Mod activeMod in ModManager.ActiveMods){
             if (activeMod.id == "willowwisp.bellyplus") rotundWorldEnabled = true;
             if (activeMod.id == "WillowWisp.CoopLeash") coopLeashEnabled = true;
+            //INCOMPATIBLE MOD WARNING
+            if (activeMod.id == "bettergrab") incompatibleMod = activeMod.id;
+            if (activeMod.id == "pkuyo.customfood") incompatibleMod = activeMod.id;
+            if (activeMod.id == "IndividualKarma") incompatibleMod = activeMod.id;
+            if (activeMod.id == "ExpeditionExtraConfig") incompatibleMod = activeMod.id;
         }
     }
     
