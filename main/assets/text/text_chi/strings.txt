@@ -11,3 +11,6 @@ Arena shelters can hold additional slugcats|竞技场避难所可容纳额外的
 Please report bugs & crashes on the steam workshop or Discord|请在Steam创意工坊或Discord上报告错误和崩溃
 Recommended mods for large groups are Stick Together and SBCameraScroll|适合大型联机的推荐模组包括“贴贴”和“SBCameraScroll”
 Some mods may not support more than 4 players|一些模组可能不支持4名以上玩家
+Always Display Nametags|始终显示名签
+The nametags above each player are always visible in game|在游戏中始终显示每个球员上方的名牌
+incompatible mod detected|检测到不兼容的修改器

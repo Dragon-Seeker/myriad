@@ -11,3 +11,6 @@ Arena shelters can hold additional slugcats|Arena refugios puede contener slugca
 Please report bugs & crashes on the steam workshop or Discord|Por favor, informe de errores y chrasheo en la steam workshop o Discord
 Recommended mods for large groups are Stick Together and SBCameraScroll|Mods recomendado para grupos grande son are Stick Together y SBCameraScroll
 Some mods may not support more than 4 players|Algún mods puede que no support más de 4 jugadores
+Always Display Nametags|Mostrar siempre las etiquetas de nombre
+The nametags above each player are always visible in game|Las etiquetas de nombre encima de cada jugador siempre están visibles en el juego
+incompatible mod detected|mod incompatible detectado

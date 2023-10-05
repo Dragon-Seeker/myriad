@@ -11,3 +11,6 @@ Arena shelters can hold additional slugcats|アリーナのシェルターは多
 Please report bugs & crashes on the steam workshop or Discord|SteamワークショップかDiscordで、バグとクラッシュを報告してください
 Recommended mods for large groups are Stick Together and SBCameraScroll|大人数用のおすすめMODは、Stick TogetherとSBCameraScroll
 Some mods may not support more than 4 players|MODによっては、4人以上のプレーヤーをサポートしないものもあります
+Always Display Nametags|名札の常時表示
+The nametags above each player are always visible in game|各選手の上にある名札は、ゲーム中に常に表示されます。
+incompatible mod detected|互換性のないMODが検出された

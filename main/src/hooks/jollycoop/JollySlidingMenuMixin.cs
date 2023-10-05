@@ -215,9 +215,29 @@ public class JollySlidingMenuMixin {
 
 
     private void JollySlidingMenu_Singal(On.JollyCoop.JollyMenu.JollySlidingMenu.orig_Singal orig, JollySlidingMenu self, MenuObject sender, string message) {
-        orig(self, sender, message);
-        
+
         var plyCnt = MyriadMod.PlyCnt();
+
+        //VANILLA SLUGPUP TOGGLE DOES NOT ACCOUNT FOR DOUBLE DIGIT PLAYERCOUNT. LETS FIX THAT
+        if (message.Contains("toggle_pup") && plyCnt > 8) {
+            bool isPup = false;
+            if (message.Contains("on")) {
+                isPup = true;
+                message = message.Replace("_on", "");
+            } else {
+                message = message.Replace("_off", "");
+            }
+
+            string checkMsg = message.Replace("toggle_pup_", ""); //(char.ToString(message[message.Length - 1]) //THIS WAS VANILLA, AND IT ONLY TOOK THE LAST DIGIT
+            if (int.TryParse(checkMsg, NumberStyles.Any, CultureInfo.InvariantCulture, out var result) && result < self.playerSelector.Length)
+                self.JollyOptions(result).isPup = isPup;
+            else
+                JollyCustom.Log("Error parsing signal string: " + message, throwException: true);
+
+            message = ""; //TO THROW OFF ORIG FROM REPEATING THE SAME MISTAKES
+        }
+
+        orig(self, sender, message);
         
         if(plyCnt <= 4) return;
         

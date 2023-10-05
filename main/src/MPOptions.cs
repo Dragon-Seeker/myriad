@@ -15,6 +15,7 @@ public class MPOptions : OptionInterface {
         downpourCoop = this.config.Bind<bool>("downpourCoop", true);
         longPipeWait = this.config.Bind<bool>("longPipeWait", true);
         grabRelease = this.config.Bind<bool>("grabRelease", true);
+        displayNametags = this.config.Bind<bool>("displayNametags", false);
         maxPlayers = this.config.Bind<int>("maxPlayers", PreloadMaxPlayerSettings.defMaxCap / 4, new ConfigAcceptableRange<int>(1, 4));
         
         this.Logger = logger;
@@ -31,7 +32,8 @@ public class MPOptions : OptionInterface {
     public readonly Configurable<bool> longPipeWait;
     private readonly Configurable<int> maxPlayers; //Used only for player control of the main value from PreloadMaxPlayerSettings
     public readonly Configurable<bool> grabRelease;
-    
+    public readonly Configurable<bool> displayNametags;
+
     public OpSliderTick pCountOp;
     public OpLabel lblOp1;
 
@@ -92,11 +94,11 @@ public class MPOptions : OptionInterface {
         
         try {
             float lineCount = 555;
-            int margin = 20;
+            int margin = 300;
             string dsc = "";
 
-            Tabs[0].AddItems(new OpLabel(265, 575, Translate("Myriad Options"), bigText: true) { alignment = FLabelAlignment.Center });
-            lineCount -= 50;
+            Tabs[0].AddItems(new OpLabel(225, 575, Translate("Myriad Options"), bigText: true) { alignment = FLabelAlignment.Center });
+            lineCount -= 60;
             
             //IF I EVER WANT TO CHANGE THIS... OpUpdown should be the way to go
             dsc = Translate("Number of controls");
@@ -118,7 +120,8 @@ public class MPOptions : OptionInterface {
             });
             //mod_menu_restart|The applied mods require the game to be re-launched. Press continue and then launch the game again.
 
-            margin += 225;
+            lineCount = 515;
+            margin = 20;
             if (!MyriadMod.coopLeashEnabled) {
                 //ONLY IF CO-OP LEASH IS NOT ENABLED
                 OpCheckBox mpBox2;
@@ -131,9 +134,9 @@ public class MPOptions : OptionInterface {
                         description = dsc
                     }
                 });
+                lineCount -= 50;
             }
 
-            margin += 200;
             if (ModManager.MSC) {
                 //ONLY SHOW THIS OPTION IF MSC IS ENABLED
                 OpCheckBox mpBox1;
@@ -146,7 +149,17 @@ public class MPOptions : OptionInterface {
                         description = dsc
                     }
                 });
+                lineCount -= 50;
             }
+
+
+            OpCheckBox mpBox3;
+            dsc = Translate("The nametags above each player are always visible in game");
+            Tabs[0].AddItems(new UIelement[] {
+                mpBox3 = new OpCheckBox(displayNametags, new Vector2(margin, lineCount)) {description = dsc},
+                new OpLabel(mpBox3.pos.x + 30, mpBox3.pos.y+3, Translate("Always Display Nametags")) {description = dsc}
+            });
+            lineCount -= 50;
 
             int descLine = 200;
             Tabs[0].AddItems(new OpLabel(25f, descLine + 25f, "--- Additional Info ---"));

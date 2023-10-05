@@ -6,7 +6,7 @@ namespace Myriad.hooks;
 [Mixin(typeof(ShelterDoor))]
 public class ShelterDoorMixin {
 
-    public const int forceTimeLimit = 120;
+    public const int forceTimeLimit = 80;
     
     public static ShelterDoorMixin INSTANCE = new ShelterDoorMixin();
 

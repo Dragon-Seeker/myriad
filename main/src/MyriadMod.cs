@@ -24,7 +24,7 @@ using Myriad.hooks.menu;
 
 namespace Myriad;
 
-[BepInPlugin("myriad", "Myriad of Slug Cats", "0.3.0")]
+[BepInPlugin("myriad", "Myriad of Slug Cats", "1.0")]
 public class MyriadMod : BaseUnityPlugin {
 
     public static MPOptions options;
@@ -136,6 +136,7 @@ public class MyriadMod : BaseUnityPlugin {
             On.ArenaBehaviors.ExitManager.ExitOccupied += ExitManager_ExitOccupied;
 
             On.Menu.MainMenu.ctor += MainMenu_ctor;
+            On.JollyCoop.JollyHUD.JollyPlayerSpecificHud.JollyPlayerArrow.Draw += JollyPlayerArrow_Draw;
 
             //-----
 
@@ -160,12 +161,21 @@ public class MyriadMod : BaseUnityPlugin {
         RainWorld.PlayerObjectBodyColors = new Color[PlyCnt()];
     }
 
+    private void JollyPlayerArrow_Draw(On.JollyCoop.JollyHUD.JollyPlayerSpecificHud.JollyPlayerArrow.orig_Draw orig, JollyCoop.JollyHUD.JollyPlayerSpecificHud.JollyPlayerArrow self, float timeStacker) {
+        orig(self, timeStacker);
+        
+        //HIDE STACKS OF PLAYER NAMES WAITING IN PIPES SO IT'S EASIER TO TELL WHEN SOMEONE IS NOT ALL THE WAY IN
+        if (options.displayNametags.Value && self.jollyHud?.RealizedPlayer != null && !self.jollyHud.RealizedPlayer.inShortcut) {
+            self.label.alpha = 1;
+        }
+    }
+
     private void MainMenu_ctor(On.Menu.MainMenu.orig_ctor orig, MainMenu self, ProcessManager manager, bool showRegionSpecificBkg) {
 
         orig(self, manager, showRegionSpecificBkg);
 
         if (incompatibleMod != "" && !shownIncompatWarning) {
-            self.popupAlert = new DialogBoxNotify(self, self.pages[0], self.Translate("Myriad incompatible mod detected: \n" + incompatibleMod), "ALERT", new Vector2(manager.rainWorld.options.ScreenSize.x / 2f - 240f + (1366f - manager.rainWorld.options.ScreenSize.x) / 2f, 284f), new Vector2(480f, 180f), false);
+            self.popupAlert = new DialogBoxNotify(self, self.pages[0], "Myriad " + self.Translate("incompatible mod detected") + ": \n" + incompatibleMod, "ALERT", new Vector2(manager.rainWorld.options.ScreenSize.x / 2f - 240f + (1366f - manager.rainWorld.options.ScreenSize.x) / 2f, 284f), new Vector2(480f, 180f), false);
             self.pages[0].subObjects.Add(self.popupAlert);
             shownIncompatWarning = true;
             return;
