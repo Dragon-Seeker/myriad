@@ -24,7 +24,7 @@ using Myriad.hooks.menu;
 
 namespace Myriad;
 
-[BepInPlugin("myriad", "Myriad of Slug Cats", "1.0")]
+[BepInPlugin("myriad", "Myriad of Slug Cats", "1.0.0")]
 public class MyriadMod : BaseUnityPlugin {
 
     public static MPOptions options;
