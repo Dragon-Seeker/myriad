@@ -24,7 +24,7 @@ using Myriad.hooks.menu;
 
 namespace Myriad;
 
-[BepInPlugin("myriad", "Myriad of Slug Cats", "1.0.0")]
+[BepInPlugin("myriad", "Myriad of Slug Cats", "1.0.1")]
 public class MyriadMod : BaseUnityPlugin {
 
     public static MPOptions options;
@@ -196,7 +196,6 @@ public class MyriadMod : BaseUnityPlugin {
             if (activeMod.id == "bettergrab") incompatibleMod = activeMod.id;
             if (activeMod.id == "pkuyo.customfood") incompatibleMod = activeMod.id;
             if (activeMod.id == "IndividualKarma") incompatibleMod = activeMod.id;
-            if (activeMod.id == "ExpeditionExtraConfig") incompatibleMod = activeMod.id;
         }
     }
     
@@ -293,7 +292,7 @@ public class MyriadMod : BaseUnityPlugin {
             //cursor.EmitDelegate((float rad, Player player, int k) =>
             cursor.EmitDelegate((int oldNum) => plyCnt);
             
-            if(maxReplace != 1 && maxReplace == x) break;
+            if(maxReplace == x) break;
         }
 
         if (x == 0) {
