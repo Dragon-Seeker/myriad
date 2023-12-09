@@ -1,5 +1,7 @@
 ﻿using BepInEx.Logging;
+using Kittehface.Framework20;
 using Menu;
+using Myriad.hooks.jollycoop;
 using Myriad.utils;
 using RWCustom;
 using UnityEngine;
@@ -16,8 +18,32 @@ public class MultiplayerMenuMixin {
         this.Logger = logger;
         //ADJUST MENU LAYOUT
         On.Menu.MultiplayerMenu.InitiateGameTypeSpecificButtons += MultiplayerMenu_InitiateGameTypeSpecificButtons;
+        On.Menu.MultiplayerMenu.Update += MultiplayerMenu_Update;
     }
-    
+
+    bool btnHeld = false;
+    private void MultiplayerMenu_Update(On.Menu.MultiplayerMenu.orig_Update orig, MultiplayerMenu self) {
+        orig(self);
+
+        bool pressedBtn = false;
+        Profiles.Profile profile = self.manager.rainWorld.playerHandler.profile;
+        if (Input.GetKey((KeyCode) 324) || (profile != null && UserInput.GetButton(profile, "UICancel"))) { //"Take"
+            if (!btnHeld)
+                pressedBtn = true;
+            btnHeld = true;
+        } else {
+            btnHeld = false;
+        }
+
+        for (int k = 0; k < self.playerClassButtons.Length; k++) {
+            if (self.playerClassButtons[k].Selected && pressedBtn) {
+                self.GetArenaSetup.playerClass[k] = JollySlidingMenuMixin.PrevClass(self.GetArenaSetup.playerClass[k], "arena", self.manager.rainWorld);
+                self.GetArenaSetup.playerClass[k] = JollySlidingMenuMixin.PrevClass(self.GetArenaSetup.playerClass[k], "arena", self.manager.rainWorld);
+                self.Singal(self.playerClassButtons[k], "CLASSCHANGE" + k.ToString());
+            }
+        }
+    }
+
     //OKAY WEIRD BUT WE A DEFINITELY DUPLICATING MENU OBJECTS WHEN SWITCHING BETWEEN ARENA MODES WHILE MSC IS DISABLED...
     private void MultiplayerMenu_InitiateGameTypeSpecificButtons(On.Menu.MultiplayerMenu.orig_InitiateGameTypeSpecificButtons orig, MultiplayerMenu self) {
         orig(self);

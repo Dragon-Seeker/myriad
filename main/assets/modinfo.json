@@ -1,10 +1,10 @@
 ﻿{
   "id": "myriad",
   "name": "Myriad of Slugcats",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "authors": "Blodhgarm, WillowWispy",
   "description": "Mod that aims to make Rainworld support more than just four players",
-  "tags": [],
+  "tags": ["Game Mechanics"],
   "requirements": [],
   "requirements_names": [],
   "checksum_override_version": false

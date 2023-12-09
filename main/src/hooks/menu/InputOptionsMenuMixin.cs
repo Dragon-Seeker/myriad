@@ -19,8 +19,18 @@ public class InputOptionsMenuMixin {
         orig(self, manager);
         
         var plyCnt = MyriadMod.PlyCnt();
-        
-        if(plyCnt <= 4) return;
+
+        if (plyCnt <= 4) { 
+            if (ModManager.JollyCoop) {
+                //JOLLYCOOP BONUS; SHOW THE CURRENT JOLLY PLAYER NAMEPLATES
+                for (int index = self.playerButtons.Length - 1; index >= 0; --index) {
+                    string nameTag = JollyCoop.JollyCustom.GetPlayerName(index);
+                    if (self.playerButtons[index].menuLabel.text != nameTag)
+                        self.playerButtons[index].menuLabel.text += " - " + nameTag;
+                }
+            }
+            return; 
+        }
 
         Vector2 vector2_1 = new Vector2(0.0f, -30f);
 
@@ -190,6 +200,9 @@ public class InputOptionsMenuMixin {
             //INCREASE VISIBILITY
             playerButton.menuLabel.pos.y += 20;
             playerButton.menuLabel.label.MoveToFront();
+            
+            if (ModManager.JollyCoop) //FINISHING TOUCH TO HELP WITH SETUP... SHOW THE CURRENT JOLLY PLAYER NAMEPLATES (WHICH DEFAULT TO PLAYER NUMBERS ANYWAYS)
+                playerButton.menuLabel.text = JollyCoop.JollyCustom.GetPlayerName(index); //(playerButton.index + 1).ToString() + " " + 
         }
 
         for (int playerNumber = 4; playerNumber < manager.rainWorld.options.controls.Length; ++playerNumber) {

@@ -1,5 +1,6 @@
 ﻿using JollyCoop;
 using JollyCoop.JollyMenu;
+using Kittehface.Framework20;
 using Menu;
 using Menu.Remix.MixedUI;
 using Mono.Cecil.Cil;
@@ -11,6 +12,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using UnityEngine;
+using Expedition;
 
 namespace Myriad.hooks.jollycoop; 
 
@@ -23,6 +25,7 @@ public class JollySlidingMenuMixin {
         On.JollyCoop.JollyMenu.JollySlidingMenu.ctor += adjustPlayerSelectGUI;
         On.JollyCoop.JollyMenu.JollySlidingMenu.NumberPlayersChange += accountForMoreThanFour;
         On.JollyCoop.JollyMenu.JollySlidingMenu.Singal += JollySlidingMenu_Singal;
+        On.JollyCoop.JollyMenu.JollyPlayerSelector.Update += JollyPlayerSelector_Update;
 
         //Needed to prevent the cap of only 31 as a span...
         IL.Menu.Remix.MixedUI.OpSliderTick.ctor_ConfigurableBase_Vector2_int_bool += il => {
@@ -35,15 +38,71 @@ public class JollySlidingMenuMixin {
 
             while (cursor.TryGotoNext(MoveType.After, predicates.ToArray())) {
                 x++;
-                //cursor.Emit(OpCodes.Ldloc, player); //THESE LIKE, BECOME ARGUMENTS WITHIN EMITDELEGATE  I THINK?
-                //cursor.Emit(OpCodes.Ldloc, k);
-
-                //cursor.EmitDelegate((float rad, Player player, int k) =>
                 cursor.EmitDelegate((int oldNum) => 128);
             }
         };
     }
-    
+
+    bool btnHeld = false;
+    public void JollyPlayerSelector_Update(On.JollyCoop.JollyMenu.JollyPlayerSelector.orig_Update orig, JollyPlayerSelector self) {
+        orig(self);
+
+        bool pressedBtn = false;
+        if (self.classButton.Selected) {
+            
+            Profiles.Profile profile = self.menu.manager.rainWorld.playerHandler.profile;
+            if (Input.GetKey((KeyCode) 324) || (profile != null && UserInput.GetButton(profile, "UICancel"))) {
+                if (!btnHeld)
+                    pressedBtn = true;
+                btnHeld = true;
+            }
+            else {
+                btnHeld = false;
+            }
+
+            if (pressedBtn) {
+                //FOR MOD COMPATIBILITY SAKE, SHIFT BACK 2 AND THEN RUN THE NORMAL CLASS CHANGE
+                string mode = self.menu.manager.rainWorld.ExpeditionMode ? "expedition" : "story";
+                self.slugName = PrevClass(self.slugName, mode, self.menu.manager.rainWorld);
+                self.slugName = PrevClass(self.slugName, mode, self.menu.manager.rainWorld);
+                self.Singal(self, "CLASSCHANGE" + self.index.ToString());
+            }
+        }
+    }
+
+    public static SlugcatStats.Name PrevClass(SlugcatStats.Name curClass, string menuMode, RainWorld rainWorld) {
+        if (ModManager.Expedition && menuMode == "expedition") //self.menu.manager.rainWorld.ExpeditionMode
+        {
+            int num = ExpeditionGame.unlockedExpeditionSlugcats.IndexOf(curClass) - 1;
+            if (num < 0) {
+                return ExpeditionGame.unlockedExpeditionSlugcats[ExpeditionGame.unlockedExpeditionSlugcats.Count - 1];
+            }
+            return ExpeditionGame.unlockedExpeditionSlugcats[num];
+        } else {
+            SlugcatStats.Name name;
+            if (curClass == null) {
+                int lastEntry = ExtEnum<SlugcatStats.Name>.values.Count - 1;
+                name = new SlugcatStats.Name(ExtEnum<SlugcatStats.Name>.values.GetEntry(lastEntry), false);
+            } else {
+                if (curClass.Index <= 0 || curClass.Index > ExtEnum<SlugcatStats.Name>.values.Count - 1) {
+                    return PrevClass(null, menuMode, rainWorld);
+                }
+                name = new SlugcatStats.Name(ExtEnum<SlugcatStats.Name>.values.GetEntry(curClass.Index - 1), false);
+            }
+            if (SlugcatStats.HiddenOrUnplayableSlugcat(name)) {
+                return PrevClass(name, menuMode, rainWorld);
+            }
+            if (menuMode == "story" && !SlugcatStats.SlugcatUnlocked(name, rainWorld)) {
+                return PrevClass(name, menuMode, rainWorld);
+            }
+            if (menuMode == "arena" && name != SlugcatStats.Name.White && name != SlugcatStats.Name.Yellow && new MultiplayerUnlocks(rainWorld.progression, new List<string>()).ClassUnlocked(name) == false) {
+                return PrevClass(name, menuMode, rainWorld);
+            }
+            //Debug.Log("Next class: " + ((name != null) ? name.ToString() : null));
+            return name;
+        }
+    }
+
     public void accountForMoreThanFour(On.JollyCoop.JollyMenu.JollySlidingMenu.orig_NumberPlayersChange orig, JollySlidingMenu self, UIconfig config, string value, string oldvalue) {
         orig(self, config, value, oldvalue);
         
@@ -71,7 +130,7 @@ public class JollySlidingMenuMixin {
 
         var plyCnt = MyriadMod.PlyCnt();
         
-        if(plyCnt <= 4) return;
+        //if(plyCnt <= 4) return;
 
         //float num1 = 70;
         //float num2 = (float)((1024.0 - num1 * 8.0) / 5.0);
@@ -79,6 +138,7 @@ public class JollySlidingMenuMixin {
 		
 		//TRYING SOMETHING FUNKY
 		jollySwapButtons = new SimpleButton[MyriadMod.PlyCnt()];
+        float swapOffsetY = (plyCnt > 8 ? 5 : 0);
 
         for (int index = 0; index < MyriadMod.PlyCnt(); ++index) {
             JollyPlayerSelector playerSelector = self.playerSelector[index];
@@ -115,23 +175,24 @@ public class JollySlidingMenuMixin {
                 playerSelector.playerLabelSelector.size -= new Vector2(18, 0);
             }
             
-            //playerSelector.pos.x -= playerSelector.pos.x - pos1.x;
-            //playerSelector.playerLabelSelector._pos.x -= playerSelector.playerLabelSelector._pos.x - pos1.x;
-            //pos1 += new Vector2(num2 + num1, 0.0f);
 
             //LETS TRY SOMETHING SIMPLER...
-            float newX = ((menu.manager.rainWorld.screenSize.x) / plyCnt) * index;
-            newX += 5 + Mathf.Lerp(700f, 0f, (Custom.rainWorld.options.ScreenSize.x / 1360)); //AN ATTEMPT TO FIX THE WEIRD SCREEN SIZE SCALING
-            playerSelector.pos.x = newX + 0;
-            playerSelector.playerLabelSelector._pos.x = newX + 0;
+            if (plyCnt > 4) {
+                float newX = ((menu.manager.rainWorld.screenSize.x) / plyCnt) * index;
+                newX += 5 + Mathf.Lerp(700f, 0f, (Custom.rainWorld.options.ScreenSize.x / 1360)); //AN ATTEMPT TO FIX THE WEIRD SCREEN SIZE SCALING
+                playerSelector.pos.x = newX + 0;
+                playerSelector.playerLabelSelector._pos.x = newX + 0;
+            }
+            
 
             if (plyCnt > 8) {
                 playerSelector.pupButton.pos += new Vector2(-85f, 95f); //-45
                 playerSelector.pupButton.roundedRect.size *= 0.8f;
                 playerSelector.pupButton.selectRect.size *= 0.8f;
             }
-			
-            jollySwapButtons[index] = new SimpleButton(self.menu, self, "<->", "JOLLYSWAP" + index.ToString(), playerSelector.pos + new Vector2(-20, 130) , new Vector2(40f, 20f));
+
+            float swapOffset = Custom.LerpMap(plyCnt, 4f, 16f, -80f, -20f);
+            jollySwapButtons[index] = new SimpleButton(self.menu, self, "<->", "JOLLYSWAP" + index.ToString(), playerSelector.pos + new Vector2(swapOffset, 120 + (swapOffsetY * 2f)) , new Vector2(40f, 20f));
             menu.elementDescription.Add(jollySwapButtons[index].signalText, menu.Translate("Swap Player <p_n> and Player <p_n2>").Replace("<p_n>", (index + 0).ToString()).Replace("<p_n2>", (index + 1).ToString()));
             self.subObjects.Add(jollySwapButtons[index]);
             
@@ -174,41 +235,40 @@ public class JollySlidingMenuMixin {
         jollySwapButtons[1].nextSelectable[0] = jollySwapButtons[1];
 
         //---
-
         var slider = self.numberPlayersSlider;
-        
-        var config = menu.oi.config.Bind("_cosmetic", Custom.rainWorld.options.JollyPlayerCount, new ConfigAcceptableRange<int>(1, plyCnt));
+        if (plyCnt > 4) {
+            var config = menu.oi.config.Bind("_cosmetic", Custom.rainWorld.options.JollyPlayerCount, new ConfigAcceptableRange<int>(1, plyCnt));
 
-        var uiConfigType = typeof(UIconfig);
-        var flags = BindingFlags.Public | BindingFlags.Instance;
+            var uiConfigType = typeof(UIconfig);
+            var flags = BindingFlags.Public | BindingFlags.Instance;
 
-        //self.numberPlayersSlider.cfgEntry = config;
-        uiConfigType.GetField("cfgEntry", flags)
-            .SetValue(self.numberPlayersSlider, config);
-        
-        //self.numberPlayersSlider.cosmetic = config.IsCosmetic;
-        uiConfigType.GetField("cosmetic", flags)
-            .SetValue(self.numberPlayersSlider, config.IsCosmetic);
+            //self.numberPlayersSlider.cfgEntry = config;
+            uiConfigType.GetField("cfgEntry", flags)
+                .SetValue(self.numberPlayersSlider, config);
 
-        slider.defaultValue = config.defaultValue;
+            //self.numberPlayersSlider.cosmetic = config.IsCosmetic;
+            uiConfigType.GetField("cosmetic", flags)
+                .SetValue(self.numberPlayersSlider, config.IsCosmetic);
 
-        slider.cfgEntry.BoundUIconfig = slider;
+            slider.defaultValue = config.defaultValue;
 
-        var bl = config.info != null && config.info.acceptable != null;
-        
-        slider.min = bl ? (int) config.info.acceptable.Clamp(int.MinValue) : 0;
-        slider.max = bl ? (int) config.info.acceptable.Clamp(int.MaxValue) : (slider._IsTick ? 15 : 100);
+            slider.cfgEntry.BoundUIconfig = slider;
 
+            var bl = config.info != null && config.info.acceptable != null;
+
+            slider.min = bl ? (int) config.info.acceptable.Clamp(int.MinValue) : 0;
+            slider.max = bl ? (int) config.info.acceptable.Clamp(int.MaxValue) : (slider._IsTick ? 15 : 100);
+
+            slider._size = new Vector2(Math.Max((int) (self.playerSelector[plyCnt - 1].pos - self.playerSelector[0].pos).x, 30), 30f);
+            slider.fixedSize = slider._size;
+
+            
+        }
         float num1 = 70;
-        slider.pos = self.playerSelector[0].pos + new Vector2((num1 / 2f) + 15, 149f); //UPPING A FEW PIXELS SO IT OVERLAPS LESS WITH THE PLAYER-SWAP BUTTONS
-
-        slider._size = new Vector2(Math.Max((int)(self.playerSelector[plyCnt - 1].pos - self.playerSelector[0].pos).x, 30), 30f);
-        slider.fixedSize = slider._size;
-        
+        slider.pos = self.playerSelector[0].pos + new Vector2((num1 / 2f) + 15, 144f + swapOffsetY); //UPPING A FEW PIXELS SO IT OVERLAPS LESS WITH THE PLAYER-SWAP BUTTONS
         slider.Initialize();
-        
         //---
-        
+
         //Rebind buttons is needed to fix navigating sortof... Needs to be better handled I think
         //self.BindButtons(); //THIS DOESN'T WORK! BREAKS TOO MANY SELECTIONS. FIXING UP TOP
     }
@@ -238,8 +298,6 @@ public class JollySlidingMenuMixin {
         }
 
         orig(self, sender, message);
-        
-        if(plyCnt <= 4) return;
         
         if (message.Contains("JOLLYSWAP")) {
             for (int i = 0; i < self.playerSelector.Length; ++i){
