@@ -35,11 +35,13 @@ public class MultiplayerMenuMixin {
             btnHeld = false;
         }
 
-        for (int k = 0; k < self.playerClassButtons.Length; k++) {
-            if (self.playerClassButtons[k].Selected && pressedBtn) {
-                self.GetArenaSetup.playerClass[k] = JollySlidingMenuMixin.PrevClass(self.GetArenaSetup.playerClass[k], "arena", self.manager.rainWorld);
-                self.GetArenaSetup.playerClass[k] = JollySlidingMenuMixin.PrevClass(self.GetArenaSetup.playerClass[k], "arena", self.manager.rainWorld);
-                self.Singal(self.playerClassButtons[k], "CLASSCHANGE" + k.ToString());
+        if (self.playerClassButtons != null) {
+            for (int k = 0; k < self.playerClassButtons.Length; k++) {
+                if (self.playerClassButtons[k].Selected && pressedBtn) {
+                    self.GetArenaSetup.playerClass[k] = JollySlidingMenuMixin.PrevClass(self.GetArenaSetup.playerClass[k], "arena", self.manager.rainWorld);
+                    self.GetArenaSetup.playerClass[k] = JollySlidingMenuMixin.PrevClass(self.GetArenaSetup.playerClass[k], "arena", self.manager.rainWorld);
+                    self.Singal(self.playerClassButtons[k], "CLASSCHANGE" + k.ToString());
+                }
             }
         }
     }

@@ -4,6 +4,7 @@
     <TargetFramework>net48</TargetFramework>
     <LangVersion>11</LangVersion>
     <RootNamespace>Myriad</RootNamespace>
+	<PathMap>$(MSBuildProjectDirectory)=/RainWorldMods/WillowsMods</PathMap>
   </PropertyGroup>
 
   <ItemGroup>

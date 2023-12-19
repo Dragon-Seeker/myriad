@@ -307,7 +307,10 @@ public class JollySlidingMenuMixin {
                     Custom.rainWorld.options.jollyPlayerOptionsArray[i] = jOptB;
                     Custom.rainWorld.options.jollyPlayerOptionsArray[i - 1] = jOptA;
 					bool swapPup = self.JollyOptions(i).isPup != self.JollyOptions(i-1).isPup;
-					
+                    //DON'T MIX UP PLAYER NUMBER. ESPECIALLY BECAUSE PLAYER 1 IS ALWAYS FORCE ENABLED
+                    Custom.rainWorld.options.jollyPlayerOptionsArray[i].playerNumber = jOptA.playerNumber;
+                    Custom.rainWorld.options.jollyPlayerOptionsArray[i - 1].playerNumber = jOptB.playerNumber;
+
                     self.SetPortraitsDirty(); //REFRESH THE PORTRAITS!
                     self.playerSelector[i].dirty = true;
                     self.playerSelector[i-1].dirty = true;
