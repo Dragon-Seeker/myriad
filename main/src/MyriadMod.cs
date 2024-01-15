@@ -165,7 +165,7 @@ public class MyriadMod : BaseUnityPlugin {
         orig(self, timeStacker);
         
         //HIDE STACKS OF PLAYER NAMES WAITING IN PIPES SO IT'S EASIER TO TELL WHEN SOMEONE IS NOT ALL THE WAY IN
-        if (options.displayNametags.Value && self.jollyHud?.RealizedPlayer != null && !self.jollyHud.RealizedPlayer.inShortcut) {
+        if (options.displayNametags.Value && self.jollyHud?.RealizedPlayer != null && !self.jollyHud.RealizedPlayer.inShortcut && !self.hide) {
             self.label.alpha = 1;
         }
     }
