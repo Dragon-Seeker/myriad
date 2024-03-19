@@ -11,8 +11,17 @@
     <Reference Include="../lib/*.dll">
       <Private>false</Private>
     </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Rain World\RainWorld_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
+    </Reference>
+    <Reference Include="HOOKS-Assembly-CSharp">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Rain World\BepInEx\plugins\HOOKS-Assembly-CSharp.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>$(RainWorldDir)\RainWorld_Data\Managed\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Rain World\BepInEx\utils\PUBLIC-Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Rewired_Core">
       <HintPath>$(RainWorldDir)\RainWorld_Data\Managed\Rewired_Core.dll</HintPath>
@@ -26,12 +35,6 @@
     </Reference>
     <Reference Include="0Harmony20">
       <HintPath>$(RainWorldDir)\BepInEx\core\0Harmony20.dll</HintPath>
-    </Reference>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>$(RainWorldDir)\BepInEx\utils\PUBLIC-Assembly-CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>$(RainWorldDir)\RainWorld_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
     <Reference Include="BepInEx">
       <HintPath>$(RainWorldDir)\BepInEx\core\BepInEx.dll</HintPath>
@@ -50,9 +53,6 @@
     </Reference>
     <Reference Include="HarmonyXInterop">
       <HintPath>$(RainWorldDir)\BepInEx\core\HarmonyXInterop.dll</HintPath>
-    </Reference>
-    <Reference Include="HOOKS-Assembly-CSharp">
-      <HintPath>$(RainWorldDir)\BepInEx\plugins\HOOKS-Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Cecil">
       <HintPath>$(RainWorldDir)\BepInEx\core\Mono.Cecil.dll</HintPath>
@@ -74,6 +74,9 @@
     </Reference>
     <Reference Include="MonoMod.Utils">
       <HintPath>$(RainWorldDir)\BepInEx\core\MonoMod.Utils.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Mathematics">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Rain World\RainWorld_Data\Managed\Unity.Mathematics.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
       <HintPath>$(RainWorldDir)\RainWorld_Data\Managed\UnityEngine.dll</HintPath>

@@ -115,7 +115,8 @@ public class MyriadMod : BaseUnityPlugin {
             IL.Options.ControlSetup.SaveAllControllerUserdata += Replace4WithMore;  //1
             IL.RainWorld.JoystickConnected += Replace4WithMore; //5-19
             IL.RainWorld.JoystickPreDisconnect += Replace4WithMore;
-            IL.RWInput.PlayerUIInput += Replace4WithMore;
+            //IL.RWInput.PlayerUIInput += Replace4WithMore;
+            IL.RWInput.PlayerUIInput_int += Replace4WithMore;
             //SOME MORE TO ADD!
             IL.ScavengersWorldAI.Outpost.ctor += Replace4WithMore;
             IL.ArenaGameSession.ctor += Replace4WithMore;

@@ -50,8 +50,8 @@ public class JollySlidingMenuMixin {
         bool pressedBtn = false;
         if (self.classButton.Selected) {
             
-            Profiles.Profile profile = self.menu.manager.rainWorld.playerHandler.profile;
-            if (Input.GetKey((KeyCode) 324) || (profile != null && UserInput.GetButton(profile, "UICancel"))) {
+            Profiles.Profile profile = self.menu.manager.rainWorld.GetPlayerHandler(0).profile;
+            if (Input.GetKey((KeyCode) 324) || (profile != null && UserInput.GetRewiredPlayer(profile, 0).GetButton(9))) {
                 if (!btnHeld)
                     pressedBtn = true;
                 btnHeld = true;

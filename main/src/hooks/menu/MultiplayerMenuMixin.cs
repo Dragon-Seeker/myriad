@@ -5,6 +5,7 @@ using Myriad.hooks.jollycoop;
 using Myriad.utils;
 using RWCustom;
 using UnityEngine;
+using Kittehface.Build;
 
 namespace Myriad.hooks.menu; 
 
@@ -26,8 +27,10 @@ public class MultiplayerMenuMixin {
         orig(self);
 
         bool pressedBtn = false;
-        Profiles.Profile profile = self.manager.rainWorld.playerHandler.profile;
-        if (Input.GetKey((KeyCode) 324) || (profile != null && UserInput.GetButton(profile, "UICancel"))) { //"Take"
+        //Profiles.Profile profile = self.manager.rainWorld.playerHandler.profile;
+        Profiles.Profile profile = self.manager.rainWorld.GetPlayerHandler(0).profile; //PRETTY SURE WE WANT PLAYER 1
+        //if (Input.GetKey((KeyCode) 324) || (profile != null && UserInput.GetButton(profile, "UICancel"))) { //"Take"
+        if (Input.GetKey((KeyCode) 324) || (profile != null && UserInput.GetRewiredPlayer(profile, 0).GetButton(9))) { //9 = UICancel
             if (!btnHeld)
                 pressedBtn = true;
             btnHeld = true;
