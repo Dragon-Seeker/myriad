@@ -156,19 +156,20 @@ public class MyriadPreloadPatches {
     
     [DllImport("kernel32", SetLastError = true, CharSet = CharSet.Ansi)]
     static extern IntPtr LoadLibrary([MarshalAs(UnmanagedType.LPStr)] string lpFileName);
-    
+
     //---------------------------------------------------------------------------------------------------------------------------------
 
     // Patch Used to adjust the amount of players by injecting a method to handle such
     //
-    // Class: [ BBctKivJxEjGKRzyEkHSRjJoJqnW ], Method: [ zQQfvDZMmpVqPPLYlLuSJXXpwJcI ]
+    // Class: [ BBctKivJxEjGKRzyEkHSRjJoJqnW ], Method: [ zQQfvDZMmpVqPPLYlLuSJXXpwJcI ] //v1.9.07b
+    // Class: [ rlfXkJTrHZdpPrmFzvJfeOpwdxFF ], Method: [ zQQfvDZMmpVqPPLYlLuSJXXpwJcI ] //IT'S UPDATED AS OF 1.9.14 SO IT HAS NEW OBFUSCATED NAMES
     public static void patch_BBctKivJxEjGKRzyEkHSRjJoJqnW_zQQfvDZMmpVqPPLYlLuSJXXpwJcI(ModuleDefinition module) {
         try {
-            TypeDefinition classDef = module.Types.First(t => t.FullName == "BBctKivJxEjGKRzyEkHSRjJoJqnW");
+            TypeDefinition classDef = module.Types.First(t => t.FullName == "rlfXkJTrHZdpPrmFzvJfeOpwdxFF");
 
             logger.LogMessage($"Class: {classDef}");
 
-            MethodDefinition methodDef = classDef.Methods.First(m => m.Name == "zQQfvDZMmpVqPPLYlLuSJXXpwJcI");
+            MethodDefinition methodDef = classDef.Methods.First(m => m.Name == "VdFdsenSIiDFIclvMkvztmdrWtWKA");
 
             Collection<Instruction> instructions = methodDef.Body.Instructions;
 
