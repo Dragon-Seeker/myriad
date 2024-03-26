@@ -14,17 +14,48 @@ public class MultiplayerMenuMixin {
     public static MultiplayerMenuMixin INSTANCE = new MultiplayerMenuMixin();
 
     private ManualLogSource Logger;
-    
+    public static bool[] arenaPlrsMemory; //AT SOME POINT MAYBE WE'LL WRITE AN ACTUAL IL HOOK BUT FOR NOW, THIS WILL DO
+
     public void init(ManualLogSource logger) {
         this.Logger = logger;
         //ADJUST MENU LAYOUT
         On.Menu.MultiplayerMenu.InitiateGameTypeSpecificButtons += MultiplayerMenu_InitiateGameTypeSpecificButtons;
         On.Menu.MultiplayerMenu.Update += MultiplayerMenu_Update;
+        On.Menu.Menu.Update += Menu_Update; //I AM NOT ABOVE RESORTING TO MILITARY GRADE SHENANGIANS TO AVOID WRITING IL HOOKS
+    }
+
+    private void Menu_Update(On.Menu.Menu.orig_Update orig, Menu.Menu self) {
+        if (self.manager?.arenaSetup?.playersJoined?.Length != MyriadMod.plyCnt && arenaPlrsMemory!= null)
+            self.manager.arenaSetup.playersJoined = arenaPlrsMemory;
+        orig(self);
     }
 
     bool btnHeld = false;
     private void MultiplayerMenu_Update(On.Menu.MultiplayerMenu.orig_Update orig, MultiplayerMenu self) {
+
+        if (!self.requestingControllerConnections && !self.exiting) {
+            for (int i = 1; i < self.manager.arenaSetup.playersJoined.Length; i++) {
+                PlayerHandler playerHandler = self.manager.rainWorld.GetPlayerHandler(i);
+                if (playerHandler != null) {
+                    Rewired.Player rewiredPlayer = UserInput.GetRewiredPlayer(playerHandler.profile, i);
+                    self.manager.arenaSetup.playersJoined[i] = true; // (rewiredPlayer.controllers.joystickCount > 0 || rewiredPlayer.controllers.hasKeyboard);
+                } else {
+                    self.manager.arenaSetup.playersJoined[i] = false;
+                }
+                self.manager.rainWorld.GetPlayerSigningIn(i);
+            }
+        }
+        
+        //TEMPORARILY ADJUST THE TABLE SIZE SO REWIRED DOESN'T TRY AND READ CONTROL SETTINGS 5+
+        arenaPlrsMemory = self.manager.arenaSetup.playersJoined;
+        self.manager.arenaSetup.playersJoined = new bool[4];
+        for (int i = 0; i < self.manager.arenaSetup.playersJoined.Length; i++) {
+            self.manager.arenaSetup.playersJoined[i] = arenaPlrsMemory[i];
+        }
         orig(self);
+        //self.manager.arenaSetup.playersJoined = arenaPlrsMemory; //WE NEED THIS BEFORE THEN! BUT WE'LL CATCH IT IN THE BASE.UPDATE...
+
+
 
         bool pressedBtn = false;
         //Profiles.Profile profile = self.manager.rainWorld.playerHandler.profile;

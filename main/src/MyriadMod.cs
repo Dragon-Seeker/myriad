@@ -123,9 +123,10 @@ public class MyriadMod : BaseUnityPlugin {
             //IL.World.LoadMapConfig += Replace4WithMore; //PERHAPS? BUT LEAVE OUT UNLESS IT'S DISCOVERED THAT WE NEED IT
             IL.CreatureCommunities.ctor += Replace4WithMore;
             IL.StoryGameSession.ctor += il => Replace4WithMore(il, false, 1);
+            IL.ArenaSetup.ctor += Replace4WithMore;
 
             //-----
-            
+
             RainWorld.PlayerObjectBodyColors = new Color[plyCnt];
             
             On.JollyCoop.JollyMenu.JollyPlayerSelector.Update += JollyPlayerSelector_Update;
