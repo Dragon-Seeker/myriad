@@ -106,7 +106,7 @@ public class JollySlidingMenuMixin {
     public void accountForMoreThanFour(On.JollyCoop.JollyMenu.JollySlidingMenu.orig_NumberPlayersChange orig, JollySlidingMenu self, UIconfig config, string value, string oldvalue) {
         orig(self, config, value, oldvalue);
         
-        var plyCnt = MyriadMod.PlyCnt();
+        var plyCnt = MyriadMod.PlyCntDisplay();
         
         if(plyCnt <= 4) return;
         
@@ -128,7 +128,7 @@ public class JollySlidingMenuMixin {
     public void adjustPlayerSelectGUI(On.JollyCoop.JollyMenu.JollySlidingMenu.orig_ctor orig, JollySlidingMenu self, JollySetupDialog menu, MenuObject owner, Vector2 pos) {
         orig(self, menu, owner, pos);
 
-        var plyCnt = MyriadMod.PlyCnt();
+        var plyCnt = MyriadMod.PlyCntDisplay();
         
         //if(plyCnt <= 4) return;
 
@@ -137,10 +137,10 @@ public class JollySlidingMenuMixin {
         //Vector2 pos1 = new Vector2(-25 + num2, 0.0f) + new Vector2(0.0f, menu.manager.rainWorld.screenSize.y * 0.55f);
 		
 		//TRYING SOMETHING FUNKY
-		jollySwapButtons = new SimpleButton[MyriadMod.PlyCnt()];
+		jollySwapButtons = new SimpleButton[MyriadMod.PlyCntDisplay()];
         float swapOffsetY = (plyCnt > 8 ? 5 : 0);
 
-        for (int index = 0; index < MyriadMod.PlyCnt(); ++index) {
+        for (int index = 0; index < MyriadMod.PlyCntDisplay(); ++index) {
             JollyPlayerSelector playerSelector = self.playerSelector[index];
 
             if (plyCnt > 8) {
@@ -276,7 +276,7 @@ public class JollySlidingMenuMixin {
 
     private void JollySlidingMenu_Singal(On.JollyCoop.JollyMenu.JollySlidingMenu.orig_Singal orig, JollySlidingMenu self, MenuObject sender, string message) {
 
-        var plyCnt = MyriadMod.PlyCnt();
+        var plyCnt = MyriadMod.PlyCntDisplay();
 
         //VANILLA SLUGPUP TOGGLE DOES NOT ACCOUNT FOR DOUBLE DIGIT PLAYERCOUNT. LETS FIX THAT
         if (message.Contains("toggle_pup") && plyCnt > 8) {

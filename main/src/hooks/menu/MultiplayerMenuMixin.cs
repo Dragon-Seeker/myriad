@@ -163,7 +163,7 @@ public class MultiplayerMenuMixin {
         
         orig(self);
 
-        var plyCnt = MyriadMod.PlyCnt();
+        var plyCnt = MyriadMod.PlyCntDisplay();
         
         if (plyCnt <= 4) return;
 
@@ -172,8 +172,8 @@ public class MultiplayerMenuMixin {
         if (playerJoinBtns != null) {
             //foreach (var playerJoinButton in playerJoinBtns) playerJoinButton.pos.x -= shift;
             var btnPos = playerJoinBtns[0].pos;
-            
-            var perBtnOffset = (Custom.rainWorld.options.ScreenSize.x - btnPos.x + 210) / playerJoinBtns.Length;
+
+            var perBtnOffset = (Custom.rainWorld.options.ScreenSize.x - btnPos.x + 210) / plyCnt; // playerJoinBtns.Length;
 
             var startingX = btnPos.x - 210;
             

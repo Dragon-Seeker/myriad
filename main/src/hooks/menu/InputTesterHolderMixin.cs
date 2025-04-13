@@ -18,7 +18,7 @@ public class InputTesterHolderMixin {
     private Vector2 InputTester_GetToPos(On.Menu.InputTesterHolder.InputTester.orig_GetToPos orig, InputTesterHolder.InputTester self) {
         Vector2 result = orig(self);
         
-        if (MyriadMod.PlyCnt() > 8 && self.playerIndex % 2 != 0) result -= new Vector2(60, 0);
+        if (MyriadMod.PlyCntDisplay() > 8 && self.playerIndex % 2 != 0) result -= new Vector2(60, 0);
         
         return result;
     }
@@ -26,7 +26,7 @@ public class InputTesterHolderMixin {
     public void Back_Update(On.Menu.InputTesterHolder.Back.orig_Update orig, InputTesterHolder.Back self) {
         orig(self);
         
-        if (MyriadMod.PlyCnt() > 8) {
+        if (MyriadMod.PlyCntDisplay() > 8) {
             //self.textLabel.pos.y -= 60f;
             //self.textLabel.pos.x += 55f;
             self.textLabel.pos += new Vector2(-280, 90);
@@ -37,7 +37,7 @@ public class InputTesterHolderMixin {
         // self.rad = 15; //TOO EARLY! IT DIDN'T WORK
         orig(self, menu, owner, playerIndex);
 
-        if (MyriadMod.PlyCnt() > 8) {
+        if (MyriadMod.PlyCntDisplay() > 8) {
             self.rad = 22; //THIS SHOULD WORK NOW. AND I BELEIVE GRAFUPDATE() SHOULD HANDLE THE REST
             self.crossSpriteH.scaleX = self.rad * 2f;
             self.crossSpriteV.scaleY = self.rad * 2f;
@@ -59,7 +59,7 @@ public class InputTesterHolderMixin {
 
     private void TestButton_ctor(On.Menu.InputTesterHolder.InputTester.TestButton.orig_ctor orig, InputTesterHolder.InputTester.TestButton self, Menu.Menu menu, MenuObject owner, Vector2 pos, string symbolName, int symbolRotat, string labelText, int buttonIndex, int playerIndex) {
        
-        if (MyriadMod.PlyCnt() > 8) {
+        if (MyriadMod.PlyCntDisplay() > 8) {
             if (symbolName != null && symbolName == "Menu_Symbol_Arrow") {
                 pos *= 0.4f; //ARROWS ARE SLIPPERY . SHRINK THEM BEFOREHAND
                 if (symbolRotat == 2) pos.y = 0; //DOWN ARROW        

@@ -45,6 +45,11 @@ public class MyriadMod : BaseUnityPlugin {
         return plyCnt;
     }
 
+    public static int PlyCntDisplay() {
+        return options.maxPlayers.Value * 4;
+    }
+    public static int plyCntDisplay = 8;
+
     public static int Reflect_GetPlayerCount() {
         int playerCount = 4;
 
@@ -271,7 +276,7 @@ public class MyriadMod : BaseUnityPlugin {
         orig(self);
 
         //Required to make sure that the main config takes priorty to the actual value used by the PreloadMaxPlayerSettings
-        options.validateAndSetup();
+        //options.validateAndSetup(); //DISABLED UNTIL NEWTONSOFT STUFF IS FIXED
     }
     
     private void ShortCutVessel_ctor(On.ShortcutHandler.ShortCutVessel.orig_ctor orig, ShortcutHandler.ShortCutVessel self, IntVector2 pos, Creature creature, AbstractRoom room, int wait) {

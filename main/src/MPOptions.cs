@@ -30,7 +30,7 @@ public class MPOptions : OptionInterface {
     
     public readonly Configurable<bool> downpourCoop;
     public readonly Configurable<bool> longPipeWait;
-    private readonly Configurable<int> maxPlayers; //Used only for player control of the main value from PreloadMaxPlayerSettings
+    public readonly Configurable<int> maxPlayers; //Used only for player control of the main value from PreloadMaxPlayerSettings
     public readonly Configurable<bool> grabRelease;
     public readonly Configurable<bool> displayNametags;
 
@@ -80,7 +80,7 @@ public class MPOptions : OptionInterface {
         Logger.LogWarning(newPlayerCap);
         Logger.LogWarning("---");
         
-        PreloadMaxPlayerSettings.SaveSettings(newPlayerCap);
+        //PreloadMaxPlayerSettings.SaveSettings(newPlayerCap); //TURNING THIS OFF UNLESS WE CAN FIX NEWTONSOFT STUFF
     }
 
     public static string Translate(string t) {

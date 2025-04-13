@@ -18,7 +18,7 @@ public class InputOptionsMenuMixin {
     public static void addMorePlayerOptions(On.Menu.InputOptionsMenu.orig_ctor orig, InputOptionsMenu self, ProcessManager manager) {
         orig(self, manager);
         
-        var plyCnt = MyriadMod.PlyCnt();
+        var plyCnt = MyriadMod.PlyCntDisplay();
 
         if (plyCnt <= 4) { 
             if (ModManager.JollyCoop) {
