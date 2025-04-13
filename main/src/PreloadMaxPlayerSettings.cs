@@ -36,7 +36,8 @@ public class PreloadMaxPlayerSettings {
     }
 
     public static int getPlayerCap() {
-        return LoadSettings().pCap;
+        //return LoadSettings().pCap;
+        return 8;
     }
 
     public static void SaveSettings(int playerCount) {

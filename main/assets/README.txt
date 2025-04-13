@@ -2,6 +2,8 @@ NON-STEAM INSTALL INSTRUCTIONS
 Drag the entire mod folder (the one containing modinfo.json) into this location:
 \Rain World\RainWorld_Data\StreamingAssets\mods
 
+Also drag the SDL2.dll file into \Rain World
+
 The mod should then show up under the "Remix" menu for you to enable.
 
 Once enabled, you can click on the mod title to edit configuration settings.

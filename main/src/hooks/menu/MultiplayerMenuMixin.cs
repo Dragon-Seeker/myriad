@@ -207,7 +207,7 @@ public class MultiplayerMenuMixin {
                 
                 //Logger.LogWarning($"Shift:{shift}, X:{playerJoinBtn.pos.x}");
                 
-                if (ModManager.MSC && self.playerClassButtons != null) {
+                if (self.playerClassButtons != null) {
                     var playerClassBtn = self.playerClassButtons[i];
                     //IF WE ARE USING SHRUNK ICONS, SHIFT EVERY OTHER CLASS BUTTON UP TOP 
                     
