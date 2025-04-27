@@ -181,7 +181,9 @@ public class MyriadMod : BaseUnityPlugin {
         orig(self, hud, fContainer, displayKarma, showAsReinforced);
 
         //REVERT BACK TO NORMAL KARMA IF USING NON-WATCHER RIPPLE KARMA
-        if (ModManager.Watcher && hud.owner is Player && (hud.owner as Player).rippleLevel >= 1f && (hud.owner as Player).abstractCreature.world.game.StoryCharacter != WatcherEnums.SlugcatStatsName.Watcher) {
+        if (ModManager.Watcher && MPOptions.coopWatcherPowers.Value && hud.owner is Player && (hud.owner as Player).rippleLevel >= 1f && (hud.owner as Player).abstractCreature.world.game.StoryCharacter != WatcherEnums.SlugcatStatsName.Watcher) {
+            self.karmaSprite.alpha = 0f;
+            self.karmaSprite = null;
             self.karmaSprite = new FSprite(HUD.KarmaMeter.KarmaSymbolSprite(true, displayKarma), true);
             self.baseColor = new Color(1f, 1f, 1f);
             self.karmaSprite.color = self.baseColor;
@@ -226,7 +228,7 @@ public class MyriadMod : BaseUnityPlugin {
 
     private float Player_rippleLevel_get(Func<Player, float> orig, Player self) {
 
-        if (self.abstractCreature.world.game.IsStorySession && self.abstractCreature.world.game.StoryCharacter == WatcherEnums.SlugcatStatsName.Watcher)
+        if (!MPOptions.coopWatcherPowers.Value || (self.abstractCreature.world.game.IsStorySession && self.abstractCreature.world.game.StoryCharacter == WatcherEnums.SlugcatStatsName.Watcher))
             return orig(self);
         else {
             return 3; // self.Karma;

@@ -17,7 +17,8 @@ public class MPOptions : OptionInterface {
         grabRelease = this.config.Bind<bool>("grabRelease", true);
         displayNametags = this.config.Bind<bool>("displayNametags", false);
         maxPlayers = this.config.Bind<int>("maxPlayers", PreloadMaxPlayerSettings.defMaxCap / 4, new ConfigAcceptableRange<int>(1, 4));
-        
+        coopWatcherPowers = this.config.Bind<bool>("coopWatcherPowers", true);
+
         this.Logger = logger;
         
         // var onConfigChanged = maxPlayers.GetType().GetEvent("OnChange");
@@ -33,6 +34,7 @@ public class MPOptions : OptionInterface {
     public readonly Configurable<int> maxPlayers; //Used only for player control of the main value from PreloadMaxPlayerSettings
     public readonly Configurable<bool> grabRelease;
     public readonly Configurable<bool> displayNametags;
+    public static Configurable<bool> coopWatcherPowers;
 
     public OpSliderTick pCountOp;
     public OpLabel lblOp1;
@@ -146,6 +148,20 @@ public class MPOptions : OptionInterface {
                         description = dsc
                     },
                     new OpLabel(mpBox1.pos.x + 30, mpBox1.pos.y+3, Translate("Downpour Co-op")) {
+                        description = dsc
+                    }
+                });
+                lineCount -= 50;
+            }
+
+            if (ModManager.Watcher) {
+                OpCheckBox mpBox1;
+                dsc = Translate("Enable abilities for Watcher outside of the Watcher campaign.");
+                Tabs[0].AddItems(new UIelement[] {
+                    mpBox1 = new OpCheckBox(coopWatcherPowers, new Vector2(margin, lineCount)) {
+                        description = dsc
+                    },
+                    new OpLabel(mpBox1.pos.x + 30, mpBox1.pos.y+3, Translate("Watcher Co-op Abilities")) {
                         description = dsc
                     }
                 });
