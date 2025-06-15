@@ -152,6 +152,7 @@ public class MyriadMod : BaseUnityPlugin {
 
             On.Menu.MainMenu.ctor += MainMenu_ctor;
             On.JollyCoop.JollyHUD.JollyPlayerSpecificHud.JollyPlayerArrow.Draw += JollyPlayerArrow_Draw;
+            On.Options.LoadOptions += Options_LoadOptions; //OUR IL REPLACEWITH4 FOR OPTIONS.CTOR REPLACES TOO MANY 4S AND BREAKS THE RESOLUTION. HERES A MANUAL FIX...
 
             //-----
 
@@ -174,6 +175,14 @@ public class MyriadMod : BaseUnityPlugin {
         }
 
         RainWorld.PlayerObjectBodyColors = new Color[PlyCnt()];
+    }
+
+    private void Options_LoadOptions(On.Options.orig_LoadOptions orig, Options self) {
+        //CHANGE THIS SINCE WE ACCIDENTALY SET IT TO 16 WHEN WE INITIALIZE OPTIONS
+        if (SteamManager.Initialized && SteamUtils.IsSteamRunningOnSteamDeck()) {
+            self.resolution = 4;
+        }
+        orig(self); //CONTINUE AS NORMAL
     }
 
     private void KarmaMeter_ctor(On.HUD.KarmaMeter.orig_ctor orig, HUD.KarmaMeter self, HUD.HUD hud, FContainer fContainer, IntVector2 displayKarma, bool showAsReinforced) {
