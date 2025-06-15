@@ -271,6 +271,8 @@ public class MyriadMod : BaseUnityPlugin {
             if (activeMod.id == "bettergrab") incompatibleMod = activeMod.id;
             if (activeMod.id == "pkuyo.customfood") incompatibleMod = activeMod.id;
             if (activeMod.id == "IndividualKarma") incompatibleMod = activeMod.id;
+            if (activeMod.id == "elumenix.pupify") incompatibleMod = activeMod.id;
+            if (activeMod.id == "demo.aimanywhere") incompatibleMod = activeMod.id;
         }
     }
     
