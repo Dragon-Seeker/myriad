@@ -139,7 +139,7 @@ public class MyriadMod : BaseUnityPlugin {
             
             On.JollyCoop.JollyMenu.JollyPlayerSelector.Update += JollyPlayerSelector_Update;
             //LOCK DOWNPOUR STORY CHARACTER SELECTION FOR PLAYER 1
-            On.JollyCoop.JollyCustom.ForceActivateWithMSC += JollyCustom_ForceActivateWithMSC; //FOR JOLLYCAMPAINGN. JUST RETURN TRUE INSTEAD OF ORIG.
+            //On.JollyCoop.JollyCustom.ForceActivateWithMSC += JollyCustom_ForceActivateWithMSC; //RETIRED!! :D //FOR JOLLYCAMPAINGN. JUST RETURN TRUE INSTEAD OF ORIG.
             On.Menu.SlugcatSelectMenu.CheckJollyCoopAvailable += SlugcatSelectMenu_CheckJollyCoopAvailable;
             On.JollyCoop.JollyMenu.JollySlidingMenu.NextClass += JollySlidingMenu_NextClass;
             On.JollyCoop.JollyCustom.SlugClassMenu += JollyCustom_SlugClassMenu;
@@ -208,14 +208,14 @@ public class MyriadMod : BaseUnityPlugin {
         return orig.Invoke(playerNumber, fallBack);
     }
 
-    private SlugcatStats.Name JollySlidingMenu_NextClass(On.JollyCoop.JollyMenu.JollySlidingMenu.orig_NextClass orig, JollySlidingMenu self, SlugcatStats.Name curClass) {
+    private SlugcatStats.Name JollySlidingMenu_NextClass(On.JollyCoop.JollyMenu.JollySlidingMenu.orig_NextClass orig, JollySlidingMenu self, SlugcatStats.Name curClass, int playerIndex) {
 
         SlugcatStats.Name name;
         if (curClass == null) {
             name = new SlugcatStats.Name(ExtEnum<SlugcatStats.Name>.values.GetEntry(0), false);
         } else {
             if (curClass.Index >= ExtEnum<SlugcatStats.Name>.values.Count - 1 || curClass.Index == -1) {
-                return self.NextClass(null);
+                return self.NextClass(null, playerIndex);
             }
             name = new SlugcatStats.Name(ExtEnum<SlugcatStats.Name>.values.GetEntry(curClass.Index + 1), false);
         }
@@ -223,7 +223,7 @@ public class MyriadMod : BaseUnityPlugin {
             return name;
         }
         else
-            return orig(self, curClass);
+            return orig(self, curClass, playerIndex);
     }
 
     private bool SlugcatSelectMenu_CheckJollyCoopAvailable(On.Menu.SlugcatSelectMenu.orig_CheckJollyCoopAvailable orig, SlugcatSelectMenu self, SlugcatStats.Name slugcat) {
@@ -317,7 +317,7 @@ public class MyriadMod : BaseUnityPlugin {
     //----
 
     private void ArenaGameSession_SpawnPlayers(On.ArenaGameSession.orig_SpawnPlayers orig, ArenaGameSession self, Room room, List<int> suggestedDens) {
-        if (!(ModManager.MSC && self.GameTypeSetup.gameType == MoreSlugcatsEnums.GameTypeID.Challenge)) {
+        if (!(ModManager.MSC && self.GameTypeSetup.gameType == DLCSharedEnums.GameTypeID.Challenge)) {
             //SO IT SKIPS CHALLENGES.
             //BUT WHAT IF IT DIDNT...
 
@@ -352,9 +352,9 @@ public class MyriadMod : BaseUnityPlugin {
         orig(self, button, ref ps, additionalOffset);
     }
     
-    private bool JollyCustom_ForceActivateWithMSC(On.JollyCoop.JollyCustom.orig_ForceActivateWithMSC orig) {
-        return options.downpourCoop.Value || orig();
-    }
+    //private bool JollyCustom_ForceActivateWithMSC(On.JollyCoop.JollyCustom.orig_ForceActivateWithMSC orig) {
+    //    return options.downpourCoop.Value || orig();
+    //}
     
     //---
 

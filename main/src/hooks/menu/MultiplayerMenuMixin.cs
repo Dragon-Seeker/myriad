@@ -427,7 +427,7 @@ public class MultiplayerMenuMixin {
                 self.InitiateGameTypeSpecificButtons();
             }
         }
-        if (ModManager.MSC && self.currentGameType == MoreSlugcatsEnums.GameTypeID.Challenge && self.levelSelector != null && self.thumbsToBeLoaded.Count > 0) {
+        if (ModManager.MSC && self.currentGameType == DLCSharedEnums.GameTypeID.Challenge && self.levelSelector != null && self.thumbsToBeLoaded.Count > 0) {
             self.levelSelector.Update();
         }
         if (self.blackFade < num) {
@@ -484,7 +484,7 @@ public class MultiplayerMenuMixin {
         }
         self.APBLLastSin = self.APBLSin;
         self.APBLLastPulse = self.APBLPulse;
-        if (!ModManager.MSC || self.currentGameType == MoreSlugcatsEnums.GameTypeID.Challenge || self.currentGameType == MoreSlugcatsEnums.GameTypeID.Safari) {
+        if (!ModManager.MSC || self.currentGameType == DLCSharedEnums.GameTypeID.Challenge || self.currentGameType == MoreSlugcatsEnums.GameTypeID.Safari) {
             flag2 = true;
         }
         if (ModManager.MSC && self.currentGameType == MoreSlugcatsEnums.GameTypeID.Safari && !self.manager.rainWorld.progression.miscProgressionData.GetTokenCollected(new MultiplayerUnlocks.SafariUnlockID(ExtEnum<MultiplayerUnlocks.SafariUnlockID>.values.GetEntry(self.GetGameTypeSetup.safariID), false)) && !MultiplayerUnlocks.CheckUnlockSafari()) {
